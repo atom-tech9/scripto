@@ -55,7 +55,7 @@ export function SkinPage() {
               {blurb.voice}
             </p>
             <p className="mk-muted" style={{ marginBlockStart: '1rem', lineHeight: 1.7 }}>
-              <strong style={{ color: 'hsl(213 28% 88%)' }}>Best for:</strong> {blurb.bestFor}
+              <strong style={{ color: 'var(--mk-fg)' }}>Best for:</strong> {blurb.bestFor}
             </p>
             <div style={{ marginBlockStart: '1.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <a href={`${APP_PATH}?skin=${skin.value}`} className="mk-btn mk-btn-primary mk-btn-lg">

@@ -57,6 +57,7 @@ export const DEFAULT_CONFIG: PdfConfig = {
   headerText: '',
   footerText: '',
   runningHeaderFromH1: true,
+  attribution: true,
 
   coverPage: false,
   coverStyle: 'minimal',

@@ -234,7 +234,7 @@ export function Landing({ lang }: { lang: MarketingLang }) {
               <p className="mk-muted" style={{ marginBlockStart: '0.5rem', lineHeight: 1.65 }}>
                 {card.text}
               </p>
-              <p style={{ marginBlockStart: '0.875rem', color: 'hsl(234 100% 84%)', fontWeight: 550, fontSize: '0.9375rem' }}>
+              <p style={{ marginBlockStart: '0.875rem', color: 'var(--mk-accent-fg)', fontWeight: 550, fontSize: '0.9375rem' }}>
                 {lang === 'ar' ? 'اقرأ الدليل ←' : 'Read the guide →'}
               </p>
             </a>
@@ -252,8 +252,8 @@ export function Landing({ lang }: { lang: MarketingLang }) {
             </p>
             <ul style={{ marginBlockStart: '1.5rem', display: 'grid', gap: '0.75rem' }}>
               {c.privacy.points.map((point) => (
-                <li key={point.slice(0, 24)} style={{ display: 'flex', gap: '0.75rem', color: 'hsl(217 22% 76%)', lineHeight: 1.65 }}>
-                  <span aria-hidden="true" style={{ color: 'hsl(160 70% 55%)' }}>
+                <li key={point.slice(0, 24)} style={{ display: 'flex', gap: '0.75rem', color: 'var(--mk-soft)', lineHeight: 1.65 }}>
+                  <span aria-hidden="true" style={{ color: 'var(--mk-success)' }}>
                     ✓
                   </span>
                   {point}

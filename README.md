@@ -8,6 +8,8 @@
 
 What you see in the live preview is exactly what lands in the PDF: same stylesheet, same rendered DOM. No backend, no uploads.
 
+Built by [Atom](https://atom.sa) · Live at [md.atom.sa](https://md.atom.sa)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Made with React + TypeScript](https://img.shields.io/badge/React%20%2B%20TypeScript-strict-3178C6.svg)](#-tech-stack)

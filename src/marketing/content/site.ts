@@ -52,6 +52,7 @@ export const CHROME: Record<
   | 'footer.about'
   | 'footer.license'
   | 'lang.switch'
+  | 'theme.toggle'
   | 'skipToContent'
   | 'breadcrumb.home',
   Localized
@@ -79,6 +80,7 @@ export const CHROME: Record<
   'footer.about': { en: 'About', ar: 'عن سكربتو' },
   'footer.license': { en: 'MIT licensed', ar: 'رخصة MIT' },
   'lang.switch': { en: 'العربية', ar: 'English' },
+  'theme.toggle': { en: 'Switch light/dark theme', ar: 'بدِّل بين الوضع الفاتح والداكن' },
   skipToContent: { en: 'Skip to content', ar: 'تخطَّ إلى المحتوى' },
   'breadcrumb.home': { en: 'Home', ar: 'الرئيسية' },
 }

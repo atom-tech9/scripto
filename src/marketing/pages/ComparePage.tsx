@@ -50,7 +50,7 @@ export function ComparePage() {
 
       <div className="mk-container mk-section-tight">
         <div className="mk-grid mk-grid-2">
-          <div className="mk-card mk-reveal" style={{ borderColor: 'hsl(239 70% 55% / 0.5)' }}>
+          <div className="mk-card mk-reveal" style={{ borderColor: 'var(--mk-accent-border)' }}>
             <h2 className="mk-h3">Choose Scripto when…</h2>
             <ul className="mk-prose" style={{ marginBlockStart: '0.75rem' }}>
               {content.verdict.scripto.map((point) => (

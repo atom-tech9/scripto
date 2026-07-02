@@ -42,6 +42,11 @@ export function buildPageCss(config: PdfConfig): string {
       `@bottom-right { content: counter(page) " / " counter(pages); ${marginBoxStyle()} }`,
     )
   }
+  if (config.attribution) {
+    marginBoxes.push(
+      `@bottom-center { content: "Made with Scripto \\00b7 md.atom.sa"; ${marginBoxStyle()} font-size: 7pt; opacity: 0.85; }`,
+    )
+  }
 
   const watermark = config.watermarkText.trim()
     ? `
@@ -78,6 +83,7 @@ export function buildPageCss(config: PdfConfig): string {
       @top-right { content: none; }
       @top-center { content: none; }
       @bottom-left { content: none; }
+      @bottom-center { content: none; }
       @bottom-right { content: none; }
     }
 

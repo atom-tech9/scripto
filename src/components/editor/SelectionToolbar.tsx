@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState, type RefObject } from 'react'
+import { useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import {
   Expand,
   Languages,
@@ -50,6 +50,7 @@ export function SelectionToolbar({
 }: SelectionToolbarProps) {
   const { t, dir } = useLanguage()
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
+  const barRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
     const wrapper = wrapperRef.current
@@ -65,15 +66,30 @@ export function SelectionToolbar({
     // Prefer above the selection; flip below if there's no room.
     const above = box.top - TOOLBAR_HEIGHT - 6
     const top = above < 4 ? box.bottom + 6 : above
-    // Clamp the centre within the wrapper so the bar stays on-screen in both directions.
-    const left = Math.min(Math.max(8, box.centerX), Math.max(8, wrapper.clientWidth - 8))
-    setPos({ top, left })
+    setPos({ top, left: box.centerX })
   }, [view, wrapperRef, tick, suppressed, dir])
+
+  // The bar is centred with translateX(-50%), so clamp its CENTRE by half its
+  // real (rendered, locale-dependent) width — otherwise selections near either
+  // edge push it partly outside the editor, in LTR and RTL alike.
+  useLayoutEffect(() => {
+    const wrapper = wrapperRef.current
+    const bar = barRef.current
+    if (!pos || !wrapper || !bar) return
+    const half = bar.offsetWidth / 2
+    const min = half + 8
+    const max = wrapper.clientWidth - half - 8
+    const clamped = max < min ? wrapper.clientWidth / 2 : Math.min(Math.max(pos.left, min), max)
+    if (Math.abs(clamped - pos.left) > 0.5) {
+      setPos((prev) => (prev ? { ...prev, left: clamped } : prev))
+    }
+  }, [pos, wrapperRef])
 
   if (!pos) return null
 
   return (
     <div
+      ref={barRef}
       role="toolbar"
       aria-label={t('editor.selection.quickActions')}
       // Keep the editor selection alive when interacting with the bar.

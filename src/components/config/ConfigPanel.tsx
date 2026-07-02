@@ -395,6 +395,16 @@ export function ConfigPanel({ config, onChange, onApplyPreset }: ConfigPanelProp
             onChange={(e) => onChange({ footerText: e.target.value })}
           />
         </Field>
+        <Field label={t('config.field.attribution')}>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">{t('config.hint.attribution')}</span>
+            <Switch
+              checked={config.attribution}
+              onChange={(attribution) => onChange({ attribution })}
+              aria-label={t('config.field.attribution')}
+            />
+          </div>
+        </Field>
       </Section>
 
       <Section title={t('config.section.cover')} defaultOpen={false}>

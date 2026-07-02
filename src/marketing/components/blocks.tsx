@@ -197,16 +197,7 @@ interface CtaBandProps {
 export function CtaBand({ lang, title, lead, href, label, children }: CtaBandProps) {
   return (
     <section className="mk-section-tight">
-      <div
-        className="mk-card mk-reveal"
-        style={{
-          textAlign: 'center',
-          padding: 'clamp(2.5rem, 6vw, 4rem)',
-          background:
-            'linear-gradient(140deg, hsl(239 60% 16% / 0.9), hsl(266 55% 14% / 0.9)), radial-gradient(40rem 18rem at 50% -20%, hsl(239 84% 60% / 0.35), transparent)',
-          borderColor: 'hsl(239 70% 55% / 0.5)',
-        }}
-      >
+      <div className="mk-cta-band mk-reveal">
         <h2 className="mk-h2">{title}</h2>
         {lead ? (
           <p className="mk-lead" style={{ marginBlockStart: '0.875rem', marginInline: 'auto', maxInlineSize: '48ch' }}>

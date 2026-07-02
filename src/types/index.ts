@@ -102,6 +102,8 @@ export interface PdfConfig {
   readonly headerText: string
   readonly footerText: string
   readonly runningHeaderFromH1: boolean
+  /** Small "Made with Scripto · by Atom" line in the PDF footer (opt-out). */
+  readonly attribution: boolean
 
   readonly coverPage: boolean
   readonly coverStyle: CoverStyle

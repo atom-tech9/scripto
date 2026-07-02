@@ -35,6 +35,11 @@ import {
 
 import { Header } from '@/components/layout/Header'
 import { StatusBar } from '@/components/layout/StatusBar'
+import {
+  ONBOARDING_DEFAULT,
+  OnboardingChecklist,
+  type OnboardingState,
+} from '@/components/layout/OnboardingChecklist'
 import { OutlineNavigator } from '@/components/layout/OutlineNavigator'
 import { CommandPalette, type Command } from '@/components/layout/CommandPalette'
 import { TemplatesDialog } from '@/components/layout/TemplatesDialog'
@@ -73,7 +78,13 @@ import { getErrorMessage } from '@/lib/logger'
 import { parseFrontmatter, applyFrontmatter } from '@/lib/frontmatter'
 import { SAMPLE_DOCUMENT } from '@/data/sampleDocument'
 import { DOCUMENT_PRESETS } from '@/data/presets'
-import { fillResumePlaceholders, type DocumentTemplate, type ResumeDetails } from '@/data/templates'
+import {
+  TEMPLATES,
+  fillResumePlaceholders,
+  type DocumentTemplate,
+  type ResumeDetails,
+} from '@/data/templates'
+import { SKIN_VALUES } from '@/data/skins'
 import { ResumeDetailsDialog } from '@/components/layout/ResumeDetailsDialog'
 import { GithubDialog } from '@/components/layout/GithubDialog'
 import { AiSettingsDialog } from '@/components/layout/AiSettingsDialog'
@@ -84,7 +95,7 @@ import { DEFAULT_AI_CONFIG, isAiConfigured, runAi, type AiConfig } from '@/lib/a
 import { ACCEPTED_IMPORT, importFile } from '@/io/importers'
 import { exportHtml, exportMarkdown, exportWord } from '@/io/exporters'
 import type { AppLockApi } from '@/hooks/useAppLock'
-import type { PdfConfig, ViewMode } from '@/types'
+import type { DocumentSkin, PdfConfig, ViewMode } from '@/types'
 
 // The PDF engine (Paged.js) is heavy — load it only when a PDF/print is requested.
 const PrintPreview = lazy(() =>
@@ -129,6 +140,15 @@ export default function App({ lock }: AppProps) {
 
   const [viewMode, setViewMode] = useLocalStorage<ViewMode>(STORAGE_KEYS.viewMode, 'split')
   const [splitRatio, setSplitRatio] = useLocalStorage<number>('scripto:split', 0.5)
+  const [onboarding, setOnboarding] = useLocalStorage<OnboardingState>(
+    'scripto:onboarding',
+    ONBOARDING_DEFAULT,
+  )
+  const markOnboarding = useCallback(
+    (step: 'template' | 'edit' | 'export') =>
+      setOnboarding((prev) => (prev[step] ? prev : { ...prev, [step]: true })),
+    [setOnboarding],
+  )
 
   const isDesktop = useMediaQuery('(min-width: 1024px)')
   const [configOpen, setConfigOpen] = useState(false)
@@ -236,6 +256,17 @@ export default function App({ lock }: AppProps) {
     [setConfig],
   )
 
+  // Stable identity matters: a fresh onChange each render makes the CodeMirror
+  // wrapper reconfigure the editor, which drops dynamically-appended
+  // extensions (e.g. the ⌘F search panel) the moment they open.
+  const handleEditorChange = useCallback(
+    (value: string) => {
+      setMarkdown(value)
+      markOnboarding('edit')
+    },
+    [setMarkdown, markOnboarding],
+  )
+
   const applyPreset = useCallback(
     (presetId: string) => {
       const preset = DOCUMENT_PRESETS.find((p) => p.id === presetId)
@@ -286,7 +317,8 @@ export default function App({ lock }: AppProps) {
       return
     }
     setPrintOpen(true)
-  }, [bodyEmpty, t])
+    markOnboarding('export')
+  }, [bodyEmpty, t, markOnboarding])
 
   const handleExportWord = useCallback(() => {
     const doc = ensureDoc()
@@ -322,6 +354,7 @@ export default function App({ lock }: AppProps) {
 
   const handleTemplate = useCallback(
     (template: DocumentTemplate) => {
+      markOnboarding('template')
       // Résumé templates first collect the user's header details.
       if (template.resume) {
         setPendingResume(template)
@@ -330,7 +363,7 @@ export default function App({ lock }: AppProps) {
       setMarkdown(template.content)
       toast.success(`${t('toast.templateLoaded')} “${template.nameKey ? t(template.nameKey) : template.name}”`)
     },
-    [setMarkdown, t],
+    [setMarkdown, t, markOnboarding],
   )
 
   const handleResumeFill = useCallback(
@@ -351,6 +384,45 @@ export default function App({ lock }: AppProps) {
       pendingResume.nameKey ? t(pendingResume.nameKey) : pendingResume.name,
     )
   }, [pendingResume, loadResumeContent, t])
+
+  // Deep links from the marketing pages: /app?template=<id>&skin=<id>.
+  // A template opens as a NEW document (never clobbers existing work); a skin
+  // applies to the now-active document. Params are consumed from the URL.
+  const deepLinkHandled = useRef(false)
+  useEffect(() => {
+    if (deepLinkHandled.current) return
+    deepLinkHandled.current = true
+    const params = new URLSearchParams(window.location.search)
+    const templateId = params.get('template')
+    const skinId = params.get('skin')
+    if (templateId === null && skinId === null) return
+
+    const template = templateId ? TEMPLATES.find((entry) => entry.id === templateId) : undefined
+    const skin: DocumentSkin | undefined =
+      skinId && (SKIN_VALUES as string[]).includes(skinId) ? (skinId as DocumentSkin) : undefined
+
+    if (template) {
+      const name = template.nameKey ? t(template.nameKey) : template.name
+      library.createDoc(template.content, name)
+      const { data } = parseFrontmatter(template.content)
+      if (Object.keys(data).length > 0) setConfig((prev) => applyFrontmatter(prev, data))
+      toast.success(`${t('toast.templateLoaded')} “${name}”`)
+      markOnboarding('template')
+    }
+    if (skin) {
+      setConfig((prev) => ({ ...prev, skin }))
+      toast.success(t('toast.skinApplied'))
+    }
+
+    params.delete('template')
+    params.delete('skin')
+    const query = params.toString()
+    window.history.replaceState(
+      null,
+      '',
+      `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`,
+    )
+  }, [library, setConfig, t, markOnboarding])
 
   const handleClear = useCallback(async () => {
     const ok = await confirm({
@@ -815,7 +887,7 @@ export default function App({ lock }: AppProps) {
           <div ref={editorWrapRef} className="relative min-h-0 flex-1 bg-surface">
             <MarkdownEditor
               value={markdown}
-              onChange={setMarkdown}
+              onChange={handleEditorChange}
               resolvedTheme={resolvedTheme}
               direction={effectiveConfig.direction === 'auto' ? ui.dir : effectiveConfig.direction}
               onReady={setEditorView}
@@ -905,6 +977,14 @@ export default function App({ lock }: AppProps) {
           config={effectiveConfig}
           headingCount={headingCount}
           onOpenStats={() => setStatsOpen(true)}
+        />
+      )}
+
+      {!zen && (
+        <OnboardingChecklist
+          state={onboarding}
+          onDismiss={() => setOnboarding((prev) => ({ ...prev, dismissed: true }))}
+          onOpenTemplates={() => setTemplatesOpen(true)}
         />
       )}
 

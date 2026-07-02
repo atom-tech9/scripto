@@ -45,6 +45,16 @@ export function StatusBar({ content, config, headingCount, onOpenStats }: Status
           {PAPER_LABELS[config.paperSize]} · {config.orientation}
         </span>
         <span className="tabular-nums">{config.fontSize}pt</span>
+        <a
+          href="https://atom.sa"
+          target="_blank"
+          rel="noopener"
+          className="hidden items-center gap-1.5 border-s border-border ps-3 opacity-80 transition-opacity hover:opacity-100 md:flex"
+          aria-label={`${t('statusbar.builtBy')} Atom`}
+        >
+          <span>{t('statusbar.builtBy')}</span>
+          <img src="/atom-logo.png" alt="Atom" className="h-3.5 w-auto" width={35} height={14} />
+        </a>
       </div>
     </footer>
   )

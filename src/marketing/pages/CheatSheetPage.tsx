@@ -138,7 +138,7 @@ export function CheatSheetPage() {
                           fontFamily: '"JetBrains Mono", monospace',
                           fontSize: '0.8125rem',
                           whiteSpace: 'pre-wrap',
-                          color: 'hsl(160 60% 70%)',
+                          color: 'var(--mk-code-fg)',
                         }}
                       >
                         {row.syntax}

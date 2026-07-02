@@ -5,12 +5,16 @@ export const config = { runtime: 'edge' }
 const MAX_TITLE_LENGTH = 110
 const MAX_TAG_LENGTH = 40
 
-const CONTROL_CHARS = new RegExp('[\\u0000-\\u001F\\u007F]', 'g')
-
-/** Clamp + sanitize untrusted query input for rendering. */
+/** Clamp + sanitize untrusted query input: drop control chars, cap length. */
 const sanitize = (value: string | null, maxLength: number, fallback: string): string => {
   if (!value) return fallback
-  const cleaned = value.replace(CONTROL_CHARS, '').trim()
+  const cleaned = [...value]
+    .filter((char) => {
+      const code = char.codePointAt(0) ?? 0
+      return code > 0x1f && code !== 0x7f
+    })
+    .join('')
+    .trim()
   if (!cleaned) return fallback
   return cleaned.length > maxLength ? `${cleaned.slice(0, maxLength - 1)}…` : cleaned
 }
