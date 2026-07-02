@@ -39,6 +39,11 @@ describe('stripHydrationArtifacts', () => {
     expect(result.html).toBe(clean)
     expect(result.removedScripts).toBe(0)
   })
+
+  it('refuses (loudly) to strip module scripts with inline bodies', () => {
+    const inline = '<script type="module">const s = "</scr" + "ipt>";</script>'
+    expect(() => stripHydrationArtifacts(inline)).toThrow(/non-empty body/)
+  })
 })
 
 describe('injectBeforeHeadEnd', () => {

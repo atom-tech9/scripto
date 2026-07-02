@@ -118,3 +118,6 @@ export const Component = SkinPage
 
 export const getStaticPaths = (): string[] =>
   SKIN_OPTIONS.map((option) => `skins/${option.value}`)
+
+// Branded 404 for unmatched slugs reached via client-side navigation.
+export { NotFoundPage as ErrorBoundary } from './NotFoundPage'

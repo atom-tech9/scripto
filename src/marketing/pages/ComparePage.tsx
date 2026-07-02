@@ -90,3 +90,6 @@ export const Component = ComparePage
 
 export const getStaticPaths = (): string[] =>
   COMPARISONS.map((comparison) => `vs/${comparison.slug}`)
+
+// Branded 404 for unmatched slugs reached via client-side navigation.
+export { NotFoundPage as ErrorBoundary } from './NotFoundPage'

@@ -5,30 +5,53 @@ export const config = { runtime: 'edge' }
 const MAX_TITLE_LENGTH = 110
 const MAX_TAG_LENGTH = 40
 
-/** Clamp + sanitize untrusted query input: drop control chars, cap length. */
+/** Bidi/RTL-override formatting chars — stripped to prevent visual spoofing. */
+const BIDI_CONTROLS = new Set([0x200e, 0x200f, 0x202a, 0x202b, 0x202c, 0x202d, 0x202e, 0x2066, 0x2067, 0x2068, 0x2069])
+
+/**
+ * Clamp + sanitize untrusted query input: drop C0/DEL and bidi controls, cap
+ * length. Works on codepoints so surrogate pairs are never split by the cut.
+ */
 const sanitize = (value: string | null, maxLength: number, fallback: string): string => {
   if (!value) return fallback
-  const cleaned = [...value]
-    .filter((char) => {
-      const code = char.codePointAt(0) ?? 0
-      return code > 0x1f && code !== 0x7f
-    })
-    .join('')
-    .trim()
+  const codepoints = [...value].filter((char) => {
+    const code = char.codePointAt(0) ?? 0
+    return code > 0x1f && code !== 0x7f && !BIDI_CONTROLS.has(code)
+  })
+  const cleaned = codepoints.join('').trim()
   if (!cleaned) return fallback
-  return cleaned.length > maxLength ? `${cleaned.slice(0, maxLength - 1)}…` : cleaned
+  if (codepoints.length <= maxLength) return cleaned
+  return `${codepoints.slice(0, maxLength - 1).join('').trimEnd()}…`
 }
+
+/** Output is a pure function of the query — cache aggressively at the edge. */
+const CACHE_HEADERS = {
+  'Cache-Control': 'public, max-age=86400, s-maxage=31536000, immutable',
+} as const
+
+const DEFAULT_TITLE = 'Markdown in. Pixel-perfect PDF out.'
 
 /**
  * Dynamic Open Graph card (1200×630) for every marketing page:
  * /api/og?title=…&tag=…&lang=ar
  */
 export default function handler(request: Request): ImageResponse {
-  const { searchParams } = new URL(request.url)
-  const title = sanitize(searchParams.get('title'), MAX_TITLE_LENGTH, 'Markdown in. Pixel-perfect PDF out.')
-  const tag = sanitize(searchParams.get('tag'), MAX_TAG_LENGTH, 'Markdown → PDF')
-  const isArabic = searchParams.get('lang') === 'ar'
+  let title = DEFAULT_TITLE
+  let tag = 'Markdown → PDF'
+  let isArabic = false
+  try {
+    const { searchParams } = new URL(request.url)
+    title = sanitize(searchParams.get('title'), MAX_TITLE_LENGTH, DEFAULT_TITLE)
+    tag = sanitize(searchParams.get('tag'), MAX_TAG_LENGTH, tag)
+    isArabic = searchParams.get('lang') === 'ar'
+    return renderCard(title, tag, isArabic)
+  } catch {
+    // Never 500 a link-unfurler: fall back to the branded default card.
+    return renderCard(DEFAULT_TITLE, 'Markdown → PDF', false)
+  }
+}
 
+function renderCard(title: string, tag: string, isArabic: boolean): ImageResponse {
   return new ImageResponse(
     (
       <div
@@ -103,6 +126,6 @@ export default function handler(request: Request): ImageResponse {
         </div>
       </div>
     ),
-    { width: 1200, height: 630 },
+    { width: 1200, height: 630, headers: CACHE_HEADERS },
   )
 }

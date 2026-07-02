@@ -27,3 +27,6 @@ export const getStaticPaths = (): string[] => [
   ...INFO_PAGES.map((page) => page.slug),
   CHEAT_SHEET_SLUG,
 ]
+
+// Branded 404 for unmatched slugs reached via client-side navigation.
+export { NotFoundPage as ErrorBoundary } from './NotFoundPage'

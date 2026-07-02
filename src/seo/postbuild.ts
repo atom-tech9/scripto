@@ -21,13 +21,23 @@ export interface StripResult {
  * Remove the framework hydration payload from a prerendered page:
  * `<script type="module">` tags and `<link rel="modulepreload">` hints.
  * Inline scripts (progressive enhancement, redirects) and JSON-LD survive.
+ *
+ * The regex assumes module scripts are external references with empty bodies
+ * (Vite's client build always emits them that way). If that ever changes, an
+ * inline `</script>` substring could truncate the match — so the invariant is
+ * asserted loudly instead of corrupting pages silently.
  */
 export const stripHydrationArtifacts = (html: string): StripResult => {
   let removedScripts = 0
   let removedPreloads = 0
   const withoutScripts = html.replace(
-    /[ \t]*<script\b[^>]*\btype="module"[^>]*>[\s\S]*?<\/script>\s*?\n?/g,
-    () => {
+    /[ \t]*<script\b[^>]*\btype="module"[^>]*>([\s\S]*?)<\/script>\s*?\n?/g,
+    (_match, body: string) => {
+      if (body.trim() !== '') {
+        throw new Error(
+          'stripHydrationArtifacts: module script with a non-empty body — refusing to strip (regex would be unsafe)',
+        )
+      }
       removedScripts += 1
       return ''
     },

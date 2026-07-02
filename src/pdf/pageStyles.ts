@@ -172,7 +172,13 @@ function marginBoxStyle(): string {
 }
 
 function cssString(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+  // Raw newlines are invalid inside CSS string tokens and corrupt the whole
+  // declaration; watermark text is settable from document frontmatter, so an
+  // imported file must not be able to break the page styles.
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/[\r\n]+/g, ' ')
 }
 
 function round(n: number): number {

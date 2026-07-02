@@ -126,3 +126,6 @@ export const Component = TemplatePage
 
 export const getStaticPaths = (): string[] =>
   TEMPLATES.map((template) => `templates/${template.id}`)
+
+// Branded 404 for unmatched slugs reached via client-side navigation.
+export { NotFoundPage as ErrorBoundary } from './NotFoundPage'

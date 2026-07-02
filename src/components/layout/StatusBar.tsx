@@ -48,7 +48,7 @@ export function StatusBar({ content, config, headingCount, onOpenStats }: Status
         <a
           href="https://atom.sa"
           target="_blank"
-          rel="noopener"
+          rel="noopener noreferrer"
           className="hidden items-center gap-1.5 border-s border-border ps-3 opacity-80 transition-opacity hover:opacity-100 md:flex"
           aria-label={`${t('statusbar.builtBy')} Atom`}
         >

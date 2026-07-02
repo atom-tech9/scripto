@@ -74,3 +74,6 @@ export function BlogPostPage() {
 export const Component = BlogPostPage
 
 export const getStaticPaths = (): string[] => BLOG_POSTS.map((post) => `blog/${post.slug}`)
+
+// Branded 404 for unmatched slugs reached via client-side navigation.
+export { NotFoundPage as ErrorBoundary } from './NotFoundPage'
