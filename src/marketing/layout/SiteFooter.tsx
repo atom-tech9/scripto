@@ -92,7 +92,7 @@ export function SiteFooter({ lang }: SiteFooterProps) {
           </div>
           {COLUMNS.map((column) => (
             <div key={column.heading}>
-              <h4>{chrome(column.heading, lang)}</h4>
+              <h3>{chrome(column.heading, lang)}</h3>
               <ul>
                 {column.links.map((link) => (
                   <li key={link.to}>

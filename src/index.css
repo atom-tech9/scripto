@@ -2,6 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Metric-matched fallbacks: fonts load async, and these keep text from
+   reflowing when the webfonts swap in (CLS ≈ 0). Metrics per next/font. */
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial');
+  size-adjust: 107.4%;
+  ascent-override: 90.44%;
+  descent-override: 22.52%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono Fallback';
+  src: local('Courier New');
+  size-adjust: 100.5%;
+  ascent-override: 102%;
+  descent-override: 30%;
+  line-gap-override: 0%;
+}
+
 @layer base {
   :root {
     --background: 220 33% 98%;
@@ -65,7 +85,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    font-family: Inter, 'Inter Fallback', ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     min-height: 100%;

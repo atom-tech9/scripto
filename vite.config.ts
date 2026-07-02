@@ -105,7 +105,9 @@ const ssgOptions: ViteReactSSGOptions = {
     // 2. Warm the landing → /app hop with prefetch hints.
     const appShellPath = path.join(dir, 'app', 'index.html')
     if (fs.existsSync(appShellPath)) {
-      const assets = extractAppAssets(fs.readFileSync(appShellPath, 'utf8'))
+      // Entry scripts come first in the extraction; a dozen hints is enough to
+      // warm the /app hop without competing with the landing page's own load.
+      const assets = extractAppAssets(fs.readFileSync(appShellPath, 'utf8')).slice(0, 12)
       const snippet = buildPrefetchSnippet(assets)
       for (const landing of ['index.html', path.join('ar', 'index.html')]) {
         const landingPath = path.join(dir, landing)

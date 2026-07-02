@@ -72,7 +72,7 @@ html.dark {
   overflow-x: clip;
   background-color: var(--mk-bg);
   color: var(--mk-fg);
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-family: Inter, 'Inter Fallback', ui-sans-serif, system-ui, sans-serif;
 }
 
 .mk-canvas {
@@ -277,6 +277,8 @@ html.dark {
 /* theme toggle: show the icon of the mode you would switch to */
 .mk-theme-toggle {
   padding-inline: 0.75rem;
+  min-inline-size: 2.75rem;
+  min-block-size: 2.75rem;
 }
 
 html.dark .mk-theme-toggle .tt-moon {
@@ -440,7 +442,7 @@ html:not(.dark) .mk-theme-toggle .tt-sun {
   background: hsl(224 42% 8%);
   box-shadow: var(--mk-mock-shadow);
   overflow: hidden;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'JetBrains Mono', 'JetBrains Mono Fallback', ui-monospace, monospace;
   font-size: clamp(0.6875rem, 1.15vw, 0.8125rem);
   line-height: 1.75;
   direction: ltr;
@@ -1008,7 +1010,7 @@ html.js .mk-reveal.in {
   }
 }
 
-.mk-footer h4 {
+.mk-footer h3 {
   font-size: 0.8125rem;
   font-weight: 650;
   text-transform: uppercase;
