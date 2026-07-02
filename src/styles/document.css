@@ -1,0 +1,1566 @@
+/*
+ * document.css — the canonical rendered-Markdown stylesheet.
+ *
+ * This exact stylesheet styles BOTH the on-screen preview and the paginated
+ * PDF output, which is what makes "the preview matches the PDF" true. All
+ * tunable values come from CSS custom properties set by the app from PdfConfig.
+ */
+
+.scripto-doc {
+  /* Defaults — overridden inline from PdfConfig */
+  --doc-font: 'Source Serif 4', Georgia, Cambria, serif;
+  --doc-size: 17px;
+  --doc-leading: 1.65;
+  --doc-accent: #6366f1;
+  --doc-fg: #1f2532;
+  --doc-muted: #5b6472;
+  --doc-rule: #e4e7ec;
+  --doc-surface: #f7f8fa;
+  --doc-quote: #4f46e5;
+
+  /* code theme tokens (default github-dark) */
+  --c-bg: #0d1117;
+  --c-fg: #e6edf3;
+  --c-comment: #8b949e;
+  --c-keyword: #ff7b72;
+  --c-string: #a5d6ff;
+  --c-number: #79c0ff;
+  --c-function: #d2a8ff;
+  --c-punct: #c9d1d9;
+  --c-property: #79c0ff;
+  --c-tag: #7ee787;
+  --c-operator: #ff7b72;
+  --c-line: rgba(255, 255, 255, 0.28);
+
+  font-family: var(--doc-font);
+  font-size: var(--doc-size);
+  line-height: var(--doc-leading);
+  color: var(--doc-fg);
+  font-feature-settings: 'kern', 'liga', 'onum';
+  word-wrap: break-word;
+}
+
+.dark .scripto-doc {
+  --doc-fg: #dfe5ee;
+  --doc-muted: #9aa4b2;
+  --doc-rule: #2a3243;
+  --doc-surface: #161c28;
+  --doc-quote: #a5b4fc;
+}
+
+/* ---------- Code themes ---------- */
+.scripto-doc[data-code-theme='github-light'] {
+  --c-bg: #f6f8fa;
+  --c-fg: #1f2328;
+  --c-comment: #6e7781;
+  --c-keyword: #cf222e;
+  --c-string: #0a3069;
+  --c-number: #0550ae;
+  --c-function: #8250df;
+  --c-punct: #24292f;
+  --c-property: #0550ae;
+  --c-tag: #116329;
+  --c-operator: #cf222e;
+  --c-line: rgba(0, 0, 0, 0.25);
+}
+.scripto-doc[data-code-theme='dracula'] {
+  --c-bg: #282a36;
+  --c-fg: #f8f8f2;
+  --c-comment: #6272a4;
+  --c-keyword: #ff79c6;
+  --c-string: #f1fa8c;
+  --c-number: #bd93f9;
+  --c-function: #50fa7b;
+  --c-punct: #f8f8f2;
+  --c-property: #8be9fd;
+  --c-tag: #ff79c6;
+  --c-operator: #ff79c6;
+  --c-line: rgba(255, 255, 255, 0.3);
+}
+.scripto-doc[data-code-theme='nord'] {
+  --c-bg: #2e3440;
+  --c-fg: #d8dee9;
+  --c-comment: #7b88a1;
+  --c-keyword: #81a1c1;
+  --c-string: #a3be8c;
+  --c-number: #b48ead;
+  --c-function: #88c0d0;
+  --c-punct: #eceff4;
+  --c-property: #8fbcbb;
+  --c-tag: #81a1c1;
+  --c-operator: #81a1c1;
+  --c-line: rgba(255, 255, 255, 0.28);
+}
+
+/* ---------- Flow & spacing ---------- */
+.scripto-doc > :first-child {
+  margin-top: 0;
+}
+.scripto-doc > :last-child {
+  margin-bottom: 0;
+}
+.scripto-doc p {
+  margin: 0 0 1em;
+  orphans: 3;
+  widows: 3;
+}
+.scripto-doc.hyphenate p,
+.scripto-doc.hyphenate li {
+  hyphens: auto;
+}
+
+/* ---------- Headings ---------- */
+.scripto-doc h1,
+.scripto-doc h2,
+.scripto-doc h3,
+.scripto-doc h4,
+.scripto-doc h5,
+.scripto-doc h6 {
+  font-family: Inter, var(--doc-font);
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  margin: 1.8em 0 0.6em;
+  break-after: avoid;
+  page-break-after: avoid;
+  color: var(--doc-fg);
+}
+.scripto-doc h1 {
+  font-size: 2.05em;
+  font-weight: 800;
+  margin-top: 0;
+  letter-spacing: -0.02em;
+  padding-bottom: 0.3em;
+  border-bottom: 2px solid var(--doc-rule);
+}
+.scripto-doc h2 {
+  font-size: 1.55em;
+  padding-bottom: 0.22em;
+  border-bottom: 1px solid var(--doc-rule);
+}
+.scripto-doc h3 {
+  font-size: 1.28em;
+}
+.scripto-doc h4 {
+  font-size: 1.1em;
+}
+.scripto-doc h5 {
+  font-size: 1em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--doc-muted);
+}
+.scripto-doc h6 {
+  font-size: 0.9em;
+  color: var(--doc-muted);
+}
+
+/* ---------- Auto-numbered headings (H1 = 1, H2 = 1.1, H3 = 1.1.1, …) ----------
+ * These CSS counters drive the live preview (one continuous flow). The PDF
+ * export can't use them — Paged.js re-creates this wrapper per page and doesn't
+ * carry the counter across fragments (a heading after a break shows `0.1`) — so
+ * `buildExportContent` bakes the numbers in as literal text and strips
+ * `data-numbered` from the export clone, meaning these rules never run there. */
+.scripto-doc[data-numbered] {
+  counter-reset: h1;
+}
+.scripto-doc[data-numbered] h1 {
+  counter-reset: h2;
+}
+.scripto-doc[data-numbered] h2 {
+  counter-reset: h3;
+}
+.scripto-doc[data-numbered] h3 {
+  counter-reset: h4;
+}
+.scripto-doc[data-numbered] h1::before {
+  counter-increment: h1;
+  content: counter(h1) '.\00a0\00a0';
+  color: var(--doc-accent);
+}
+.scripto-doc[data-numbered] h2::before {
+  counter-increment: h2;
+  content: counter(h1) '.' counter(h2) '\00a0\00a0';
+  color: var(--doc-accent);
+}
+.scripto-doc[data-numbered] h3::before {
+  counter-increment: h3;
+  content: counter(h1) '.' counter(h2) '.' counter(h3) '\00a0\00a0';
+  color: var(--doc-accent);
+}
+.scripto-doc[data-numbered] h4::before {
+  counter-increment: h4;
+  content: counter(h1) '.' counter(h2) '.' counter(h3) '.' counter(h4) '\00a0\00a0';
+  color: var(--doc-accent);
+}
+.scripto-doc[data-numbered] .footnotes h2::before,
+.scripto-doc[data-numbered] .pdf-toc h2::before {
+  content: none;
+}
+/* Baked heading numbers in the PDF export (buildExportContent) — match the
+   accent colour the live-preview CSS counters use. */
+.scripto-doc .heading-number {
+  color: var(--doc-accent);
+}
+
+/* ---------- Inline ---------- */
+.scripto-doc a {
+  color: var(--doc-accent);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--doc-accent) 35%, transparent);
+  transition: border-color 0.15s ease;
+}
+.scripto-doc a:hover {
+  border-bottom-color: var(--doc-accent);
+}
+.scripto-doc strong {
+  font-weight: 700;
+  color: var(--doc-fg);
+}
+.scripto-doc mark {
+  background: linear-gradient(transparent 55%, color-mix(in srgb, var(--doc-accent) 32%, transparent) 55%);
+  color: inherit;
+  padding: 0 0.05em;
+  border-radius: 2px;
+}
+.scripto-doc sub,
+.scripto-doc sup {
+  font-size: 0.72em;
+}
+.scripto-doc del {
+  color: var(--doc-muted);
+}
+.scripto-doc abbr {
+  cursor: help;
+}
+
+/* ---------- Inline code ---------- */
+.scripto-doc :not(pre) > code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.86em;
+  background: color-mix(in srgb, var(--doc-accent) 12%, var(--doc-surface));
+  color: var(--doc-fg);
+  padding: 0.12em 0.4em;
+  border-radius: 5px;
+  border: 1px solid var(--doc-rule);
+  word-break: break-word;
+}
+
+/* ---------- Code blocks ---------- */
+.scripto-doc .code-block {
+  margin: 1.2em 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--c-fg) 14%, transparent);
+  background: var(--c-bg);
+  break-inside: avoid;
+  page-break-inside: avoid;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+.scripto-doc .code-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4em 0.85em;
+  background: color-mix(in srgb, var(--c-fg) 8%, var(--c-bg));
+  border-bottom: 1px solid color-mix(in srgb, var(--c-fg) 12%, transparent);
+}
+.scripto-doc .code-block__lang {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--c-fg) 70%, transparent);
+}
+.scripto-doc .code-block__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font-size: 0.72rem;
+  font-family: Inter, sans-serif;
+  color: color-mix(in srgb, var(--c-fg) 70%, transparent);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--c-fg) 22%, transparent);
+  border-radius: 6px;
+  padding: 0.18em 0.5em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.scripto-doc .code-block__copy:hover {
+  color: var(--c-fg);
+  border-color: color-mix(in srgb, var(--c-fg) 45%, transparent);
+}
+.scripto-doc pre {
+  margin: 0;
+  padding: 0.9em 0;
+  overflow-x: auto;
+  background: var(--c-bg);
+  color: var(--c-fg);
+  font-size: 0.82em;
+  line-height: 1.65;
+  tab-size: 2;
+}
+.scripto-doc pre code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  background: none;
+  border: none;
+  padding: 0;
+  display: block;
+}
+.scripto-doc .code-line {
+  display: block;
+  padding: 0 1.1em;
+  border-left: 3px solid transparent;
+}
+.scripto-doc .code-line.highlight-line {
+  background: color-mix(in srgb, var(--doc-accent) 16%, transparent);
+  border-left-color: var(--doc-accent);
+}
+.scripto-doc .line-number::before {
+  content: attr(line);
+  display: inline-block;
+  width: 1.4em;
+  margin-right: 1.1em;
+  text-align: right;
+  color: var(--c-line);
+  user-select: none;
+}
+
+/* Prism tokens (driven by the theme variables above) */
+.scripto-doc .token.comment,
+.scripto-doc .token.prolog,
+.scripto-doc .token.doctype,
+.scripto-doc .token.cdata {
+  color: var(--c-comment);
+  font-style: italic;
+}
+.scripto-doc .token.punctuation {
+  color: var(--c-punct);
+}
+.scripto-doc .token.keyword,
+.scripto-doc .token.rule,
+.scripto-doc .token.important,
+.scripto-doc .token.atrule {
+  color: var(--c-keyword);
+}
+.scripto-doc .token.string,
+.scripto-doc .token.char,
+.scripto-doc .token.attr-value,
+.scripto-doc .token.regex {
+  color: var(--c-string);
+}
+.scripto-doc .token.number,
+.scripto-doc .token.boolean,
+.scripto-doc .token.constant,
+.scripto-doc .token.symbol {
+  color: var(--c-number);
+}
+.scripto-doc .token.function,
+.scripto-doc .token.class-name {
+  color: var(--c-function);
+}
+.scripto-doc .token.property,
+.scripto-doc .token.attr-name,
+.scripto-doc .token.variable {
+  color: var(--c-property);
+}
+.scripto-doc .token.tag,
+.scripto-doc .token.selector,
+.scripto-doc .token.builtin {
+  color: var(--c-tag);
+}
+.scripto-doc .token.operator,
+.scripto-doc .token.entity,
+.scripto-doc .token.url {
+  color: var(--c-operator);
+}
+.scripto-doc .token.bold {
+  font-weight: 700;
+}
+.scripto-doc .token.italic {
+  font-style: italic;
+}
+
+/* ---------- Blockquotes ---------- */
+.scripto-doc blockquote {
+  margin: 1.3em 0;
+  padding: 0.4em 1.2em;
+  border-left: 4px solid var(--doc-quote);
+  background: color-mix(in srgb, var(--doc-quote) 7%, transparent);
+  color: var(--doc-muted);
+  border-radius: 0 8px 8px 0;
+  break-inside: avoid;
+}
+.scripto-doc blockquote p {
+  margin-bottom: 0.5em;
+}
+.scripto-doc blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- Lists ---------- */
+.scripto-doc ul,
+.scripto-doc ol {
+  margin: 0 0 1em;
+  padding-inline-start: 1.6em;
+}
+/* Tailwind's preflight resets list-style globally — restore real markers. */
+.scripto-doc ul {
+  list-style: disc outside;
+}
+.scripto-doc ol {
+  list-style: decimal outside;
+}
+.scripto-doc ul ul {
+  list-style: circle outside;
+}
+.scripto-doc ul ul ul {
+  list-style: square outside;
+}
+.scripto-doc ol ol {
+  list-style: lower-alpha outside;
+}
+.scripto-doc ol ol ol {
+  list-style: lower-roman outside;
+}
+.scripto-doc li {
+  margin: 0.3em 0;
+  padding-inline-start: 0.2em;
+}
+.scripto-doc li::marker {
+  color: var(--doc-accent);
+}
+.scripto-doc li > ul,
+.scripto-doc li > ol {
+  margin: 0.3em 0;
+}
+/* Loose lists wrap item text in <p>; keep that tight. */
+.scripto-doc li > p {
+  margin: 0 0 0.4em;
+}
+.scripto-doc li > p:last-child {
+  margin-bottom: 0;
+}
+.scripto-doc ul.contains-task-list {
+  list-style: none;
+  padding-inline-start: 0.2em;
+}
+.scripto-doc .task-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55em;
+}
+.scripto-doc .task-list-item::marker {
+  content: '';
+}
+.scripto-doc .task-list-item input[type='checkbox'] {
+  margin-top: 0.34em;
+  width: 1.05em;
+  height: 1.05em;
+  accent-color: var(--doc-accent);
+  flex: none;
+}
+
+/* ---------- Horizontal rule ---------- */
+.scripto-doc hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--doc-rule) 20%, var(--doc-rule) 80%, transparent);
+  margin: 2.2em 0;
+}
+
+/* ---------- Tables ---------- */
+.scripto-doc .table-wrap {
+  margin: 1.4em 0;
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--doc-rule);
+}
+.scripto-doc table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92em;
+  break-inside: auto;
+}
+.scripto-doc thead {
+  display: table-header-group; /* repeat header on each printed page */
+}
+.scripto-doc tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.scripto-doc th,
+.scripto-doc td {
+  padding: 0.55em 0.85em;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--doc-rule);
+}
+.scripto-doc th {
+  font-family: Inter, sans-serif;
+  font-weight: 600;
+  font-size: 0.92em;
+  background: color-mix(in srgb, var(--doc-accent) 9%, var(--doc-surface));
+  color: var(--doc-fg);
+  border-bottom: 2px solid color-mix(in srgb, var(--doc-accent) 30%, var(--doc-rule));
+}
+.scripto-doc[data-table-style='striped'] tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--doc-fg) 3.5%, transparent);
+}
+.scripto-doc[data-table-style='minimal'] .table-wrap {
+  border: none;
+}
+.scripto-doc[data-table-style='minimal'] th,
+.scripto-doc[data-table-style='minimal'] td {
+  border-bottom: 1px solid var(--doc-rule);
+  padding-left: 0.2em;
+}
+.scripto-doc[data-table-style='minimal'] th {
+  background: none;
+}
+.scripto-doc[data-table-style='boxed'] table,
+.scripto-doc[data-table-style='boxed'] th,
+.scripto-doc[data-table-style='boxed'] td {
+  border: 1px solid var(--doc-rule);
+}
+.scripto-doc[data-table-style='boxed'] .table-wrap {
+  border: none;
+}
+
+/* ===========================================================================
+ * Document skins — distinct structural personalities. `modern` is the base
+ * defined above; the rest override headings, tables, quotes, and rules.
+ * ======================================================================== */
+
+/* —— Classic: centered titles, small-caps, ruled tables, ornament rules —— */
+.scripto-doc[data-skin='classic'] h1 {
+  text-align: center;
+  border: none;
+  padding-bottom: 0;
+}
+.scripto-doc[data-skin='classic'] h1::after {
+  content: '';
+  display: block;
+  width: 64px;
+  height: 2px;
+  margin: 0.5em auto 0;
+  background: var(--doc-accent);
+}
+.scripto-doc[data-skin='classic'] h2 {
+  border: none;
+  font-variant: small-caps;
+  letter-spacing: 0.02em;
+}
+.scripto-doc[data-skin='classic'] h3 {
+  font-style: italic;
+}
+.scripto-doc[data-skin='classic'] blockquote {
+  border-left: none;
+  border-top: 1px solid var(--doc-rule);
+  border-bottom: 1px solid var(--doc-rule);
+  border-radius: 0;
+  background: none;
+  font-style: italic;
+  text-align: center;
+  padding: 1em 2em;
+}
+.scripto-doc[data-skin='classic'] table,
+.scripto-doc[data-skin='classic'] th,
+.scripto-doc[data-skin='classic'] td {
+  border: 1px solid var(--doc-rule);
+}
+.scripto-doc[data-skin='classic'] th {
+  background: none;
+}
+.scripto-doc[data-skin='classic'] hr {
+  height: auto;
+  background: none;
+  text-align: center;
+}
+.scripto-doc[data-skin='classic'] hr::after {
+  content: '❖';
+  color: var(--doc-accent);
+  font-size: 0.9em;
+}
+
+/* —— Editorial: magazine headlines, drop cap, quotation flourish —— */
+.scripto-doc[data-skin='editorial'] h1 {
+  font-size: 2.7em;
+  line-height: 1.04;
+  border: none;
+  letter-spacing: -0.03em;
+}
+.scripto-doc[data-skin='editorial'] h2 {
+  border: none;
+  color: var(--doc-accent);
+  font-size: 1.7em;
+}
+.scripto-doc[data-skin='editorial'] h2::before {
+  content: '';
+  display: block;
+  width: 42px;
+  height: 3px;
+  margin-bottom: 0.3em;
+  background: var(--doc-accent);
+}
+.scripto-doc[data-skin='editorial'] > p:first-of-type::first-letter {
+  font-family: Inter, sans-serif;
+  font-weight: 800;
+  font-size: 3.2em;
+  line-height: 0.78;
+  float: left;
+  margin: 0.05em 0.08em 0 0;
+  color: var(--doc-accent);
+}
+.scripto-doc[data-skin='editorial'] blockquote {
+  border: none;
+  background: none;
+  border-radius: 0;
+  text-align: center;
+  font-size: 1.3em;
+  font-style: italic;
+  color: var(--doc-fg);
+  padding: 0.4em 1.5em;
+}
+.scripto-doc[data-skin='editorial'] blockquote::before {
+  content: '“';
+  display: block;
+  font-size: 2.4em;
+  line-height: 0.4;
+  color: var(--doc-accent);
+}
+.scripto-doc[data-skin='editorial'] th {
+  background: none;
+  border-bottom: 2px solid var(--doc-accent);
+  text-transform: uppercase;
+  font-size: 0.76em;
+  letter-spacing: 0.07em;
+}
+
+/* —— Technical: accent side-bars, square corners, filled table headers —— */
+.scripto-doc[data-skin='technical'] h1,
+.scripto-doc[data-skin='technical'] h2,
+.scripto-doc[data-skin='technical'] h3 {
+  border-bottom: none;
+  padding: 0 0 0 0.6em;
+  border-left: 4px solid var(--doc-accent);
+}
+.scripto-doc[data-skin='technical'] .code-block,
+.scripto-doc[data-skin='technical'] pre,
+.scripto-doc[data-skin='technical'] .callout,
+.scripto-doc[data-skin='technical'] blockquote,
+.scripto-doc[data-skin='technical'] .table-wrap,
+.scripto-doc[data-skin='technical'] img {
+  border-radius: 0;
+}
+.scripto-doc[data-skin='technical'] table,
+.scripto-doc[data-skin='technical'] th,
+.scripto-doc[data-skin='technical'] td {
+  border: 1px solid var(--doc-rule);
+}
+.scripto-doc[data-skin='technical'] th {
+  background: color-mix(in srgb, var(--doc-accent) 14%, var(--doc-surface));
+}
+
+/* —— Compact: dense spacing for one-pagers and reference sheets —— */
+.scripto-doc[data-skin='compact'] h1 {
+  font-size: 1.7em;
+  margin: 0 0 0.4em;
+  padding-bottom: 0.15em;
+}
+.scripto-doc[data-skin='compact'] h2 {
+  font-size: 1.3em;
+  margin: 1em 0 0.3em;
+  padding-bottom: 0.08em;
+}
+.scripto-doc[data-skin='compact'] h3 {
+  font-size: 1.08em;
+  margin: 0.8em 0 0.2em;
+}
+.scripto-doc[data-skin='compact'] p,
+.scripto-doc[data-skin='compact'] ul,
+.scripto-doc[data-skin='compact'] ol {
+  margin: 0 0 0.55em;
+}
+.scripto-doc[data-skin='compact'] li {
+  margin: 0.12em 0;
+}
+.scripto-doc[data-skin='compact'] th,
+.scripto-doc[data-skin='compact'] td {
+  padding: 0.32em 0.6em;
+}
+.scripto-doc[data-skin='compact'] .code-block,
+.scripto-doc[data-skin='compact'] blockquote,
+.scripto-doc[data-skin='compact'] .callout {
+  margin: 0.7em 0;
+}
+
+/* —— Manuscript: centered titles, first-line indents, typewriter flow —— */
+.scripto-doc[data-skin='manuscript'] h1 {
+  text-align: center;
+  border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 1.7em;
+}
+.scripto-doc[data-skin='manuscript'] h2 {
+  text-align: center;
+  border: none;
+  font-weight: 400;
+  font-style: italic;
+  font-size: 1.3em;
+}
+.scripto-doc[data-skin='manuscript'] h3 {
+  text-align: center;
+  font-size: 1.1em;
+}
+.scripto-doc[data-skin='manuscript'] p {
+  margin: 0;
+  text-indent: 2em;
+}
+.scripto-doc[data-skin='manuscript'] h1 + p,
+.scripto-doc[data-skin='manuscript'] h2 + p,
+.scripto-doc[data-skin='manuscript'] h3 + p,
+.scripto-doc[data-skin='manuscript'] hr + p,
+.scripto-doc[data-skin='manuscript'] blockquote p:first-child,
+.scripto-doc[data-skin='manuscript'] li p {
+  text-indent: 0;
+}
+.scripto-doc[data-skin='manuscript'] blockquote {
+  border: none;
+  background: none;
+  font-style: italic;
+}
+.scripto-doc[data-skin='manuscript'] hr {
+  height: auto;
+  background: none;
+  text-align: center;
+}
+.scripto-doc[data-skin='manuscript'] hr::after {
+  content: '* * *';
+  letter-spacing: 0.6em;
+  color: var(--doc-muted);
+}
+
+/* —— Blueprint: monospaced uppercase headings, accent grid, dashed rules —— */
+.scripto-doc[data-skin='blueprint'] h1,
+.scripto-doc[data-skin='blueprint'] h2,
+.scripto-doc[data-skin='blueprint'] h3,
+.scripto-doc[data-skin='blueprint'] h4 {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: none;
+}
+.scripto-doc[data-skin='blueprint'] h1 {
+  font-size: 1.6em;
+  padding-bottom: 0.2em;
+  border-bottom: 3px double var(--doc-accent);
+}
+.scripto-doc[data-skin='blueprint'] h2 {
+  color: var(--doc-accent);
+  font-size: 1.25em;
+}
+.scripto-doc[data-skin='blueprint'] h2::before {
+  content: '// ';
+  opacity: 0.55;
+}
+.scripto-doc[data-skin='blueprint'] table,
+.scripto-doc[data-skin='blueprint'] th,
+.scripto-doc[data-skin='blueprint'] td {
+  border: 1px solid color-mix(in srgb, var(--doc-accent) 55%, var(--doc-rule));
+}
+.scripto-doc[data-skin='blueprint'] th {
+  background: color-mix(in srgb, var(--doc-accent) 12%, transparent);
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  font-size: 0.78em;
+  letter-spacing: 0.05em;
+}
+.scripto-doc[data-skin='blueprint'] .code-block,
+.scripto-doc[data-skin='blueprint'] .callout,
+.scripto-doc[data-skin='blueprint'] .table-wrap,
+.scripto-doc[data-skin='blueprint'] img {
+  border-radius: 0;
+}
+.scripto-doc[data-skin='blueprint'] blockquote {
+  border-radius: 0;
+  border-left: 3px dashed var(--doc-accent);
+}
+.scripto-doc[data-skin='blueprint'] hr {
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--doc-accent) 0 8px,
+    transparent 8px 16px
+  );
+}
+
+/* —— Corporate: accent-underlined H1, filled table headers, card tables —— */
+.scripto-doc[data-skin='corporate'] h1 {
+  border: none;
+  border-bottom: 4px solid var(--doc-accent);
+  padding-bottom: 0.22em;
+}
+.scripto-doc[data-skin='corporate'] h2 {
+  border: none;
+  color: var(--doc-accent);
+}
+.scripto-doc[data-skin='corporate'] h2::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 3px;
+  margin-top: 0.25em;
+  background: var(--doc-accent);
+}
+.scripto-doc[data-skin='corporate'] .table-wrap {
+  border: none;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+.scripto-doc[data-skin='corporate'] th {
+  background: var(--doc-accent);
+  color: #fff;
+  border-bottom: none;
+}
+.scripto-doc[data-skin='corporate'] blockquote {
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--doc-accent) 7%, transparent);
+}
+
+/* —— Brutalist: heavy borders, inverse title, hard offset shadows —— */
+.scripto-doc[data-skin='brutalist'] h1,
+.scripto-doc[data-skin='brutalist'] h2,
+.scripto-doc[data-skin='brutalist'] h3 {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  text-transform: uppercase;
+  border: none;
+  letter-spacing: -0.01em;
+}
+.scripto-doc[data-skin='brutalist'] h1 {
+  display: table;
+  background: var(--doc-fg);
+  color: var(--doc-surface);
+  padding: 0.15em 0.4em;
+}
+.scripto-doc[data-skin='brutalist'] h2 {
+  border-bottom: 3px solid var(--doc-fg);
+  padding-bottom: 0.15em;
+}
+.scripto-doc[data-skin='brutalist'] table,
+.scripto-doc[data-skin='brutalist'] th,
+.scripto-doc[data-skin='brutalist'] td {
+  border: 2px solid var(--doc-fg);
+}
+.scripto-doc[data-skin='brutalist'] th {
+  background: var(--doc-accent);
+  color: #fff;
+}
+.scripto-doc[data-skin='brutalist'] .table-wrap,
+.scripto-doc[data-skin='brutalist'] img {
+  border-radius: 0;
+}
+.scripto-doc[data-skin='brutalist'] .code-block,
+.scripto-doc[data-skin='brutalist'] .callout {
+  border-radius: 0;
+  border: 2px solid var(--doc-fg);
+  box-shadow: 4px 4px 0 var(--doc-fg);
+}
+.scripto-doc[data-skin='brutalist'] blockquote {
+  border-radius: 0;
+  border: 2px solid var(--doc-fg);
+  border-left-width: 6px;
+  background: none;
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--doc-accent) 70%, transparent);
+}
+.scripto-doc[data-skin='brutalist'] hr {
+  height: 3px;
+  background: var(--doc-fg);
+}
+
+/* —— Notebook: highlighter titles, pencil bullets, dashed rules —— */
+.scripto-doc[data-skin='notebook'] h1 {
+  border: none;
+  display: inline;
+  padding: 0 0.1em;
+  background: linear-gradient(
+    transparent 58%,
+    color-mix(in srgb, var(--doc-accent) 38%, transparent) 58%
+  );
+}
+.scripto-doc[data-skin='notebook'] h2 {
+  border: none;
+}
+.scripto-doc[data-skin='notebook'] h2::before {
+  content: '✎ ';
+  color: var(--doc-accent);
+}
+.scripto-doc[data-skin='notebook'] blockquote {
+  border-left: 3px solid var(--doc-accent);
+  border-radius: 0 8px 8px 0;
+  background: color-mix(in srgb, var(--doc-accent) 6%, transparent);
+}
+.scripto-doc[data-skin='notebook'] th {
+  background: color-mix(in srgb, var(--doc-accent) 10%, var(--doc-surface));
+}
+.scripto-doc[data-skin='notebook'] hr {
+  height: 0;
+  background: none;
+  border-top: 2px dashed var(--doc-rule);
+}
+
+/* ===========================================================================
+ * RTL / bidirectional (Arabic, Hebrew, …)
+ * `dir="auto"` lets the browser align each block; `dir="rtl"` additionally
+ * mirrors the chrome (lists, quotes, side-bars). Code and math stay LTR.
+ * ======================================================================== */
+.scripto-doc pre,
+.scripto-doc :not(pre) > code,
+.scripto-doc .katex,
+.scripto-doc .katex-display,
+.scripto-doc .mermaid-figure {
+  direction: ltr;
+}
+.scripto-doc pre,
+.scripto-doc .katex-display {
+  text-align: left;
+}
+
+.scripto-doc[dir='rtl'] {
+  text-align: right;
+}
+.scripto-doc[dir='rtl'] ul,
+.scripto-doc[dir='rtl'] ol {
+  padding-left: 0;
+  padding-right: 1.6em;
+}
+.scripto-doc[dir='rtl'] blockquote {
+  border-left: none;
+  border-right: 4px solid var(--doc-quote);
+  border-radius: 8px 0 0 8px;
+}
+.scripto-doc[dir='rtl'] th,
+.scripto-doc[dir='rtl'] td {
+  text-align: right;
+}
+.scripto-doc[dir='rtl'] dd {
+  margin-left: 0;
+  margin-right: 1.2em;
+}
+.scripto-doc[dir='rtl'] .footnotes {
+  text-align: right;
+}
+.scripto-doc[dir='rtl'][data-skin='technical'] h1,
+.scripto-doc[dir='rtl'][data-skin='technical'] h2,
+.scripto-doc[dir='rtl'][data-skin='technical'] h3 {
+  border-left: none;
+  padding-left: 0;
+  border-right: 4px solid var(--doc-accent);
+  padding-right: 0.6em;
+}
+.scripto-doc[dir='rtl'][data-skin='notebook'] blockquote {
+  border-right: 3px solid var(--doc-accent);
+}
+.scripto-doc[dir='rtl'][data-skin='brutalist'] blockquote {
+  border-left-width: 2px;
+  border-right-width: 6px;
+}
+.scripto-doc[dir='rtl'][data-skin='editorial'] > p:first-of-type::first-letter {
+  float: right;
+  margin: 0.05em 0 0 0.08em;
+}
+
+/* —— Résumé: single column, ATS-friendly, tight sections, accent rules —— */
+.scripto-doc[data-skin='resume'] h1 {
+  border: none;
+  font-size: 2em;
+  text-align: left;
+  margin-bottom: 0.1em;
+  letter-spacing: -0.01em;
+}
+.scripto-doc[data-skin='resume'] h2 {
+  border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 1em;
+  color: var(--doc-accent);
+  border-bottom: 1.5px solid var(--doc-rule);
+  padding-bottom: 0.15em;
+  margin: 1.1em 0 0.4em;
+}
+.scripto-doc[data-skin='resume'] h3 {
+  font-size: 0.98em;
+  margin: 0.6em 0 0.1em;
+}
+.scripto-doc[data-skin='resume'] p {
+  margin: 0.2em 0 0.5em;
+}
+.scripto-doc[data-skin='resume'] ul,
+.scripto-doc[data-skin='resume'] ol {
+  margin: 0.2em 0 0.6em;
+}
+.scripto-doc[data-skin='resume'] li {
+  margin: 0.12em 0;
+}
+.scripto-doc[data-skin='resume'] blockquote {
+  border-left: 2px solid var(--doc-rule);
+  background: none;
+  border-radius: 0;
+  font-style: normal;
+  padding: 0.1em 0 0.1em 0.9em;
+}
+.scripto-doc[data-skin='resume'] hr {
+  height: 0;
+  background: none;
+  border-top: 1px solid var(--doc-rule);
+  margin: 0.8em 0;
+}
+
+/* —— Swiss: international typographic, bold start-aligned heads, thick rules —— */
+.scripto-doc[data-skin='swiss'] h1,
+.scripto-doc[data-skin='swiss'] h2,
+.scripto-doc[data-skin='swiss'] h3 {
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 800;
+  text-align: start;
+  letter-spacing: -0.02em;
+  border: none;
+}
+.scripto-doc[data-skin='swiss'] h1 {
+  font-size: 2.3em;
+}
+.scripto-doc[data-skin='swiss'] h2 {
+  padding-bottom: 0.18em;
+  border-bottom: 4px solid var(--doc-accent);
+}
+.scripto-doc[data-skin='swiss'] table {
+  border-top: 3px solid var(--doc-fg);
+  border-bottom: 3px solid var(--doc-fg);
+}
+.scripto-doc[data-skin='swiss'] th,
+.scripto-doc[data-skin='swiss'] td {
+  border-left: none;
+  border-right: none;
+}
+.scripto-doc[data-skin='swiss'] th {
+  background: none;
+  border-bottom: 2px solid var(--doc-fg);
+}
+.scripto-doc[data-skin='swiss'] .table-wrap {
+  border: none;
+  border-radius: 0;
+}
+.scripto-doc[data-skin='swiss'] blockquote {
+  border-radius: 0;
+  border-inline-start: 4px solid var(--doc-accent);
+  background: none;
+}
+
+/* —— Terminal: mono everything, dark surface, green accent, square —— */
+.scripto-doc[data-skin='terminal'] {
+  --doc-surface: #0b0f0a;
+  --doc-fg: #d4f7d4;
+  --doc-rule: #1f3a22;
+  --doc-muted: #6fa873;
+  --doc-accent: #22c55e;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.scripto-doc[data-skin='terminal'] h1,
+.scripto-doc[data-skin='terminal'] h2,
+.scripto-doc[data-skin='terminal'] h3,
+.scripto-doc[data-skin='terminal'] p,
+.scripto-doc[data-skin='terminal'] li,
+.scripto-doc[data-skin='terminal'] th,
+.scripto-doc[data-skin='terminal'] td {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.scripto-doc[data-skin='terminal'] h1,
+.scripto-doc[data-skin='terminal'] h2,
+.scripto-doc[data-skin='terminal'] h3 {
+  color: var(--doc-accent);
+  border: none;
+  letter-spacing: 0;
+}
+.scripto-doc[data-skin='terminal'] h2::before {
+  content: '> ';
+  color: var(--doc-accent);
+}
+.scripto-doc[data-skin='terminal'] .code-block,
+.scripto-doc[data-skin='terminal'] .callout,
+.scripto-doc[data-skin='terminal'] .table-wrap,
+.scripto-doc[data-skin='terminal'] blockquote,
+.scripto-doc[data-skin='terminal'] img {
+  border-radius: 0;
+}
+.scripto-doc[data-skin='terminal'] th,
+.scripto-doc[data-skin='terminal'] td {
+  border-bottom: 1px solid var(--doc-rule);
+}
+.scripto-doc[data-skin='terminal'] th {
+  background: color-mix(in srgb, var(--doc-accent) 16%, var(--doc-surface));
+}
+.scripto-doc[data-skin='terminal'] blockquote {
+  border-inline-start: 3px solid var(--doc-accent);
+  background: color-mix(in srgb, var(--doc-accent) 8%, transparent);
+}
+
+/* —— Newsprint: newspaper serif, condensed heads, all-caps kicker —— */
+.scripto-doc[data-skin='newsprint'] {
+  --doc-font: Georgia, 'Times New Roman', Times, serif;
+}
+.scripto-doc[data-skin='newsprint'] h1,
+.scripto-doc[data-skin='newsprint'] h2,
+.scripto-doc[data-skin='newsprint'] h3 {
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.scripto-doc[data-skin='newsprint'] h1 {
+  border: none;
+  font-size: 2.4em;
+  line-height: 1.06;
+}
+.scripto-doc[data-skin='newsprint'] h1::before {
+  content: 'DISPATCH';
+  display: block;
+  font-size: 0.32em;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--doc-muted);
+  margin-bottom: 0.4em;
+}
+.scripto-doc[data-skin='newsprint'] h2 {
+  border-bottom: 1px solid var(--doc-rule);
+}
+.scripto-doc[data-skin='newsprint'] blockquote {
+  border-radius: 0;
+  background: none;
+  border-inline-start: 1px solid var(--doc-rule);
+  border-inline-end: 1px solid var(--doc-rule);
+  font-style: italic;
+  text-align: center;
+}
+.scripto-doc[data-skin='newsprint'] th {
+  background: none;
+  border-bottom: 2px solid var(--doc-fg);
+}
+
+/* —— Elegant: high-contrast serif, letter-spaced caps H1, hairlines —— */
+.scripto-doc[data-skin='elegant'] {
+  --doc-leading: 1.8;
+  --doc-font: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+}
+.scripto-doc[data-skin='elegant'] h1 {
+  border: none;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 400;
+  font-size: 1.9em;
+}
+.scripto-doc[data-skin='elegant'] h1::after {
+  content: '';
+  display: block;
+  width: 56px;
+  height: 1px;
+  margin: 0.6em auto 0;
+  background: var(--doc-accent);
+}
+.scripto-doc[data-skin='elegant'] h2 {
+  border: none;
+  border-bottom: 1px solid var(--doc-rule);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.scripto-doc[data-skin='elegant'] h3 {
+  font-style: italic;
+  font-weight: 500;
+}
+.scripto-doc[data-skin='elegant'] blockquote {
+  border-radius: 0;
+  border-inline-start: 1px solid var(--doc-accent);
+  background: none;
+  font-style: italic;
+}
+.scripto-doc[data-skin='elegant'] th,
+.scripto-doc[data-skin='elegant'] td {
+  border-bottom: 1px solid var(--doc-rule);
+}
+.scripto-doc[data-skin='elegant'] th {
+  background: none;
+  font-weight: 600;
+}
+
+/* —— Playful: rounded, pill H2, friendly tables —— */
+.scripto-doc[data-skin='playful'] h1 {
+  border: none;
+  font-weight: 800;
+}
+.scripto-doc[data-skin='playful'] h2 {
+  border: none;
+  display: inline-block;
+  background: var(--doc-accent);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.15em 0.6em;
+  font-size: 1.3em;
+}
+.scripto-doc[data-skin='playful'] h3 {
+  color: var(--doc-accent);
+}
+.scripto-doc[data-skin='playful'] blockquote {
+  border-radius: 14px;
+  border-inline-start: 5px solid var(--doc-accent);
+  background: color-mix(in srgb, var(--doc-accent) 10%, transparent);
+}
+.scripto-doc[data-skin='playful'] .table-wrap {
+  border: none;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+}
+.scripto-doc[data-skin='playful'] th {
+  background: color-mix(in srgb, var(--doc-accent) 16%, var(--doc-surface));
+}
+.scripto-doc[data-skin='playful'] .code-block,
+.scripto-doc[data-skin='playful'] .callout {
+  border-radius: 14px;
+}
+
+/* —— Dark: dark document surface even in light UI; keep legible —— */
+.scripto-doc[data-skin='dark'] {
+  --doc-surface: #161c28;
+  --doc-fg: #e6ebf3;
+  --doc-rule: #2e3850;
+  --doc-muted: #97a3b8;
+}
+.scripto-doc[data-skin='dark'] h1 {
+  border-bottom-color: var(--doc-rule);
+}
+.scripto-doc[data-skin='dark'] h2 {
+  border-bottom-color: var(--doc-rule);
+}
+.scripto-doc[data-skin='dark'] blockquote {
+  background: color-mix(in srgb, var(--doc-accent) 14%, var(--doc-surface));
+  color: var(--doc-fg);
+}
+.scripto-doc[data-skin='dark'] th {
+  background: color-mix(in srgb, var(--doc-accent) 18%, var(--doc-surface));
+  color: var(--doc-fg);
+}
+.scripto-doc[data-skin='dark'] th,
+.scripto-doc[data-skin='dark'] td {
+  border-bottom: 1px solid var(--doc-rule);
+}
+.scripto-doc[data-skin='dark'] .table-wrap {
+  border-color: var(--doc-rule);
+}
+
+/* —— Ledger: financial, tabular numerals, fully ruled, numeric end-aligned —— */
+.scripto-doc[data-skin='ledger'] {
+  font-variant-numeric: tabular-nums;
+}
+.scripto-doc[data-skin='ledger'] h1,
+.scripto-doc[data-skin='ledger'] h2,
+.scripto-doc[data-skin='ledger'] h3 {
+  font-family: Inter, system-ui, sans-serif;
+  border: none;
+}
+.scripto-doc[data-skin='ledger'] h2 {
+  border-bottom: 2px solid var(--doc-rule);
+  padding-bottom: 0.18em;
+}
+.scripto-doc[data-skin='ledger'] table {
+  font-variant-numeric: tabular-nums;
+}
+.scripto-doc[data-skin='ledger'] table,
+.scripto-doc[data-skin='ledger'] th,
+.scripto-doc[data-skin='ledger'] td {
+  border: 1px solid var(--doc-rule);
+}
+.scripto-doc[data-skin='ledger'] th {
+  background: color-mix(in srgb, var(--doc-accent) 10%, var(--doc-surface));
+}
+.scripto-doc[data-skin='ledger'] td + td,
+.scripto-doc[data-skin='ledger'] th + th {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.scripto-doc[data-skin='ledger'] .table-wrap {
+  border: none;
+  border-radius: 0;
+}
+
+/* —— Zen: ultra-minimal, no heading rules, centered H1, whitespace —— */
+.scripto-doc[data-skin='zen'] {
+  --doc-leading: 1.9;
+}
+.scripto-doc[data-skin='zen'] h1 {
+  border: none;
+  text-align: center;
+  font-weight: 600;
+  margin-bottom: 1.2em;
+}
+.scripto-doc[data-skin='zen'] h2,
+.scripto-doc[data-skin='zen'] h3 {
+  border: none;
+  font-weight: 600;
+  margin-top: 2.2em;
+}
+.scripto-doc[data-skin='zen'] blockquote {
+  border: none;
+  background: none;
+  border-radius: 0;
+  text-align: center;
+  font-style: italic;
+}
+.scripto-doc[data-skin='zen'] table,
+.scripto-doc[data-skin='zen'] th,
+.scripto-doc[data-skin='zen'] td {
+  border: none;
+}
+.scripto-doc[data-skin='zen'] th {
+  background: none;
+  border-bottom: 1px solid var(--doc-rule);
+}
+.scripto-doc[data-skin='zen'] .table-wrap {
+  border: none;
+  border-radius: 0;
+}
+.scripto-doc[data-skin='zen'] hr {
+  background: none;
+  height: 0;
+  border-top: 1px solid var(--doc-rule);
+  margin: 3em auto;
+  width: 40%;
+}
+
+/* —— Memo: corporate memo, ruled header band, compact, uppercase H3 —— */
+.scripto-doc[data-skin='memo'] {
+  --doc-font: Inter, system-ui, sans-serif;
+}
+.scripto-doc[data-skin='memo'] h1,
+.scripto-doc[data-skin='memo'] h2,
+.scripto-doc[data-skin='memo'] h3 {
+  font-family: Inter, system-ui, sans-serif;
+}
+.scripto-doc[data-skin='memo'] h1 {
+  border: none;
+  border-bottom: 3px solid var(--doc-accent);
+  padding-bottom: 0.25em;
+}
+.scripto-doc[data-skin='memo'] h2 {
+  border: none;
+  font-size: 1.3em;
+  margin: 1.1em 0 0.4em;
+}
+.scripto-doc[data-skin='memo'] h3 {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 1.02em;
+  color: var(--doc-muted);
+}
+.scripto-doc[data-skin='memo'] p {
+  margin: 0 0 0.7em;
+}
+.scripto-doc[data-skin='memo'] th {
+  background: color-mix(in srgb, var(--doc-accent) 12%, var(--doc-surface));
+}
+.scripto-doc[data-skin='memo'] blockquote {
+  border-inline-start: 3px solid var(--doc-accent);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--doc-accent) 6%, transparent);
+}
+
+/* —— Poster: oversized display H1, bold H2, big accent rule —— */
+.scripto-doc[data-skin='poster'] h1,
+.scripto-doc[data-skin='poster'] h2 {
+  font-family: Inter, system-ui, sans-serif;
+  border: none;
+}
+.scripto-doc[data-skin='poster'] h1 {
+  font-size: 3em;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  padding-bottom: 0.18em;
+  border-bottom: 6px solid var(--doc-accent);
+}
+.scripto-doc[data-skin='poster'] h2 {
+  font-size: 1.9em;
+  font-weight: 800;
+  color: var(--doc-accent);
+}
+.scripto-doc[data-skin='poster'] h3 {
+  font-size: 1.3em;
+  font-weight: 700;
+}
+.scripto-doc[data-skin='poster'] blockquote {
+  border-inline-start: 6px solid var(--doc-accent);
+  border-radius: 0;
+  font-size: 1.2em;
+  background: color-mix(in srgb, var(--doc-accent) 8%, transparent);
+}
+.scripto-doc[data-skin='poster'] th {
+  background: var(--doc-accent);
+  color: #fff;
+  border-bottom: none;
+}
+
+/* ---------- Images & figures ---------- */
+.scripto-doc img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+  margin: 0.4em auto;
+}
+.scripto-doc figure {
+  margin: 1.5em 0;
+  break-inside: avoid;
+  text-align: center;
+}
+.scripto-doc figure img {
+  margin: 0 auto;
+}
+.scripto-doc figcaption,
+.scripto-doc p > img + em,
+.scripto-doc p > em:only-child {
+  display: block;
+  text-align: center;
+  font-size: 0.85em;
+  color: var(--doc-muted);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+/* ---------- Callouts / admonitions ---------- */
+.scripto-doc .callout {
+  margin: 1.4em 0;
+  padding: 0.9em 1.1em 0.9em 1.1em;
+  border-radius: 10px;
+  border: 1px solid;
+  border-left-width: 4px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.2em 0.7em;
+}
+.scripto-doc .callout__icon {
+  font-size: 1.05em;
+  line-height: 1.5;
+  grid-row: 1 / span 2;
+}
+.scripto-doc .callout__title {
+  font-family: Inter, sans-serif;
+  font-weight: 700;
+  font-size: 0.85em;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  align-self: center;
+}
+.scripto-doc .callout__body > :first-child {
+  margin-top: 0;
+}
+.scripto-doc .callout__body > :last-child {
+  margin-bottom: 0;
+}
+.scripto-doc .callout--note {
+  --cl: #3b82f6;
+}
+.scripto-doc .callout--tip {
+  --cl: #10b981;
+}
+.scripto-doc .callout--info {
+  --cl: #06b6d4;
+}
+.scripto-doc .callout--success {
+  --cl: #22c55e;
+}
+.scripto-doc .callout--warning {
+  --cl: #f59e0b;
+}
+.scripto-doc .callout--danger {
+  --cl: #ef4444;
+}
+.scripto-doc .callout {
+  border-color: color-mix(in srgb, var(--cl) 40%, var(--doc-rule));
+  background: color-mix(in srgb, var(--cl) 8%, transparent);
+}
+.scripto-doc .callout__title {
+  color: color-mix(in srgb, var(--cl) 80%, var(--doc-fg));
+}
+
+/* ---------- Definition lists ---------- */
+.scripto-doc dl {
+  margin: 1.2em 0;
+}
+.scripto-doc dt {
+  font-weight: 700;
+  font-family: Inter, sans-serif;
+  margin-top: 0.8em;
+}
+.scripto-doc dd {
+  margin: 0.2em 0 0;
+  margin-inline-start: 1.2em;
+  color: var(--doc-muted);
+}
+
+/* ---------- Footnotes ---------- */
+.scripto-doc .footnotes {
+  margin-top: 2.5em;
+  padding-top: 1em;
+  border-top: 1px solid var(--doc-rule);
+  font-size: 0.86em;
+  color: var(--doc-muted);
+}
+.scripto-doc .footnotes h2 {
+  font-size: 1em;
+  border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--doc-muted);
+}
+.scripto-doc sup a[data-footnote-ref] {
+  border: none;
+  font-weight: 600;
+  padding: 0 0.15em;
+}
+
+/* ---------- Math ---------- */
+.scripto-doc .katex-display {
+  margin: 1.4em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.3em 0;
+  break-inside: avoid;
+}
+.scripto-doc .katex {
+  font-size: 1.05em;
+}
+
+/* ---------- Mermaid ---------- */
+.scripto-doc .mermaid-figure {
+  margin: 1.5em 0;
+  text-align: center;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.scripto-doc .mermaid-figure svg {
+  max-width: 100%;
+  height: auto;
+}
+.scripto-doc .mermaid-error {
+  border: 1px dashed var(--doc-rule);
+  border-radius: 8px;
+  padding: 1em;
+  color: var(--doc-muted);
+  font-size: 0.85em;
+  font-family: 'JetBrains Mono', monospace;
+  text-align: left;
+}

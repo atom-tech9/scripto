@@ -1,0 +1,81 @@
+/*
+ * print.css — on-screen styling for the paginated Paged.js pages plus the
+ * @media print rules that isolate those pages for the browser's "Save as PDF".
+ */
+
+/* On-screen: render the paginated pages like a stack of paper. */
+.pagedjs_pages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 24px 0;
+}
+
+.pagedjs_page {
+  background: #fff;
+  box-shadow: 0 10px 30px -8px rgba(15, 23, 42, 0.25);
+  margin: 0 auto !important;
+  overflow: hidden;
+}
+
+/* The paginated document always renders on a white sheet, even in dark mode. */
+.scripto-print-surface .scripto-doc {
+  --doc-fg: #1f2532;
+  --doc-muted: #5b6472;
+  --doc-rule: #e4e7ec;
+  --doc-surface: #f7f8fa;
+  --doc-quote: #4f46e5;
+  color: #1f2532;
+}
+
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* During export we add `.scripto-printing` to <body>; hide everything that
+   * isn't the print portal so only the paginated pages reach the PDF. */
+  body.scripto-printing > *:not(.scripto-print-portal) {
+    display: none !important;
+  }
+
+  .scripto-print-portal {
+    position: static !important;
+    inset: auto !important;
+    background: #fff !important;
+    backdrop-filter: none !important;
+  }
+
+  .scripto-print-portal .print-chrome {
+    display: none !important;
+  }
+
+  .scripto-print-surface {
+    position: static !important;
+    overflow: visible !important;
+    background: #fff !important;
+    padding: 0 !important;
+    height: auto !important;
+    box-shadow: none !important;
+  }
+
+  /* Ignore the on-screen zoom transform when printing. */
+  .scripto-print-surface > div {
+    transform: none !important;
+  }
+
+  .pagedjs_pages {
+    gap: 0 !important;
+    padding: 0 !important;
+  }
+
+  .pagedjs_page {
+    box-shadow: none !important;
+    margin: 0 !important;
+    break-after: page;
+  }
+}
