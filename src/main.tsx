@@ -1,34 +1,16 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { MotionConfig } from 'motion/react'
+import { ViteReactSSG } from 'vite-react-ssg'
 import './index.css'
-import './styles/document.css'
-import './styles/print.css'
-import { AppRoot } from './AppRoot.tsx'
-import { ErrorBoundary } from './components/ErrorBoundary'
-import { ConfirmProvider } from './components/ui/Confirm'
-import { LanguageProvider } from './i18n'
-import { ModeProvider } from './mode'
-import { registerSW } from 'virtual:pwa-register'
+import { routes } from './routes'
 
-// Register the service worker for offline support (auto-updates in the background).
-registerSW({ immediate: true })
-
-const rootElement = document.getElementById('root')
-if (!rootElement) throw new Error('Root element #root not found')
-
-createRoot(rootElement).render(
-  <StrictMode>
-    <MotionConfig reducedMotion="user">
-      <ErrorBoundary fallbackTitle="Scripto hit an unexpected error.">
-        <LanguageProvider>
-          <ModeProvider>
-            <ConfirmProvider>
-              <AppRoot />
-            </ConfirmProvider>
-          </ModeProvider>
-        </LanguageProvider>
-      </ErrorBoundary>
-    </MotionConfig>
-  </StrictMode>,
-)
+/**
+ * Site entry. vite-react-ssg prerenders every marketing route to static HTML
+ * at build time; in the browser it hydrates only where needed (the /app
+ * editor — marketing pages ship without scripts).
+ */
+export const createRoot = ViteReactSSG({ routes, basename: import.meta.env.BASE_URL }, ({ isClient }) => {
+  if (isClient) {
+    // Service worker for offline support (auto-updates in the background).
+    // Dynamic import keeps the PWA virtual module out of the SSG render.
+    void import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true }))
+  }
+})

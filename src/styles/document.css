@@ -5,6 +5,7 @@
  * PDF output, which is what makes "the preview matches the PDF" true. All
  * tunable values come from CSS custom properties set by the app from PdfConfig.
  */
+@import 'katex/dist/katex.min.css';
 
 .scripto-doc {
   /* Defaults — overridden inline from PdfConfig */
