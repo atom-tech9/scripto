@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { languages } from '@codemirror/language-data'
@@ -36,6 +36,21 @@ interface MarkdownEditorProps {
   ghostComplete?: GhostComplete
   onError?: (message: string) => void
 }
+
+/** Module-level so its identity never changes: `useCodeMirror` reconfigures
+ * the editor whenever `basicSetup` (by reference), `onChange` or `extensions`
+ * change — and reconfiguring destroys the runtime-attached ⌘F search panel. */
+const BASIC_SETUP = {
+  lineNumbers: true,
+  highlightActiveLine: true,
+  highlightActiveLineGutter: true,
+  foldGutter: false,
+  bracketMatching: true,
+  closeBrackets: true,
+  autocompletion: false,
+  highlightSelectionMatches: true,
+  searchKeymap: true,
+} as const
 
 function imageFiles(list: FileList | null | undefined): File[] {
   return Array.from(list ?? []).filter((file) => file.type.startsWith('image/'))
@@ -85,6 +100,13 @@ async function embedImages(
  * The Markdown source editor built on CodeMirror 6: syntax highlighting,
  * line numbers, word wrap, undo/redo, search (⌘F), bracket matching, and
  * Markdown-specific formatting shortcuts.
+ *
+ * IMPORTANT: reconfiguring CodeMirror destroys dynamically-appended
+ * extensions — most visibly the ⌘F search panel, which @codemirror/search
+ * attaches at runtime. So the `extensions` array below must NOT rebuild just
+ * because a parent re-rendered: every callback prop is read through a ref,
+ * and the memo depends only on genuine configuration (wrap, direction,
+ * feature availability, language).
  */
 export function MarkdownEditor({
   value,
@@ -102,6 +124,37 @@ export function MarkdownEditor({
   onError,
 }: MarkdownEditorProps) {
   const { t } = useLanguage()
+
+  // Latest callbacks, readable from stable closures without reconfiguring.
+  const callbacks = useRef({
+    onChange,
+    onReady,
+    onScrollFraction,
+    onActivity,
+    slashAi,
+    onSlashHelp,
+    onPastedAsMarkdown,
+    ghostComplete,
+    onError,
+  })
+  callbacks.current = {
+    onChange,
+    onReady,
+    onScrollFraction,
+    onActivity,
+    slashAi,
+    onSlashHelp,
+    onPastedAsMarkdown,
+    ghostComplete,
+    onError,
+  }
+
+  const handleChange = useCallback((next: string) => callbacks.current.onChange(next), [])
+  const handleCreateEditor = useCallback((view: EditorView) => callbacks.current.onReady?.(view), [])
+
+  // Presence (not identity) of optional features is real configuration.
+  const hasSlashAi = Boolean(slashAi)
+  const hasGhostComplete = Boolean(ghostComplete)
 
   const formattingKeymap = useMemo(
     () =>
@@ -137,38 +190,57 @@ export function MarkdownEditor({
     ]
     if (wordWrap) base.push(EditorView.lineWrapping)
     base.push(EditorView.contentAttributes.of({ dir: direction }))
-    if (slashAi) base.push(slashCommands({ onAi: slashAi, onHelp: onSlashHelp }, t))
-    if (ghostComplete) base.push(ghostCompletion(ghostComplete))
-
-    if (onActivity) {
+    if (hasSlashAi) {
       base.push(
-        EditorView.updateListener.of((update) => {
-          if (
-            update.selectionSet ||
-            update.docChanged ||
-            update.geometryChanged ||
-            update.focusChanged
-          ) {
-            onActivity()
-          }
-        }),
+        slashCommands(
+          {
+            onAi: (action) => callbacks.current.slashAi?.(action),
+            onHelp: () => callbacks.current.onSlashHelp?.(),
+          },
+          t,
+        ),
+      )
+    }
+    if (hasGhostComplete) {
+      base.push(
+        ghostCompletion((prefix, signal) =>
+          callbacks.current.ghostComplete
+            ? callbacks.current.ghostComplete(prefix, signal)
+            : Promise.resolve(''),
+        ),
       )
     }
 
     base.push(
+      EditorView.updateListener.of((update) => {
+        if (
+          update.selectionSet ||
+          update.docChanged ||
+          update.geometryChanged ||
+          update.focusChanged
+        ) {
+          callbacks.current.onActivity?.()
+        }
+      }),
+    )
+
+    base.push(
       EditorView.domEventHandlers({
         scroll: (_event, view) => {
-          onActivity?.()
-          if (!onScrollFraction) return
+          callbacks.current.onActivity?.()
+          const notify = callbacks.current.onScrollFraction
+          if (!notify) return
           const el = view.scrollDOM
           const max = el.scrollHeight - el.clientHeight
-          onScrollFraction(max > 0 ? el.scrollTop / max : 0)
+          notify(max > 0 ? el.scrollTop / max : 0)
         },
         paste: (event, view) => {
           const files = imageFiles(event.clipboardData?.files)
           if (files.length > 0) {
             event.preventDefault()
-            void embedImages(view, files, view.state.selection.main.from, onError)
+            void embedImages(view, files, view.state.selection.main.from, (message) =>
+              callbacks.current.onError?.(message),
+            )
             return true
           }
           // Rich content (Word, Docs, web) → convert the HTML clipboard to Markdown; plain text falls through.
@@ -183,7 +255,7 @@ export function MarkdownEditor({
             selection: { anchor: from + md.length },
           })
           view.focus()
-          onPastedAsMarkdown?.()
+          callbacks.current.onPastedAsMarkdown?.()
           return true
         },
         drop: (event, view) => {
@@ -193,32 +265,22 @@ export function MarkdownEditor({
           const pos =
             view.posAtCoords({ x: event.clientX, y: event.clientY }) ??
             view.state.selection.main.from
-          void embedImages(view, files, pos, onError)
+          void embedImages(view, files, pos, (message) => callbacks.current.onError?.(message))
           return true
         },
       }),
     )
     return base
-  }, [formattingKeymap, wordWrap, direction, onScrollFraction, onActivity, slashAi, onSlashHelp, onPastedAsMarkdown, ghostComplete, onError, t])
+  }, [formattingKeymap, wordWrap, direction, hasSlashAi, hasGhostComplete, t])
 
   return (
     <CodeMirror
       value={value}
-      onChange={onChange}
-      onCreateEditor={(view) => onReady?.(view)}
+      onChange={handleChange}
+      onCreateEditor={handleCreateEditor}
       extensions={extensions}
       theme={resolvedTheme === 'dark' ? githubDark : githubLight}
-      basicSetup={{
-        lineNumbers: true,
-        highlightActiveLine: true,
-        highlightActiveLineGutter: true,
-        foldGutter: false,
-        bracketMatching: true,
-        closeBrackets: true,
-        autocompletion: false,
-        highlightSelectionMatches: true,
-        searchKeymap: true,
-      }}
+      basicSetup={BASIC_SETUP}
       className="h-full"
       height="100%"
       placeholder={t('editor.placeholder')}

@@ -1123,15 +1123,13 @@
   font-size: 2.4em;
   line-height: 1.06;
 }
+/* Masthead-style double rule above the headline — decorative only; skins must
+   never inject words into the user's document. */
 .scripto-doc[data-skin='newsprint'] h1::before {
-  content: 'DISPATCH';
+  content: '';
   display: block;
-  font-size: 0.32em;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--doc-muted);
-  margin-bottom: 0.4em;
+  border-block-start: 4px double var(--doc-fg);
+  margin-bottom: 0.45em;
 }
 .scripto-doc[data-skin='newsprint'] h2 {
   border-bottom: 1px solid var(--doc-rule);

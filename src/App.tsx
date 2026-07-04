@@ -267,6 +267,8 @@ export default function App({ lock }: AppProps) {
     [setMarkdown, markOnboarding],
   )
 
+  const openFormattingHelp = useCallback(() => setFormattingHelpOpen(true), [])
+
   const applyPreset = useCallback(
     (presetId: string) => {
       const preset = DOCUMENT_PRESETS.find((p) => p.id === presetId)
@@ -883,7 +885,7 @@ export default function App({ lock }: AppProps) {
             onToggleToc={handleToggleToc}
             onAi={handleAiAction}
           />
-          {isSimple && <SimpleHintBar onOpenFormattingHelp={() => setFormattingHelpOpen(true)} />}
+          {isSimple && <SimpleHintBar onOpenFormattingHelp={openFormattingHelp} />}
           <div ref={editorWrapRef} className="relative min-h-0 flex-1 bg-surface">
             <MarkdownEditor
               value={markdown}
@@ -894,7 +896,7 @@ export default function App({ lock }: AppProps) {
               onScrollFraction={showPreview ? setEditorScroll : undefined}
               onActivity={bumpActivity}
               slashAi={handleAiAction}
-              onSlashHelp={() => setFormattingHelpOpen(true)}
+              onSlashHelp={openFormattingHelp}
               onPastedAsMarkdown={handlePastedAsMarkdown}
               ghostComplete={
                 aiConfig.autocomplete && isAiConfigured(aiConfig) ? ghostComplete : undefined
