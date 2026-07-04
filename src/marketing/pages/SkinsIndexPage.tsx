@@ -1,7 +1,6 @@
 import { SKIN_OPTIONS } from '@/data/skins'
 import { Breadcrumbs, CtaBand } from '../components/blocks'
 import { Seo } from '../components/Seo'
-import { SkinThumb } from '../components/SkinThumb'
 import { APP_PATH } from '../content/site'
 import { MarketingLayout } from '../layout/MarketingLayout'
 import { breadcrumb } from '../seo/jsonld'
@@ -28,8 +27,8 @@ export function SkinsIndexPage() {
         </h1>
         <p className="mk-lead" style={{ maxInlineSize: '60ch', marginBlockStart: '1.25rem' }}>
           A skin restyles your entire PDF — typography, rules, spacing, code blocks — without
-          touching a character of your Markdown. These previews are stylized impressions; the real
-          thing is one click away in the editor.
+          touching a character of your Markdown. Every preview below is a real render of the same
+          sample document, captured from the app.
         </p>
       </div>
 
@@ -39,7 +38,14 @@ export function SkinsIndexPage() {
             const [name, caption] = skin.label.split(' — ')
             return (
               <a key={skin.value} href={`/skins/${skin.value}`} className="mk-card mk-reveal" style={{ padding: '0.875rem' }}>
-                <SkinThumb skin={skin.value} title={name} />
+                <img
+                  className="mk-shot"
+                  src={`/screenshots/skin-${skin.value}.jpg`}
+                  alt={`${name} skin — real page render`}
+                  width={1512}
+                  height={1996}
+                  loading="lazy"
+                />
                 <p style={{ marginBlockStart: '0.75rem', fontWeight: 600, fontSize: '0.9375rem' }}>{name}</p>
                 <p className="mk-muted" style={{ fontSize: '0.8125rem' }}>
                   {caption}

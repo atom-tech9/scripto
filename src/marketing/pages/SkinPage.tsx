@@ -2,7 +2,6 @@ import { useLocation } from 'react-router-dom'
 import { SKIN_OPTIONS } from '@/data/skins'
 import { Breadcrumbs, CtaBand, StepList } from '../components/blocks'
 import { Seo } from '../components/Seo'
-import { SkinThumb } from '../components/SkinThumb'
 import { APP_PATH } from '../content/site'
 import { SKIN_BLURBS } from '../content/skinBlurbs'
 import { MarketingLayout } from '../layout/MarketingLayout'
@@ -101,7 +100,14 @@ export function SkinPage() {
             const [relatedName] = option.label.split(' — ')
             return (
               <a key={option.value} href={`/skins/${option.value}`} className="mk-card" style={{ padding: '0.875rem' }}>
-                <SkinThumb skin={option.value} title={relatedName} />
+                <img
+                  className="mk-shot"
+                  src={`/screenshots/skin-${option.value}.jpg`}
+                  alt={`${relatedName} skin — real page render`}
+                  width={1512}
+                  height={1996}
+                  loading="lazy"
+                />
                 <p style={{ marginBlockStart: '0.625rem', fontWeight: 600, fontSize: '0.875rem' }}>{relatedName}</p>
               </a>
             )

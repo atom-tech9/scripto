@@ -1,7 +1,11 @@
 import ReactMarkdown from 'react-markdown'
 import { useLocation } from 'react-router-dom'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
 import { TEMPLATES } from '@/data/templates'
+import { parseFrontmatter } from '@/lib/frontmatter'
 import { Breadcrumbs, CtaBand } from '../components/blocks'
 import { Seo } from '../components/Seo'
 import { APP_PATH } from '../content/site'
@@ -35,7 +39,10 @@ export function TemplatePage() {
     { name: 'Templates', path: '/templates' },
     { name: template.name, path: meta.path },
   ]
-  const showRendered = !containsRawHtml(template.content)
+  // Front-matter is config, not content — the app turns it into cover/TOC
+  // settings, so the marketing preview must not print it as text.
+  const { body: previewBody } = parseFrontmatter(template.content)
+  const showRendered = !containsRawHtml(previewBody)
 
   return (
     <MarketingLayout lang="en">
@@ -66,7 +73,9 @@ export function TemplatePage() {
           </h2>
           <div className="mk-card mk-reveal" style={{ padding: 'clamp(1.5rem, 4vw, 2.75rem)' }}>
             <div className="mk-prose">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{template.content}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                {previewBody}
+              </ReactMarkdown>
             </div>
           </div>
         </div>

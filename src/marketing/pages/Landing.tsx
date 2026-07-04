@@ -4,7 +4,6 @@ import { TEMPLATES } from '@/data/templates'
 import { translate } from '@/lib/i18n'
 import { CtaBand, FaqList, SectionHeader } from '../components/blocks'
 import { Seo } from '../components/Seo'
-import { SkinThumb } from '../components/SkinThumb'
 import { LANDING } from '../content/landing'
 import { APP_PATH, GITHUB_URL, chrome } from '../content/site'
 import { MarketingLayout } from '../layout/MarketingLayout'
@@ -239,7 +238,14 @@ export function Landing({ lang }: { lang: MarketingLang }) {
             const [name, caption] = label.split(' — ')
             return (
               <a key={skinId} href={`/skins/${skinId}`} className="mk-card" style={{ padding: '0.875rem' }}>
-                <SkinThumb skin={skinId} title={name} />
+                <img
+                  className="mk-shot"
+                  src={`/screenshots/skin-${skinId}.jpg`}
+                  alt={`${name} skin — real page render`}
+                  width={1512}
+                  height={1996}
+                  loading="lazy"
+                />
                 <p style={{ marginBlockStart: '0.75rem', fontWeight: 600, fontSize: '0.9375rem' }}>{name}</p>
                 <p className="mk-muted" style={{ fontSize: '0.8125rem' }}>
                   {caption}
