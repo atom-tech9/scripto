@@ -1,11 +1,17 @@
+import type { ComponentProps, ReactElement } from 'react'
+import { isValidElement } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { useLocation } from 'react-router-dom'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
+import remarkDirective from 'remark-directive'
+import remarkGemoji from 'remark-gemoji'
 import rehypeKatex from 'rehype-katex'
 import 'katex/dist/katex.min.css'
 import { TEMPLATES } from '@/data/templates'
 import { parseFrontmatter } from '@/lib/frontmatter'
+import { remarkCallouts } from '@/markdown/plugins/remarkCallouts'
+import { remarkMarks } from '@/markdown/plugins/remarkMarks'
 import { Breadcrumbs, CtaBand } from '../components/blocks'
 import { Seo } from '../components/Seo'
 import { APP_PATH } from '../content/site'
@@ -14,6 +20,39 @@ import { breadcrumb } from '../seo/jsonld'
 
 /** Raw-HTML templates render misleadingly without rehype-raw; show source only. */
 const containsRawHtml = (markdown: string): boolean => /<[a-z][\s\S]*>/i.test(markdown)
+
+/** Mirror the app's remark stack so template previews match the editor. */
+const PREVIEW_REMARK_PLUGINS = [
+  remarkGfm,
+  remarkMath,
+  remarkDirective,
+  remarkCallouts,
+  remarkMarks,
+  remarkGemoji,
+]
+
+const languageOf = (className: string | undefined): string | undefined =>
+  /language-([\w-]+)/.exec(className ?? '')?.[1]
+
+/**
+ * Fenced code with the app's chrome: a header bar carrying the language label
+ * and a copy button (wired by the site's inline enhancement script).
+ */
+function PreviewCodeBlock(props: ComponentProps<'pre'>) {
+  const child = props.children as ReactElement<{ className?: string }> | undefined
+  const language = isValidElement(child) ? languageOf(child.props.className) : undefined
+  return (
+    <div className="mk-codebox">
+      <div className="mk-codebox-bar">
+        <span>{language ?? 'code'}</span>
+        <button type="button" data-copy aria-label="Copy code">
+          Copy
+        </button>
+      </div>
+      <pre>{props.children}</pre>
+    </div>
+  )
+}
 
 export function TemplatePage() {
   const { pathname } = useLocation()
@@ -73,7 +112,11 @@ export function TemplatePage() {
           </h2>
           <div className="mk-card mk-reveal" style={{ padding: 'clamp(1.5rem, 4vw, 2.75rem)' }}>
             <div className="mk-prose">
-              <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+              <ReactMarkdown
+                remarkPlugins={PREVIEW_REMARK_PLUGINS}
+                rehypePlugins={[rehypeKatex]}
+                components={{ pre: PreviewCodeBlock }}
+              >
                 {previewBody}
               </ReactMarkdown>
             </div>

@@ -901,6 +901,108 @@ html.js .mk-reveal.in {
   border: 1px solid var(--mk-border);
 }
 
+/* ---------- template preview: code boxes & callouts (app parity) ---------- */
+
+.mk-prose .mk-codebox {
+  margin-block: 1.4em;
+  border: 1px solid hsl(220 25% 22%);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: hsl(224 42% 8%);
+  direction: ltr;
+  text-align: start;
+}
+
+.mk-prose .mk-codebox-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 0.875rem;
+  border-block-end: 1px solid hsl(222 28% 16%);
+  background: hsl(223 36% 10%);
+  color: hsl(217 16% 58%);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.71rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mk-prose .mk-codebox-bar button {
+  cursor: pointer;
+  border: 1px solid hsl(220 24% 28%);
+  border-radius: 0.375rem;
+  background: transparent;
+  color: hsl(217 16% 62%);
+  padding: 0.2rem 0.6rem;
+  font-size: 0.71rem;
+  letter-spacing: 0.05em;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.mk-prose .mk-codebox-bar button:hover {
+  color: hsl(213 28% 90%);
+  border-color: hsl(220 24% 42%);
+}
+
+.mk-prose .mk-codebox pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+}
+
+.mk-prose .callout {
+  --co: hsl(220 12% 55%);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.625rem;
+  align-items: center;
+  margin-block: 1.4em;
+  padding: 0.875rem 1.125rem;
+  border: 1px solid var(--mk-border);
+  border-inline-start: 3px solid var(--co);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--co) 8%, transparent);
+}
+
+.mk-prose .callout__icon {
+  grid-column: 1;
+  line-height: 1;
+}
+
+.mk-prose .callout__title {
+  grid-column: 2;
+  font-weight: 650;
+  color: var(--mk-fg);
+}
+
+.mk-prose .callout__body {
+  grid-column: 1 / -1;
+}
+
+.mk-prose .callout__body > :first-child {
+  margin-block-start: 0.5em;
+}
+
+.mk-prose .callout__body > :last-child {
+  margin-block-end: 0;
+}
+
+.mk-prose .callout--note { --co: hsl(215 15% 55%); }
+.mk-prose .callout--info { --co: hsl(199 89% 48%); }
+.mk-prose .callout--tip { --co: hsl(160 84% 39%); }
+.mk-prose .callout--success { --co: hsl(142 71% 45%); }
+.mk-prose .callout--warning { --co: hsl(38 92% 50%); }
+.mk-prose .callout--danger { --co: hsl(0 84% 60%); }
+
+/* ==highlight== marks from the app's remarkMarks plugin */
+.mk-prose mark {
+  background: hsl(48 96% 53% / 0.35);
+  color: inherit;
+  border-radius: 0.2em;
+  padding: 0.05em 0.2em;
+}
+
 /* ---------- comparison table ---------- */
 
 .mk-vs-table {
