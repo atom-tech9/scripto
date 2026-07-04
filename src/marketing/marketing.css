@@ -637,6 +637,24 @@ html.has-vid [data-hero-mock] {
   }
 }
 
+/* ---------- product screenshots (theme-paired) ---------- */
+
+.mk-shot {
+  inline-size: 100%;
+  block-size: auto;
+  border-radius: 1rem;
+  border: 1px solid var(--mk-border-strong);
+  box-shadow: var(--mk-mock-shadow);
+}
+
+html.dark .mk-shot--light {
+  display: none;
+}
+
+html:not(.dark) .mk-shot--dark {
+  display: none;
+}
+
 /* ---------- reveal on scroll (JS-optional) ---------- */
 
 html.js .mk-reveal {

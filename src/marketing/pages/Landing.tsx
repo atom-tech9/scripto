@@ -19,6 +19,25 @@ import type { MarketingLang } from '../types'
 const RETURNING_USER_REDIRECT =
   "(function(){try{if(new URLSearchParams(location.search).has('home')){sessionStorage.setItem('scripto:stay','1');return}if(sessionStorage.getItem('scripto:stay'))return;if(localStorage.getItem('scripto:library')||localStorage.getItem('scripto:document')){location.replace('/app'+location.hash)}}catch(e){}})();"
 
+/** Real PDFs exported by the app itself (public/samples/) — proof, not promises. */
+const SAMPLE_EXPORTS = [
+  {
+    href: '/samples/report-with-cover-and-toc.pdf',
+    en: { title: 'Business report', desc: 'Cover page, table of contents with real page numbers, corporate skin.' },
+    ar: { title: 'تقرير أعمال', desc: 'صفحة غلاف وفهرس بأرقام صفحات حقيقية وتصميم مؤسسي.' },
+  },
+  {
+    href: '/samples/arabic-report.pdf',
+    en: { title: 'Arabic document', desc: 'True RTL pagination — mirrored cover, headers and page numbers.' },
+    ar: { title: 'مستند عربي', desc: 'تقسيم صفحات حقيقي من اليمين إلى اليسار — غلاف وترويسات وأرقام معكوسة.' },
+  },
+  {
+    href: '/samples/markdown-resume.pdf',
+    en: { title: 'One-page resume', desc: 'ATS-friendly single column from the Résumé skin.' },
+    ar: { title: 'سيرة ذاتية بصفحة واحدة', desc: 'عمود واحد صديق لأنظمة التوظيف من تصميم السيرة الذاتية.' },
+  },
+]
+
 const SHOWCASE_SKINS = ['modern', 'editorial', 'swiss', 'terminal', 'newsprint', 'blueprint', 'brutalist', 'elegant']
 const SHOWCASE_TEMPLATES = ['readme', 'resume', 'invoice', 'proposal', 'meeting', 'changelog', 'academic', 'prd']
 
@@ -157,6 +176,37 @@ export function Landing({ lang }: { lang: MarketingLang }) {
               </p>
             </article>
           ))}
+        </div>
+      </section>
+
+      {/* ---------- sample exports ---------- */}
+      <section className="mk-container mk-section-tight">
+        <SectionHeader
+          title={lang === 'ar' ? 'لا تصدّق الكلام — افتح الملفات.' : 'Don’t take our word — open the files.'}
+          lead={
+            lang === 'ar'
+              ? 'ثلاثة ملفات PDF صدّرها سكربتو نفسه، بلا أي تعديل يدوي.'
+              : 'Three PDFs exported by Scripto itself, untouched.'
+          }
+        />
+        <div className="mk-grid mk-grid-3">
+          {SAMPLE_EXPORTS.map((sample) => {
+            const copy = sample[lang]
+            return (
+              <a key={sample.href} href={sample.href} target="_blank" rel="noopener" className="mk-card mk-reveal">
+                <span className="mk-card-icon" aria-hidden="true">
+                  📄
+                </span>
+                <h3 className="mk-h3">{copy.title}</h3>
+                <p className="mk-muted" style={{ marginBlockStart: '0.5rem', lineHeight: 1.65 }}>
+                  {copy.desc}
+                </p>
+                <p style={{ marginBlockStart: '0.875rem', color: 'var(--mk-accent-fg)', fontWeight: 550, fontSize: '0.9375rem' }}>
+                  {lang === 'ar' ? 'افتح الـPDF ←' : 'Open the PDF →'}
+                </p>
+              </a>
+            )
+          })}
         </div>
       </section>
 

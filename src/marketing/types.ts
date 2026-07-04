@@ -89,6 +89,8 @@ export interface InfoPageContent {
   sections: PageSection[]
   faq?: FaqItem[]
   related?: InternalLink[]
+  /** Product screenshot pair shown under the hero, matching the site theme. */
+  heroImage?: { dark: string; light: string; alt: string; width: number; height: number }
 }
 
 /** Parsed blog post (markdown file + frontmatter). */

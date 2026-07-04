@@ -66,8 +66,16 @@ export function SkinPage() {
               </a>
             </div>
           </div>
-          <div style={{ maxInlineSize: '20rem', marginInline: 'auto', inlineSize: '100%' }} className="mk-reveal">
-            <SkinThumb skin={skin.value} title={name} />
+          <div style={{ maxInlineSize: '24rem', marginInline: 'auto', inlineSize: '100%' }} className="mk-reveal">
+            {/* Real render of the sample document in this skin (captured from the app). */}
+            <img
+              className="mk-shot"
+              src={`/screenshots/skin-${skin.value}.jpg`}
+              alt={`The sample document rendered with the ${name} skin`}
+              width={1512}
+              height={1996}
+              loading="eager"
+            />
           </div>
         </div>
       </div>
@@ -79,8 +87,8 @@ export function SkinPage() {
         <StepList steps={steps} />
         <p className="mk-muted" style={{ marginBlockStart: '1.25rem', maxInlineSize: '65ch', lineHeight: 1.7 }}>
           Skins are pure print styling: switching between them never alters your Markdown, and you
-          can layer per-document custom CSS on top for fine-tuning. The thumbnail above is a
-          stylized impression — open the editor to see the full typography live on your own text.
+          can layer per-document custom CSS on top for fine-tuning. The page above is a real render
+          of the sample document in this skin — open the editor to see it live on your own text.
         </p>
       </div>
 

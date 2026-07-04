@@ -13,6 +13,13 @@ const features: InfoPageContent = {
   intro: [
     'Scripto is a single-purpose tool taken seriously: turn Markdown into documents that look professionally typeset. Here is the complete feature set — no tiers, everything free.',
   ],
+  heroImage: {
+    dark: '/screenshots/editor-dark.png',
+    light: '/screenshots/editor-light.png',
+    alt: 'The Scripto editor: Markdown source beside the live paginated PDF preview',
+    width: 2940,
+    height: 1536,
+  },
   sections: [
     {
       heading: 'A real pagination engine',

@@ -23,6 +23,27 @@ export function InfoPage() {
       <Seo meta={content.meta} lang="en" jsonLd={jsonLd} />
       <PageHero h1={content.h1} intro={content.intro} breadcrumbs={crumbs} lang="en" />
 
+      {content.heroImage ? (
+        <div className="mk-container mk-section-tight" style={{ paddingBlockStart: 0 }}>
+          <img
+            className="mk-shot mk-shot--dark mk-reveal"
+            src={content.heroImage.dark}
+            alt={content.heroImage.alt}
+            width={content.heroImage.width}
+            height={content.heroImage.height}
+            loading="lazy"
+          />
+          <img
+            className="mk-shot mk-shot--light mk-reveal"
+            src={content.heroImage.light}
+            alt={content.heroImage.alt}
+            width={content.heroImage.width}
+            height={content.heroImage.height}
+            loading="lazy"
+          />
+        </div>
+      ) : null}
+
       <div className="mk-container mk-section-tight">
         <ContentSections sections={content.sections} />
       </div>

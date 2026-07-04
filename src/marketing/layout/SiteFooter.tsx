@@ -1,3 +1,4 @@
+import { AtomMark } from '@/components/ui/AtomMark'
 import {
   APP_PATH,
   ATOM_URL,
@@ -87,7 +88,7 @@ export function SiteFooter({ lang }: SiteFooterProps) {
               style={{ marginBlockStart: '1.25rem' }}
             >
               <span>{chrome('footer.builtBy', lang)}</span>
-              <img src="/atom-logo.png" alt="Atom" width={57} height={22} />
+              <AtomMark style={{ blockSize: '1.375rem', inlineSize: 'auto' }} />
             </a>
           </div>
           {COLUMNS.map((column) => (

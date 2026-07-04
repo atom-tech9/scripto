@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Clock, FileText, Hash, Type } from 'lucide-react'
+import { AtomMark } from '@/components/ui/AtomMark'
 import { PAPER_LABELS } from '@/lib/constants'
 import { countWords, readingTime, stripDataUrls } from '@/lib/utils'
 import { useLanguage } from '@/i18n'
@@ -53,7 +54,7 @@ export function StatusBar({ content, config, headingCount, onOpenStats }: Status
           aria-label={`${t('statusbar.builtBy')} Atom`}
         >
           <span>{t('statusbar.builtBy')}</span>
-          <img src="/atom-logo.png" alt="Atom" className="h-3.5 w-auto" width={35} height={14} />
+          <AtomMark className="h-3.5 w-auto" />
         </a>
       </div>
     </footer>
