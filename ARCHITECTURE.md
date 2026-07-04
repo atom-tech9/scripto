@@ -51,6 +51,16 @@ sufficient for a local-first app.
 
 ## 3. High-level architecture
 
+Since the SEO layer landed, the deployment is **one static site with two personalities**:
+
+- **`/` and ~100 content routes** — prerendered marketing/SEO pages (vite-react-ssg). Pure HTML +
+  CSS; framework JS is stripped at build time (§19). Landing, use-case guides, comparisons, blog,
+  and a page per template and skin.
+- **`/app`** — the editor SPA described by the rest of this document, mounted as a `ClientOnly`
+  lazy route. Its prerendered shell is a splash screen; the editor hydrates client-side only.
+
+Everything below this section describes the editor. The marketing layer is covered in §19.
+
 ```mermaid
 flowchart TD
   subgraph Browser
@@ -76,11 +86,20 @@ That is the core of "preview === PDF".
 
 ```
 src/
-├── main.tsx                  # Entry: SW registration, ErrorBoundary, Confirm/Language/Mode providers, AppRoot
+├── main.tsx                  # Entry: ViteReactSSG(routes) + client-only SW registration
+├── routes.tsx                # Route table: '/', content routes (all lazy), '/app', 404
+├── app/
+│   ├── AppPage.tsx           # /app route: noindex head, static splash, ClientOnly gate
+│   └── AppShell.tsx          # Providers (Motion/Error/Language/Mode/Confirm) + AppRoot + app CSS
 ├── AppRoot.tsx               # Lock gate — mounts App only when unlocked/open
-├── App.tsx                   # Orchestrator: state, commands, dialogs, shortcuts, layout
+├── App.tsx                   # Orchestrator: state, commands, dialogs, shortcuts, layout, deep links
 ├── i18n.tsx                  # LanguageProvider + useLanguage() — UI language, dir, t()
 ├── mode.tsx                  # standard/simple UI mode provider
+│
+├── marketing/                # Prerendered site (§19): layout/, pages/, components/, content/,
+│   │                         #   blog/ (md posts + loader), seo/ (jsonld builders), marketing.css
+├── seo/
+│   └── postbuild.ts          # Pure build-time HTML/XML transforms (strip, sitemap, robots) — unit-tested
 │
 ├── markdown/                 # The rendering pipeline (single source of truth)
 │   ├── MarkdownRenderer.tsx  # unified plugins + component overrides + urlTransform
@@ -119,6 +138,10 @@ src/
 │   ├── document.css          # THE shared preview+PDF stylesheet (skins, tables, callouts, code, math)
 │   └── print.css             # @media print isolation + on-screen page chrome
 └── types/                    # PdfConfig, DocumentSkin, DocumentRecord, pagedjs.d.ts
+
+api/og.tsx                    # Vercel Edge function: dynamic Open Graph images (sanitized inputs)
+tests/                        # Vitest suites for src/seo/postbuild.ts and the blog loader
+docs/SEO_PLAYBOOK.md          # Launch checklist, keyword map, content operations
 ```
 
 ---
@@ -274,9 +297,17 @@ data URLs into an atomic `🖼 image` chip — display-only; the underlying text
 
 ## 12. PWA / offline
 
-`vite-plugin-pwa` (Workbox, `registerType: 'autoUpdate'`) precaches the app shell and runtime-caches
-Google Fonts and the KaTeX CDN. After first load the app works offline. `index.css` includes an
-`@media print` block that restores normal document flow for printing.
+`vite-plugin-pwa` (Workbox, `registerType: 'autoUpdate'`). Since the marketing layer landed:
+
+- Manifest `start_url` is **`/app`** (scope stays `/`); installed users launch straight into the editor.
+- The precache covers all JS/CSS/font/icon assets plus **three** HTML files only — `/`, `/ar` and
+  `/app` — so offline PWA startup works end-to-end (landing redirect → app shell) without
+  precaching ~100 marketing pages.
+- `navigateFallback` is `/app/index.html`, allow-listed to `/app*` routes only.
+- The service worker is **regenerated in `ssgOptions.onFinished`** — the plugin's own pass runs
+  before the SSG HTML exists, so the final manifest must be rebuilt after rendering.
+- Runtime caching: Google Fonts and the jsDelivr CDN. After first load the app works offline.
+  `index.css` includes an `@media print` block that restores normal document flow for printing.
 
 ---
 
@@ -296,9 +327,11 @@ Google Fonts and the KaTeX CDN. After first load the app works offline. `index.c
 
 | To add… | Do this |
 | --- | --- |
-| A **document skin** | Extend `DocumentSkin` (types), add to `SKIN_OPTIONS`, add a `.scripto-doc[data-skin='x']{…}` block in `document.css`. |
+| A **document skin** | Extend `DocumentSkin` (types), add to `SKIN_OPTIONS`, add a `.scripto-doc[data-skin='x']{…}` block in `document.css`, add a blurb in `marketing/content/skinBlurbs.ts` + thumb style in `skinStyles.ts`. Its `/skins/x` marketing page generates automatically. |
 | A **preset** | Add a `Partial<PdfConfig>` to `data/presets.ts`. |
-| A **template** | Add a `DocumentTemplate` to `data/templates.ts`. |
+| A **template** | Add a `DocumentTemplate` to `data/templates.ts`. Its `/templates/x` marketing page generates automatically. |
+| A **blog post** | Drop `marketing/content/blog/<slug>.md` with `title/description/date/keyword` frontmatter — route, sitemap, JSON-LD and OG image are automatic. |
+| A **use-case page** | Add a `UseCaseContent` file under `marketing/content/use-cases/` and register it in that folder's `index.ts` (Arabic variant → `USE_CASES_AR`). |
 | A **config option** | Add to `PdfConfig` (types) + `DEFAULT_CONFIG` + a control in `ConfigPanel` + consume in `documentStyle.ts`/`document.css`/`pageStyles.ts`. |
 | A **Markdown feature** | Add a remark/rehype plugin (or a custom one under `markdown/plugins/`) in `MarkdownRenderer.tsx`. |
 | An **export format** | Add to `io/exporters.ts` + a `MenuItem`/command. |
@@ -309,12 +342,24 @@ Google Fonts and the KaTeX CDN. After first load the app works offline. `index.c
 ## 15. Build & deploy
 
 ```bash
-npm run build     # tsc -b (type-check) + vite build → dist/ (+ service worker)
-npm run preview   # serve the production build
+npm run build     # tsc -b (type-check) + vite-react-ssg build → dist/
+npm run preview   # serve the production build (note: nested routes need a trailing slash here)
+npm run test      # vitest — seo/postbuild + blog loader suites
 ```
 
-`dist/` is fully static — deploy to any static host (Vercel, Netlify, GitHub Pages, S3). No
-environment variables or server required.
+The build prerenders every route in `src/routes.tsx` (~102 pages), then `ssgOptions` hooks in
+`vite.config.ts` post-process the output:
+
+1. `onPageRendered` — strips hydration `<script type="module">`/`modulepreload` tags from every
+   marketing page (the `/app` shell keeps its scripts) and injects the analytics tag.
+2. `onFinished` — writes `sitemap.xml` (with hreflang alternates) + `robots.txt` + `404.html`,
+   injects `/app` asset prefetch hints into the landing pages, regenerates the service worker,
+   and logs exact page counts (nothing is silently capped).
+
+`dist/` is fully static — deploy to any static host. `vercel.json` adds cache headers, security
+headers (CSP, HSTS, nosniff, frame-ancestors) and the `/app/*` rewrite; `api/og.tsx` is a Vercel
+Edge function for social-card images (the only non-static piece, and optional). No environment
+variables required. Launch steps live in [docs/SEO_PLAYBOOK.md](docs/SEO_PLAYBOOK.md).
 
 ---
 
@@ -326,7 +371,14 @@ environment variables or server required.
 - Reuse the `components/ui/*` primitives; don't hand-roll buttons/dialogs.
 - Handle errors with `toast.error`; show loading states; keep things keyboard-accessible and
   light/dark safe.
-- Keep `npx tsc -b && npm run build` green.
+- **Every prop that reaches CodeMirror must be identity-stable.** `useCodeMirror` reconfigures the
+  editor when `extensions`, `onChange` or `basicSetup` change by reference, and reconfiguring
+  destroys runtime-attached extensions (most visibly the ⌘F search panel). `MarkdownEditor` defends
+  itself by reading callbacks through a ref — keep that pattern when adding editor callbacks.
+- **Skins are styling only** — they must never inject words into a user's document
+  (no text in CSS `content:`; ornaments/punctuation are fine).
+- Marketing pages: no hardcoded colors in TSX — use the `--mk-*` theme variables (light/dark).
+- Keep `npx tsc -b && npm run test && npm run build` green.
 
 ---
 
@@ -358,3 +410,45 @@ the provider** — there is no Scripto server.
 - Dialogs (`components/layout/`): `AiSettingsDialog`, `AiDashboardDialog`, `AiInputDialog`.
 - The key lives only in this browser's `localStorage` and is encrypted at rest when the passphrase
   lock is on (see §8). It is never logged or sent anywhere except the chosen provider.
+
+---
+
+## 19. Static marketing & SEO layer
+
+The site's public face is a prerendered content layer built with **vite-react-ssg** on top of
+react-router. `src/main.tsx` exports `createRoot = ViteReactSSG({ routes })`; at build time every
+route in `src/routes.tsx` renders to `dist/<path>/index.html` (`dirStyle: 'nested'`), and in the
+browser the same table drives the `/app` SPA.
+
+**Zero-JS pages.** Marketing pages are *rendered by React but shipped without it*:
+`onPageRendered` strips the module scripts and modulepreload hints from every non-`/app` page
+(asserting the scripts are empty external references — a non-empty body fails the build loudly).
+What remains is pure HTML/CSS plus one ~1 KB inline script (`MarketingLayout`) that applies the
+persisted theme before paint, powers reveal-on-scroll, and binds the header theme toggle via event
+delegation. Without JS, content is simply visible — never hidden.
+
+**Per-page SEO.** Every page composes `<Seo>` (`marketing/components/Seo.tsx`): unique
+title/description, canonical, Open Graph/Twitter cards pointing at `/api/og`, hreflang clusters
+(en/ar/x-default) when an Arabic variant exists, and a JSON-LD `@graph` (Organization + WebSite
+always; SoftwareApplication, HowTo, FAQPage, BreadcrumbList, BlogPosting per page type — builders
+in `marketing/seo/jsonld.ts`, `<` escaped against script-tag breakout).
+
+**Content model.** Copy lives as typed data in `marketing/content/*` (use-cases, comparisons, info
+pages, landing en+ar) rendered by generic page components; blog posts are markdown files with
+frontmatter (`marketing/blog/loadPosts.ts`, unit-tested); template and skin pages generate from the
+app's own `data/templates.ts` / `data/skins.ts` via `getStaticPaths` exported from the lazy page
+modules — so the entry chunk never loads content data, and product/marketing can't drift.
+
+**Theming.** `marketing.css` defines semantic `--mk-*` variables (dark default on `html.dark`,
+light otherwise) — marketing TSX must never hardcode colors. Fonts load async with metric-matched
+fallback faces (`index.css`) to keep CLS at 0.
+
+**Conversion plumbing.** `/app?template=<id>` opens a template as a *new* document and
+`?skin=<id>` applies a skin to the active one (allowlist-validated, params consumed —
+deep-link effect in `App.tsx`). The landing pages carry an inline returning-user redirect
+(localStorage `scripto:library` → `location.replace('/app')`; `?home` opts out) and prefetch the
+app's entry chunks. A first-run onboarding checklist (`components/layout/OnboardingChecklist.tsx`)
+ticks itself off on template → edit → export.
+
+Build-time transforms are pure functions in `src/seo/postbuild.ts` (vitest-covered); filesystem
+work stays in `vite.config.ts`. Operations runbook: [docs/SEO_PLAYBOOK.md](docs/SEO_PLAYBOOK.md).

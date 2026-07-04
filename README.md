@@ -95,16 +95,21 @@ Most "Markdown to PDF" tools render your document twice — once for the screen,
 # install dependencies
 npm install
 
-# start the dev server
+# start the dev server (editor at /app, marketing site at /)
 npm run dev
 
-# type-check + production build → dist/
+# type-check + prerender the full site → dist/ (~102 static pages + the app)
 npm run build
+
+# unit tests (SEO build transforms, blog loader)
+npm run test
 ```
 
 Other scripts: `npm run preview`, `npm run typecheck`, `npm run lint`, `npm run format`.
 
-The `dist/` output is fully static — deploy it to any static host (Vercel, Netlify, GitHub Pages, S3). No environment variables or server required.
+The `dist/` output is fully static — deploy it to any static host (Vercel, Netlify, GitHub Pages, S3). No environment variables or server required. `vercel.json` ships cache + security headers, and `api/og.tsx` (optional) generates social-card images on Vercel's edge.
+
+**Deep links:** `/app?template=<id>` opens any of the 50+ templates as a new document; `/app?skin=<id>` applies a skin — handy for docs and integrations.
 
 ---
 
@@ -124,8 +129,10 @@ The `dist/` output is fully static — deploy it to any static host (Vercel, Net
 | Import | **mammoth** (DOCX→HTML) + **turndown** (HTML→MD) | Reliable Word and HTML import. |
 | Offline | **vite-plugin-pwa** (Workbox) | Service worker + precache + runtime caching. |
 | Crypto | **Web Crypto API** | Native AES-GCM / PBKDF2 — no crypto dependency. |
+| Marketing/SEO | **vite-react-ssg** + react-router | Prerenders ~100 content pages to static, zero-JS HTML (landing, guides, per-template/skin pages, blog) with sitemap, hreflang and JSON-LD. |
+| Tests | **Vitest** | Unit coverage for the SEO build transforms and blog loader. |
 
-For the full design rationale, the rendering pipeline, and the "preview === PDF" mechanism, see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
+For the full design rationale, the rendering pipeline, and the "preview === PDF" mechanism, see **[ARCHITECTURE.md](ARCHITECTURE.md)** — the static marketing/SEO layer is documented there (§19) and operationally in **[docs/SEO_PLAYBOOK.md](docs/SEO_PLAYBOOK.md)**.
 
 ---
 

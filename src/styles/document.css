@@ -539,11 +539,14 @@
   border: none;
   padding-bottom: 0;
 }
+/* Centered flourish under the title — em-based so it scales with the type
+   size instead of reading as a stray fixed-width line. */
 .scripto-doc[data-skin='classic'] h1::after {
   content: '';
   display: block;
-  width: 64px;
+  width: 1.8em;
   height: 2px;
+  border-radius: 1px;
   margin: 0.5em auto 0;
   background: var(--doc-accent);
 }
@@ -596,12 +599,15 @@
   color: var(--doc-accent);
   font-size: 1.7em;
 }
+/* Magazine kicker bar above section heads — scales with the heading size and
+   sits tight against it so it reads as part of the heading, not a stray rule. */
 .scripto-doc[data-skin='editorial'] h2::before {
   content: '';
   display: block;
-  width: 42px;
-  height: 3px;
-  margin-bottom: 0.3em;
+  width: 1.7em;
+  height: 0.14em;
+  border-radius: 0.07em;
+  margin-bottom: 0.35em;
   background: var(--doc-accent);
 }
 .scripto-doc[data-skin='editorial'] > p:first-of-type::first-letter {
