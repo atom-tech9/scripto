@@ -95,7 +95,17 @@ export function Landing({ lang }: { lang: MarketingLang }) {
           </p>
         </div>
 
-        <div className="mk-hero-visual mk-reveal">
+        {/* Real product recording (public/screenshots/demo.mp4|webm). The inline
+            enhance script reveals it only once it actually loads; until then —
+            and for reduced-motion or no-JS visitors — the CSS mock below shows. */}
+        <div className="mk-hero-live mk-reveal" aria-hidden="true">
+          <video data-hero-video muted loop playsInline autoPlay preload="metadata">
+            <source src="/screenshots/demo.mp4" type="video/mp4" />
+            <source src="/screenshots/demo.webm" type="video/webm" />
+          </video>
+        </div>
+
+        <div className="mk-hero-visual mk-reveal" data-hero-mock>
           <div className="mk-editor-mock" aria-hidden="true">
             <div className="mk-editor-chrome">
               <i /> <i /> <i />

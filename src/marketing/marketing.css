@@ -599,6 +599,44 @@ html:not(.dark) .mk-theme-toggle .tt-sun {
   box-shadow: 0 12px 30px -12px hsl(0 0% 0% / 0.35);
 }
 
+/* ---------- hero: real product recording (progressive enhancement) ---------- */
+
+/* Hidden until the inline script confirms the video actually loaded
+   (html.has-vid); the CSS mock is the default and the no-JS/reduced-motion
+   experience. */
+.mk-hero-live {
+  display: none;
+  max-inline-size: 66rem;
+  margin-inline: auto;
+  margin-block-start: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+.mk-hero-live video {
+  inline-size: 100%;
+  block-size: auto;
+  display: block;
+  border-radius: 1rem;
+  border: 1px solid var(--mk-border-strong);
+  box-shadow: var(--mk-mock-shadow), 0 0 90px -30px hsl(239 84% 66% / 0.4);
+}
+
+html.has-vid .mk-hero-live {
+  display: block;
+}
+
+html.has-vid [data-hero-mock] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.has-vid .mk-hero-live {
+    display: none;
+  }
+  html.has-vid [data-hero-mock] {
+    display: grid;
+  }
+}
+
 /* ---------- reveal on scroll (JS-optional) ---------- */
 
 html.js .mk-reveal {
