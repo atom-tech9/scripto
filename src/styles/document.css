@@ -386,10 +386,13 @@
 .scripto-doc blockquote {
   margin: 1.3em 0;
   padding: 0.4em 1.2em;
-  border-left: 4px solid var(--doc-quote);
+  border-inline-start: 4px solid var(--doc-quote);
   background: color-mix(in srgb, var(--doc-quote) 7%, transparent);
   color: var(--doc-muted);
-  border-radius: 0 8px 8px 0;
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+  border-start-end-radius: 8px;
+  border-end-end-radius: 8px;
   break-inside: avoid;
 }
 .scripto-doc blockquote p {
@@ -493,7 +496,7 @@
 .scripto-doc th,
 .scripto-doc td {
   padding: 0.55em 0.85em;
-  text-align: left;
+  text-align: start;
   vertical-align: top;
   border-bottom: 1px solid var(--doc-rule);
 }
@@ -514,7 +517,7 @@
 .scripto-doc[data-table-style='minimal'] th,
 .scripto-doc[data-table-style='minimal'] td {
   border-bottom: 1px solid var(--doc-rule);
-  padding-left: 0.2em;
+  padding-inline-start: 0.2em;
 }
 .scripto-doc[data-table-style='minimal'] th {
   background: none;
@@ -559,7 +562,7 @@
   font-style: italic;
 }
 .scripto-doc[data-skin='classic'] blockquote {
-  border-left: none;
+  border-inline-start: none;
   border-top: 1px solid var(--doc-rule);
   border-bottom: 1px solid var(--doc-rule);
   border-radius: 0;
@@ -615,8 +618,9 @@
   font-weight: 800;
   font-size: 3.2em;
   line-height: 0.78;
-  float: left;
-  margin: 0.05em 0.08em 0 0;
+  float: inline-start;
+  margin-block: 0.05em 0;
+  margin-inline: 0 0.08em;
   color: var(--doc-accent);
 }
 .scripto-doc[data-skin='editorial'] blockquote {
@@ -649,8 +653,9 @@
 .scripto-doc[data-skin='technical'] h2,
 .scripto-doc[data-skin='technical'] h3 {
   border-bottom: none;
-  padding: 0 0 0 0.6em;
-  border-left: 4px solid var(--doc-accent);
+  padding: 0;
+  padding-inline-start: 0.6em;
+  border-inline-start: 4px solid var(--doc-accent);
 }
 .scripto-doc[data-skin='technical'] .code-block,
 .scripto-doc[data-skin='technical'] pre,
@@ -792,7 +797,7 @@
 }
 .scripto-doc[data-skin='blueprint'] blockquote {
   border-radius: 0;
-  border-left: 3px dashed var(--doc-accent);
+  border-inline-start: 3px dashed var(--doc-accent);
 }
 .scripto-doc[data-skin='blueprint'] hr {
   height: 2px;
@@ -878,7 +883,7 @@
 .scripto-doc[data-skin='brutalist'] blockquote {
   border-radius: 0;
   border: 2px solid var(--doc-fg);
-  border-left-width: 6px;
+  border-inline-start-width: 6px;
   background: none;
   box-shadow: 4px 4px 0 color-mix(in srgb, var(--doc-accent) 70%, transparent);
 }
@@ -905,8 +910,11 @@
   color: var(--doc-accent);
 }
 .scripto-doc[data-skin='notebook'] blockquote {
-  border-left: 3px solid var(--doc-accent);
-  border-radius: 0 8px 8px 0;
+  border-inline-start: 3px solid var(--doc-accent);
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+  border-start-end-radius: 8px;
+  border-end-end-radius: 8px;
   background: color-mix(in srgb, var(--doc-accent) 6%, transparent);
 }
 .scripto-doc[data-skin='notebook'] th {
@@ -935,55 +943,18 @@
   text-align: left;
 }
 
-.scripto-doc[dir='rtl'] {
-  text-align: right;
-}
+/* RTL flips via logical properties — new skin decorations must use
+   border-inline-start, padding-inline-start and text-align: start. */
 .scripto-doc[dir='rtl'] ul,
 .scripto-doc[dir='rtl'] ol {
-  padding-left: 0;
-  padding-right: 1.6em;
-}
-.scripto-doc[dir='rtl'] blockquote {
-  border-left: none;
-  border-right: 4px solid var(--doc-quote);
-  border-radius: 8px 0 0 8px;
-}
-.scripto-doc[dir='rtl'] th,
-.scripto-doc[dir='rtl'] td {
-  text-align: right;
-}
-.scripto-doc[dir='rtl'] dd {
-  margin-left: 0;
-  margin-right: 1.2em;
-}
-.scripto-doc[dir='rtl'] .footnotes {
-  text-align: right;
-}
-.scripto-doc[dir='rtl'][data-skin='technical'] h1,
-.scripto-doc[dir='rtl'][data-skin='technical'] h2,
-.scripto-doc[dir='rtl'][data-skin='technical'] h3 {
-  border-left: none;
-  padding-left: 0;
-  border-right: 4px solid var(--doc-accent);
-  padding-right: 0.6em;
-}
-.scripto-doc[dir='rtl'][data-skin='notebook'] blockquote {
-  border-right: 3px solid var(--doc-accent);
-}
-.scripto-doc[dir='rtl'][data-skin='brutalist'] blockquote {
-  border-left-width: 2px;
-  border-right-width: 6px;
-}
-.scripto-doc[dir='rtl'][data-skin='editorial'] > p:first-of-type::first-letter {
-  float: right;
-  margin: 0.05em 0 0 0.08em;
+  padding-inline-start: 1.6em;
 }
 
 /* —— Résumé: single column, ATS-friendly, tight sections, accent rules —— */
 .scripto-doc[data-skin='resume'] h1 {
   border: none;
   font-size: 2em;
-  text-align: left;
+  text-align: start;
   margin-bottom: 0.1em;
   letter-spacing: -0.01em;
 }
@@ -1012,11 +983,12 @@
   margin: 0.12em 0;
 }
 .scripto-doc[data-skin='resume'] blockquote {
-  border-left: 2px solid var(--doc-rule);
+  border-inline-start: 2px solid var(--doc-rule);
   background: none;
   border-radius: 0;
   font-style: normal;
-  padding: 0.1em 0 0.1em 0.9em;
+  padding-block: 0.1em;
+  padding-inline: 0.9em 0;
 }
 .scripto-doc[data-skin='resume'] hr {
   height: 0;
@@ -1446,10 +1418,10 @@
 /* ---------- Callouts / admonitions ---------- */
 .scripto-doc .callout {
   margin: 1.4em 0;
-  padding: 0.9em 1.1em 0.9em 1.1em;
+  padding: 0.9em 1.1em;
   border-radius: 10px;
   border: 1px solid;
-  border-left-width: 4px;
+  border-inline-start-width: 4px;
   break-inside: avoid;
   page-break-inside: avoid;
   display: grid;

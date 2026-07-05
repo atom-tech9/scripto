@@ -24,9 +24,14 @@ with **zero framework JavaScript** — only a ~1 KB inline enhancement script pe
    `vercel.json` already sets cache + security headers and the `/app/*` rewrite.
 2. **Set the real GitHub URL** — update `GITHUB_URL` in
    [src/marketing/content/site.ts](../src/marketing/content/site.ts) (currently a placeholder).
-3. **Plausible** — create a site for `md.atom.sa` at plausible.io. The script tag is already on
-   every marketing page. (Prefer PostHog EU? Swap `PLAUSIBLE_SNIPPET` in
-   [src/seo/postbuild.ts](../src/seo/postbuild.ts).)
+3. **Analytics** — Vercel Web Analytics, integrated per Vercel's docs for each surface: the raw
+   first-party tag (`/_vercel/insights/script.js`) on the static marketing pages, and the official
+   `<Analytics/>` component (`@vercel/analytics/react`) inside the `/app` SPA (AppShell). Enable it
+   in the Vercel project's **Analytics tab** after deploy — it no-ops until then; verify via a
+   `/_vercel/insights/view` request in the Network tab. Custom events later: `track()` from
+   `@vercel/analytics`. Plausible is architected but dormant — to activate, inject
+   `PLAUSIBLE_SNIPPET` ([src/seo/postbuild.ts](../src/seo/postbuild.ts)) in `vite.config.ts` and
+   create the site at plausible.io.
 4. **Google Search Console** — add property `md.atom.sa` (Domain property via DNS TXT record on
    `atom.sa`, or URL-prefix via HTML meta). For the meta route: add the verification tag to
    `index.html` `<head>`, rebuild, deploy. Then **submit `https://md.atom.sa/sitemap.xml`**.

@@ -8,8 +8,13 @@
 
 export const SITE_ORIGIN = 'https://md.atom.sa'
 
+/** Kept ready but not injected yet — Vercel Analytics is the live provider. */
 export const PLAUSIBLE_SNIPPET =
   '<script defer data-domain="md.atom.sa" src="https://plausible.io/js/script.js"></script>'
+
+/** First-party, cookieless; raw tag so script-stripped pages are tracked too. */
+export const VERCEL_ANALYTICS_SNIPPET =
+  '<script defer src="/_vercel/insights/script.js"></script>'
 
 export interface StripResult {
   html: string

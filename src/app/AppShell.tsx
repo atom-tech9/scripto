@@ -1,4 +1,5 @@
 import { useLayoutEffect } from 'react'
+import { Analytics } from '@vercel/analytics/react'
 import { MotionConfig } from 'motion/react'
 import '../styles/document.css'
 import '../styles/print.css'
@@ -28,6 +29,7 @@ export default function AppShell() {
           <ModeProvider>
             <ConfirmProvider>
               <AppRoot />
+              <Analytics />
             </ConfirmProvider>
           </ModeProvider>
         </LanguageProvider>

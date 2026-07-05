@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  PLAUSIBLE_SNIPPET,
+  VERCEL_ANALYTICS_SNIPPET,
   buildPrefetchSnippet,
   buildRobotsTxt,
   buildSitemapXml,
@@ -43,6 +45,19 @@ describe('stripHydrationArtifacts', () => {
   it('refuses (loudly) to strip module scripts with inline bodies', () => {
     const inline = '<script type="module">const s = "</scr" + "ipt>";</script>'
     expect(() => stripHydrationArtifacts(inline)).toThrow(/non-empty body/)
+  })
+})
+
+describe('analytics snippets', () => {
+  it('are single, deferred, stripper-safe script tags', () => {
+    for (const snippet of [PLAUSIBLE_SNIPPET, VERCEL_ANALYTICS_SNIPPET]) {
+      expect(snippet.match(/<script/g)).toHaveLength(1)
+      expect(snippet).toContain('defer')
+      expect(snippet).not.toContain('type="module"')
+      // Surviving the marketing-page stripper is what makes injection work.
+      expect(stripHydrationArtifacts(snippet).html).toBe(snippet)
+    }
+    expect(VERCEL_ANALYTICS_SNIPPET).toContain('/_vercel/insights/script.js')
   })
 })
 

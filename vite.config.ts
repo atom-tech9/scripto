@@ -6,7 +6,7 @@ import { VitePWA, type VitePluginPWAAPI } from 'vite-plugin-pwa'
 // Importing the type activates vite-react-ssg's `ssgOptions` UserConfig augmentation.
 import type { ViteReactSSGOptions } from 'vite-react-ssg'
 import {
-  PLAUSIBLE_SNIPPET,
+  VERCEL_ANALYTICS_SNIPPET,
   buildPrefetchSnippet,
   buildRobotsTxt,
   buildSitemapXml,
@@ -84,13 +84,12 @@ const ssgOptions: ViteReactSSGOptions = {
   dirStyle: 'nested',
   concurrency: 12,
   onPageRendered(route, renderedHTML) {
-    // The /app shell keeps its scripts — it IS the SPA. Everything else
-    // becomes pure static HTML (+ tiny inline progressive-enhancement JS).
+    // /app keeps its scripts; its analytics come from <Analytics/> in AppShell.
     if (route === '/app' || route.startsWith('/app/')) return renderedHTML
     const stripped = stripHydrationArtifacts(renderedHTML)
     strippedPages += 1
     removedScriptTags += stripped.removedScripts + stripped.removedPreloads
-    return injectBeforeHeadEnd(stripped.html, PLAUSIBLE_SNIPPET)
+    return injectBeforeHeadEnd(stripped.html, VERCEL_ANALYTICS_SNIPPET)
   },
   async onFinished(dir) {
     const htmlFiles = walkHtmlFiles(dir)

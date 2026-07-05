@@ -181,7 +181,7 @@ const privacy: InfoPageContent = {
     {
       heading: 'This website’s analytics',
       paragraphs: [
-        'The marketing pages (not the editor) use Plausible, a cookieless, EU-hosted analytics service that counts page views without personal identifiers, fingerprinting or cross-site tracking. The editor itself sends no telemetry.',
+        'We count page views with Vercel Web Analytics — served first-party by our host, cookieless, with no personal identifiers, fingerprinting or cross-site tracking. It cannot see your documents: analytics record that the editor page was opened, never what you write in it.',
       ],
     },
     {
