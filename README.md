@@ -26,9 +26,9 @@ Built by [Atom](https://atom.sa) · Live at [md.atom.sa](https://md.atom.sa)
 
 <br />
 
-**[Live demo →](https://your-demo-url)** <!-- TODO: replace with your deployed URL -->
+**[Live demo →](https://md.atom.sa)**
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-org/scripto) <!-- TODO: replace repository-url -->
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/atom-tech9/scripto)
 
 </div>
 
