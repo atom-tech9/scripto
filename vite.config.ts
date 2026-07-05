@@ -164,6 +164,10 @@ export default defineConfig(({ isSsrBuild }) => ({
   build: {
     target: 'es2020',
     chunkSizeWarningLimit: 1500,
+    // Marketing pages are prerendered with their JS stripped for SEO, so any
+    // route-split CSS would never get injected. Bundle all CSS into one file
+    // that is statically <link>-ed on every page and survives the strip.
+    cssCodeSplit: false,
     rollupOptions: {
       output: {
         // manualChunks only applies to the client build — in the SSR pass
