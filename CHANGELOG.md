@@ -23,5 +23,5 @@ _Nothing yet._
 - **Internationalization & RTL** — full English and Arabic UI with correct right-to-left layout and Arabic fonts (Cairo); configurable document direction.
 - **PWA** — installable and fully functional offline after first load.
 
-[Unreleased]: https://github.com/your-org/scripto/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/your-org/scripto/releases/tag/v1.0.0
+[Unreleased]: https://github.com/atom-tech9/scripto/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/atom-tech9/scripto/releases/tag/v1.0.0

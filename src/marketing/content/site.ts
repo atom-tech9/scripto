@@ -6,11 +6,7 @@ export const SITE_URL = 'https://md.atom.sa'
 export const SITE_NAME = 'Scripto'
 export const SITE_NAME_AR = 'سكربتو'
 
-/**
- * Public repository. NOTE: README currently ships a placeholder org — update
- * this single constant once the real repository is public.
- */
-export const GITHUB_URL = 'https://github.com/your-org/scripto'
+export const GITHUB_URL = 'https://github.com/atom-tech9/scripto'
 
 export const ATOM_URL = 'https://atom.sa'
 
