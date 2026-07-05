@@ -118,8 +118,8 @@ export function Landing({ lang }: { lang: MarketingLang }) {
             and for reduced-motion or no-JS visitors — the CSS mock below shows. */}
         <div className="mk-hero-live mk-reveal" aria-hidden="true">
           <video data-hero-video muted loop playsInline autoPlay preload="metadata">
-            <source src="/screenshots/demo.mp4" type="video/mp4" />
-            <source src="/screenshots/demo.webm" type="video/webm" />
+            <source src={lang === 'ar' ? '/screenshots/demo-ar.mp4' : '/screenshots/demo.mp4'} type="video/mp4" />
+            <source src={lang === 'ar' ? '/screenshots/demo-ar.webm' : '/screenshots/demo.webm'} type="video/webm" />
           </video>
         </div>
 
