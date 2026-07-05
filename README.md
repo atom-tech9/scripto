@@ -19,8 +19,10 @@ Built by [Atom](https://atom.sa) · Live at [md.atom.sa](https://md.atom.sa)
 
 <div align="center">
 
-<!-- TODO: add a screenshot at docs/assets/screenshot.png (referenced below). -->
-<img src="docs/assets/screenshot.png" width="820" alt="Scripto editor with live paginated PDF preview" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/screenshots/editor-dark.png">
+  <img src="public/screenshots/editor-light.png" width="820" alt="Scripto editor with live paginated PDF preview" />
+</picture>
 
 <em>Scripto's editor beside its live, paginated print preview — the preview <strong>is</strong> the PDF.</em>
 
