@@ -6,9 +6,9 @@
   "description": "A world-class Markdown editor with pixel-perfect PDF export.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite-react-ssg build",
+    "build": "tsc -b && tsc -p api/tsconfig.json --noEmit && vite-react-ssg build",
     "preview": "vite preview",
-    "typecheck": "tsc -b",
+    "typecheck": "tsc -b && tsc -p api/tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
