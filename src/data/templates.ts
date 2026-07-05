@@ -972,8 +972,8 @@ Let it rest 5 minutes before serving for the best texture.
     emoji: '📄',
     resume: true,
     content: `---
-title: {Your Name} — Résumé
-author: {Your Name}
+title: "{Your Name} — Résumé"
+author: "{Your Name}"
 skin: resume
 font: sans
 accent: '#334155'
@@ -1022,8 +1022,8 @@ pageNumbers: false
     emoji: '🟦',
     resume: true,
     content: `---
-title: {Your Name} — Résumé
-author: {Your Name}
+title: "{Your Name} — Résumé"
+author: "{Your Name}"
 skin: resume
 font: sans
 accent: '#2563eb'
@@ -1073,8 +1073,8 @@ pageNumbers: false
     emoji: '💻',
     resume: true,
     content: `---
-title: {Your Name} — Résumé
-author: {Your Name}
+title: "{Your Name} — Résumé"
+author: "{Your Name}"
 skin: resume
 font: sans
 accent: '#0f766e'
@@ -1130,8 +1130,8 @@ pageNumbers: false
     emoji: '📈',
     resume: true,
     content: `---
-title: {Your Name} — Résumé
-author: {Your Name}
+title: "{Your Name} — Résumé"
+author: "{Your Name}"
 skin: resume
 font: sans
 accent: '#9333ea'
@@ -1180,8 +1180,8 @@ Product Strategy · Roadmapping · Experimentation · SQL · Stakeholder Managem
     emoji: '🎓',
     resume: true,
     content: `---
-title: {Your Name} — Résumé
-author: {Your Name}
+title: "{Your Name} — Résumé"
+author: "{Your Name}"
 skin: resume
 font: sans
 accent: '#16a34a'
@@ -1236,8 +1236,8 @@ pageNumbers: false
     emoji: '🏛️',
     resume: true,
     content: `---
-title: {Your Name} — Résumé
-author: {Your Name}
+title: "{Your Name} — Résumé"
+author: "{Your Name}"
 skin: resume
 font: sans
 accent: '#1d4ed8'
@@ -1287,8 +1287,8 @@ P&L Ownership · Org Design · {Function} Strategy · M&A · Board Reporting · 
     emoji: '🔁',
     resume: true,
     content: `---
-title: {Your Name} — Résumé
-author: {Your Name}
+title: "{Your Name} — Résumé"
+author: "{Your Name}"
 skin: resume
 font: sans
 accent: '#ea580c'
@@ -1593,8 +1593,8 @@ timeline
     descKey: 'template.pitch-one-pager.desc',
     emoji: '🚀',
     content: `---
-title: {Your Company} — One-Pager
-author: {Founder Name}
+title: "{Your Company} — One-Pager"
+author: "{Founder Name}"
 subject: Seed round one-pager
 skin: modern
 accent: '#6366f1'
@@ -1655,8 +1655,8 @@ We're raising **{\\$X}M** to {hit the milestone: reach \\$N ARR / ship product /
     descKey: 'template.portfolio.desc',
     emoji: '🧑‍🎨',
     content: `---
-title: {Your Name} — Portfolio
-author: {Your Name}
+title: "{Your Name} — Portfolio"
+author: "{Your Name}"
 subject: Selected work and bio
 skin: editorial
 accent: '#db2777'
@@ -1697,8 +1697,8 @@ about}. This page collects the work they are proudest of and the easiest ways to
     descKey: 'template.datasheet.desc',
     emoji: '📃',
     content: `---
-title: {Product Name} — Datasheet
-author: {Your Company}
+title: "{Product Name} — Datasheet"
+author: "{Your Company}"
 subject: Technical datasheet
 skin: technical
 accent: '#0f766e'
@@ -1755,8 +1755,8 @@ Specifications are subject to change without notice. Document revision {Rev. A} 
     descKey: 'template.syllabus.desc',
     emoji: '🎓',
     content: `---
-title: {Course Code} — {Course Title}
-author: {Instructor Name}
+title: "{Course Code} — {Course Title}"
+author: "{Instructor Name}"
 subject: Course syllabus
 skin: editorial
 toc: true
@@ -1827,8 +1827,8 @@ written approval before the due date.
     descKey: 'template.pricing.desc',
     emoji: '💲',
     content: `---
-title: {Your Company} — Pricing & Quote
-author: {Your Company}
+title: "{Your Company} — Pricing & Quote"
+author: "{Your Company}"
 subject: Quote for {Client}
 skin: corporate
 accent: '#2563eb'
@@ -1879,8 +1879,8 @@ Prepared for **{Client Name}** · {Date} · Valid for {30} days · Quote #{Q-000
     descKey: 'template.cheatsheet.desc',
     emoji: '⚡',
     content: `---
-title: {Tool} Cheat Sheet
-author: {Your Name}
+title: "{Tool} Cheat Sheet"
+author: "{Your Name}"
 subject: Quick reference
 skin: compact
 margins: narrow
@@ -1932,7 +1932,7 @@ Substitute \`Cmd\` for \`Ctrl\` on macOS. Customize bindings in {Settings → Ke
     emoji: '🏅',
     content: `---
 title: Certificate of Achievement
-author: {Issuing Organization}
+author: "{Issuing Organization}"
 skin: classic
 pageNumbers: false
 ---
@@ -1978,8 +1978,8 @@ Awarded by **{Issuing Organization}**
     descKey: 'template.menu.desc',
     emoji: '🍽️',
     content: `---
-title: {Restaurant Name} — Menu
-author: {Restaurant Name}
+title: "{Restaurant Name} — Menu"
+author: "{Restaurant Name}"
 subject: Food & drink menu
 skin: editorial
 accent: '#9333ea'
@@ -2025,8 +2025,8 @@ parties of {6} or more.}*
     descKey: 'template.brand-guide.desc',
     emoji: '🎨',
     content: `---
-title: {Brand Name} — Brand Guidelines
-author: {Your Company}
+title: "{Brand Name} — Brand Guidelines"
+author: "{Your Company}"
 subject: Brand identity guidelines
 skin: modern
 accent: '#ea580c'
@@ -2088,7 +2088,7 @@ Questions about brand usage? Email [{brand@company.com}](mailto:{brand@company.c
     emoji: '🎉',
     content: `---
 title: You're Invited — {Event Name}
-author: {Host Name}
+author: "{Host Name}"
 subject: Invitation to {Event Name}
 skin: classic
 ---
