@@ -10,6 +10,7 @@ import rehypeRaw from 'rehype-raw'
 import rehypeKatex from 'rehype-katex'
 import rehypeSlug from 'rehype-slug'
 import rehypePrismPlus from 'rehype-prism-plus'
+import { rehypeSourceLine } from './plugins/rehypeSourceLine'
 import { remarkCallouts } from './plugins/remarkCallouts'
 import { remarkMarks } from './plugins/remarkMarks'
 import { CodeBlock } from './components/CodeBlock'
@@ -65,6 +66,9 @@ const remarkPlugins = [
 ] as const
 
 const rehypePlugins = [
+  // First, while mdast positions are intact, so scroll-sync anchors survive
+  // rehype-raw's reserialization of raw HTML.
+  rehypeSourceLine,
   rehypeRaw,
   rehypeKatex,
   rehypeSlug,

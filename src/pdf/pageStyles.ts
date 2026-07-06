@@ -107,6 +107,23 @@ export function buildPageCss(config: PdfConfig): string {
     .scripto-doc .katex-display, .scripto-doc .mermaid-figure {
       break-inside: avoid;
     }
+
+    /* Tall diagrams / images are scaled to fit within one page's content box,
+       WITH the heading that precedes them (headings set break-after: avoid). An
+       unbreakable heading+figure taller than the page makes Paged.js split the
+       SVG — spilling blank pages and leaking the diagram's inner <style> as
+       text — so the cap reserves room for a heading + the figure's margins.
+       width:auto keeps the aspect ratio intact. */
+    .scripto-doc .mermaid-figure svg,
+    .scripto-doc figure svg,
+    .scripto-doc img {
+      max-height: ${round(Math.max(40, height - top - bottom - 30))}mm;
+    }
+    .scripto-doc .mermaid-figure svg,
+    .scripto-doc figure svg {
+      width: auto;
+      height: auto;
+    }
     /* Tables flow across pages: header repeats, rows never split. */
     .scripto-doc .table-wrap { break-inside: auto; overflow: visible; border: none; }
     .scripto-doc table { break-inside: auto; }

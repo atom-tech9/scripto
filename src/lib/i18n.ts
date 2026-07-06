@@ -803,6 +803,8 @@ export const EN_STRINGS = {
 
   // Preview cover/Contents toggle
   'preview.frontMatter.toggle': 'Show cover & contents',
+  'preview.sync.on': 'Scroll sync on — click to disable',
+  'preview.sync.off': 'Scroll sync off — click to enable',
   'print.frontMatter': 'Cover & contents',
 
   // Cover page & contents
@@ -1592,6 +1594,8 @@ export const STRINGS: Record<UiLanguage, Dictionary> = {
 
     // Preview cover/Contents toggle
     'preview.frontMatter.toggle': 'إظهار الغلاف والمحتويات',
+    'preview.sync.on': 'مزامنة التمرير مُفعّلة — انقر للتعطيل',
+    'preview.sync.off': 'مزامنة التمرير مُعطّلة — انقر للتفعيل',
     'print.frontMatter': 'الغلاف والمحتويات',
 
     // Cover page & contents

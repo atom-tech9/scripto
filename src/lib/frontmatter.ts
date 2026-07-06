@@ -19,9 +19,15 @@ export interface ParsedDocument {
   body: string
   /** Whether a front-matter block was found. */
   hasFrontmatter: boolean
+  /** Editor source lines before the body starts (0 when no front-matter).
+   * Body line N corresponds to editor line N + bodyLineOffset. */
+  bodyLineOffset: number
 }
 
 const FRONTMATTER_RE = /^﻿?---\r?\n([\s\S]*?)\r?\n---\r?\n?/
+
+/** Lines consumed by the matched front-matter block (its newline count). */
+const countLines = (block: string): number => (block.match(/\r?\n/g)?.length ?? 0)
 
 /**
  * Split a YAML front-matter block (`--- … ---`) from the Markdown body.
@@ -29,15 +35,20 @@ const FRONTMATTER_RE = /^﻿?---\r?\n([\s\S]*?)\r?\n---\r?\n?/
  */
 export function parseFrontmatter(source: string): ParsedDocument {
   const match = FRONTMATTER_RE.exec(source)
-  if (!match) return { data: {}, body: source, hasFrontmatter: false }
+  if (!match) return { data: {}, body: source, hasFrontmatter: false, bodyLineOffset: 0 }
 
   try {
     const parsed = yaml.load(match[1])
     const data = parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : {}
-    return { data, body: source.slice(match[0].length), hasFrontmatter: true }
+    return {
+      data,
+      body: source.slice(match[0].length),
+      hasFrontmatter: true,
+      bodyLineOffset: countLines(match[0]),
+    }
   } catch (error) {
     logger.warn('Invalid YAML front-matter; ignoring', error)
-    return { data: {}, body: source, hasFrontmatter: false }
+    return { data: {}, body: source, hasFrontmatter: false, bodyLineOffset: 0 }
   }
 }
 

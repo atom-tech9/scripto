@@ -71,6 +71,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useDocumentLibrary } from '@/hooks/useDocumentLibrary'
+import { useScrollSync } from '@/hooks/useScrollSync'
 
 import { DEFAULT_CONFIG, MARGIN_PRESETS, STORAGE_KEYS } from '@/lib/constants'
 import { countHeadings } from '@/lib/utils'
@@ -172,7 +173,7 @@ export default function App({ lock }: AppProps) {
   const [saving, setSaving] = useState(false)
 
   const [editorView, setEditorView] = useState<EditorView | null>(null)
-  const [editorScroll, setEditorScroll] = useState<number | undefined>(undefined)
+  const [previewScrollEl, setPreviewScrollEl] = useState<HTMLElement | null>(null)
   const previewRef = useRef<PreviewHandle>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const mainRef = useRef<HTMLDivElement>(null)
@@ -202,6 +203,17 @@ export default function App({ lock }: AppProps) {
   const showEditor = effectiveView !== 'preview'
   const showPreview = effectiveView !== 'editor'
   const isSplit = showEditor && showPreview && isDesktop
+
+  // Anchor-based scroll sync between the editor and preview (split view only).
+  const [syncEnabled, setSyncEnabled] = useLocalStorage('scripto:scroll-sync', true)
+  const getDoc = useCallback(() => previewRef.current?.getDocElement() ?? null, [])
+  useScrollSync({
+    view: editorView,
+    previewScroll: previewScrollEl,
+    getPreviewDoc: getDoc,
+    bodyLineOffset: parsed.bodyLineOffset,
+    enabled: syncEnabled && isSplit,
+  })
 
   const startResize = useCallback(
     (event: React.MouseEvent) => {
@@ -301,7 +313,6 @@ export default function App({ lock }: AppProps) {
     [library, t],
   )
 
-  const getDoc = useCallback(() => previewRef.current?.getDocElement() ?? null, [])
   const handleEditorError = useCallback((message: string) => toast.error(message), [])
 
   const ensureDoc = useCallback((): HTMLElement | null => {
@@ -893,7 +904,6 @@ export default function App({ lock }: AppProps) {
               resolvedTheme={resolvedTheme}
               direction={effectiveConfig.direction === 'auto' ? ui.dir : effectiveConfig.direction}
               onReady={setEditorView}
-              onScrollFraction={showPreview ? setEditorScroll : undefined}
               onActivity={bumpActivity}
               slashAi={handleAiAction}
               onSlashHelp={openFormattingHelp}
@@ -949,7 +959,9 @@ export default function App({ lock }: AppProps) {
               content={parsed.body}
               config={effectiveConfig}
               resolvedTheme={resolvedTheme}
-              scrollFraction={editorScroll}
+              onScrollElement={setPreviewScrollEl}
+              syncEnabled={isSplit ? syncEnabled : undefined}
+              onToggleSync={isSplit ? () => setSyncEnabled((v) => !v) : undefined}
             />
           )}
         </section>

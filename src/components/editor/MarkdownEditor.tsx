@@ -23,7 +23,6 @@ interface MarkdownEditorProps {
   onReady?: (view: EditorView) => void
   wordWrap?: boolean
   direction?: TextDirection
-  onScrollFraction?: (fraction: number) => void
   /** Fires on any selection / geometry / scroll change so overlays can reposition. */
   onActivity?: () => void
   /** Enables the `/` slash menu, routing AI items to this handler. */
@@ -115,7 +114,6 @@ export function MarkdownEditor({
   onReady,
   wordWrap = true,
   direction = 'auto',
-  onScrollFraction,
   onActivity,
   slashAi,
   onSlashHelp,
@@ -129,7 +127,6 @@ export function MarkdownEditor({
   const callbacks = useRef({
     onChange,
     onReady,
-    onScrollFraction,
     onActivity,
     slashAi,
     onSlashHelp,
@@ -140,7 +137,6 @@ export function MarkdownEditor({
   callbacks.current = {
     onChange,
     onReady,
-    onScrollFraction,
     onActivity,
     slashAi,
     onSlashHelp,
@@ -226,13 +222,8 @@ export function MarkdownEditor({
 
     base.push(
       EditorView.domEventHandlers({
-        scroll: (_event, view) => {
+        scroll: () => {
           callbacks.current.onActivity?.()
-          const notify = callbacks.current.onScrollFraction
-          if (!notify) return
-          const el = view.scrollDOM
-          const max = el.scrollHeight - el.clientHeight
-          notify(max > 0 ? el.scrollTop / max : 0)
         },
         paste: (event, view) => {
           const files = imageFiles(event.clipboardData?.files)

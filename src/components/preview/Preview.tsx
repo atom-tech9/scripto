@@ -8,7 +8,7 @@ import {
   useState,
   type CSSProperties,
 } from 'react'
-import { Eye, EyeOff, Minus, Plus } from 'lucide-react'
+import { Eye, EyeOff, Link2, Link2Off, Minus, Plus } from 'lucide-react'
 import { MarkdownRenderer } from '@/markdown/MarkdownRenderer'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useLanguage } from '@/i18n'
@@ -25,15 +25,17 @@ import type { PdfConfig, ResolvedTheme, TocEntry } from '@/types'
 export interface PreviewHandle {
   /** The live document element — cloned by the PDF engine for export. */
   getDocElement: () => HTMLElement | null
-  scrollToFraction: (fraction: number) => void
 }
 
 interface PreviewProps {
   content: string
   config: PdfConfig
   resolvedTheme: ResolvedTheme
-  scrollFraction?: number
-  onScrollFraction?: (fraction: number) => void
+  /** Reports the scroll container up (for scroll sync); null on unmount. */
+  onScrollElement?: (el: HTMLElement | null) => void
+  /** Scroll-sync toggle — rendered only when provided (i.e. in split view). */
+  syncEnabled?: boolean
+  onToggleSync?: () => void
 }
 
 const pageCard = 'rounded-xl bg-surface shadow-sm ring-1 ring-border/60'
@@ -41,13 +43,12 @@ const pageCard = 'rounded-xl bg-surface shadow-sm ring-1 ring-border/60'
 /** The live, scrollable rendered document. Shows the same cover + contents pages
  * the PDF will, so the preview matches the export. */
 export const Preview = forwardRef<PreviewHandle, PreviewProps>(function Preview(
-  { content, config, resolvedTheme, scrollFraction, onScrollFraction },
+  { content, config, resolvedTheme, onScrollElement, syncEnabled, onToggleSync },
   ref,
 ) {
   const { t, lang } = useLanguage()
   const scrollRef = useRef<HTMLDivElement>(null)
   const docRef = useRef<HTMLDivElement>(null)
-  const syncingRef = useRef(false)
   const [progress, setProgress] = useState(0)
   const [zoom, setZoom] = useState(1)
   const zoomRef = useRef(1)
@@ -59,23 +60,14 @@ export const Preview = forwardRef<PreviewHandle, PreviewProps>(function Preview(
 
   useImperativeHandle(ref, () => ({
     getDocElement: () => docRef.current,
-    scrollToFraction: (fraction) => {
-      const el = scrollRef.current
-      if (!el) return
-      const max = el.scrollHeight - el.clientHeight
-      el.scrollTop = max * fraction
-    },
   }))
 
+  // Report the scroll container to the parent so the scroll-sync hook can wire
+  // native listeners to it.
   useEffect(() => {
-    const el = scrollRef.current
-    if (!el || scrollFraction === undefined) return
-    syncingRef.current = true
-    const max = el.scrollHeight - el.clientHeight
-    el.scrollTop = max * scrollFraction
-    const id = window.setTimeout(() => (syncingRef.current = false), 60)
-    return () => window.clearTimeout(id)
-  }, [scrollFraction])
+    onScrollElement?.(scrollRef.current)
+    return () => onScrollElement?.(null)
+  }, [onScrollElement])
 
   // Pinch-to-zoom the preview on touch devices (native non-passive listeners so
   // the gesture can preventDefault the browser's own page zoom).
@@ -161,10 +153,7 @@ export const Preview = forwardRef<PreviewHandle, PreviewProps>(function Preview(
         onScroll={(e) => {
           const el = e.currentTarget
           const max = el.scrollHeight - el.clientHeight
-          const fraction = max > 0 ? el.scrollTop / max : 0
-          setProgress(fraction)
-          if (syncingRef.current || !onScrollFraction) return
-          onScrollFraction(fraction)
+          setProgress(max > 0 ? el.scrollTop / max : 0)
         }}
       >
         <div
@@ -222,6 +211,24 @@ export const Preview = forwardRef<PreviewHandle, PreviewProps>(function Preview(
           </div>
         </div>
       </div>
+
+      {/* Scroll-sync toggle — only in split view (when the editor is visible). */}
+      {onToggleSync && (
+        <button
+          type="button"
+          onClick={onToggleSync}
+          aria-pressed={syncEnabled}
+          title={syncEnabled ? t('preview.sync.on') : t('preview.sync.off')}
+          aria-label={syncEnabled ? t('preview.sync.on') : t('preview.sync.off')}
+          className={`absolute end-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border shadow-lg backdrop-blur transition-colors ${
+            syncEnabled
+              ? 'border-primary/30 bg-primary/10 text-primary'
+              : 'border-border bg-surface/90 text-muted-foreground hover:bg-muted hover:text-foreground'
+          }`}
+        >
+          {syncEnabled ? <Link2 size={15} /> : <Link2Off size={15} />}
+        </button>
+      )}
 
       {/* Floating zoom control — most useful on touch / small screens. */}
       <div className="absolute bottom-3 end-3 z-20 flex items-center gap-0.5 rounded-full border border-border bg-surface/90 p-0.5 shadow-lg backdrop-blur lg:hidden">
