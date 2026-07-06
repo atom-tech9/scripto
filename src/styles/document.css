@@ -198,6 +198,21 @@
 .scripto-doc[data-numbered] .pdf-toc h2::before {
   content: none;
 }
+/* Headings that carry their own number in the text keep it and are fully
+   transparent to the auto counters (no increment, no child reset) — matching
+   bakeHeadingNumbers so preview and PDF always agree. */
+.scripto-doc[data-numbered] h1[data-self-numbered],
+.scripto-doc[data-numbered] h2[data-self-numbered],
+.scripto-doc[data-numbered] h3[data-self-numbered] {
+  counter-reset: none;
+}
+.scripto-doc[data-numbered] h1[data-self-numbered]::before,
+.scripto-doc[data-numbered] h2[data-self-numbered]::before,
+.scripto-doc[data-numbered] h3[data-self-numbered]::before,
+.scripto-doc[data-numbered] h4[data-self-numbered]::before {
+  content: none;
+  counter-increment: none;
+}
 /* Baked heading numbers in the PDF export (buildExportContent) — match the
    accent colour the live-preview CSS counters use. */
 .scripto-doc .heading-number {

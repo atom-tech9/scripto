@@ -1,4 +1,5 @@
 import { buildCoverHtml, resolveDocDirection } from './pageStyles'
+import { startsWithManualNumber } from '@/lib/headingNumbers'
 import { escapeHtml } from '@/lib/utils'
 import type { PdfConfig, TocEntry } from '@/types'
 
@@ -73,6 +74,8 @@ function bakeHeadingNumbers(root: HTMLElement): void {
   const counters = [0, 0, 0, 0]
   root.querySelectorAll<HTMLElement>('h1, h2, h3, h4').forEach((h) => {
     if (h.closest('.footnotes')) return
+    // Self-numbered headings keep their own number and don't consume a slot.
+    if (startsWithManualNumber(h.textContent ?? '')) return
     const level = Number(h.tagName[1])
     counters[level - 1] += 1
     for (let i = level; i < counters.length; i++) counters[i] = 0
