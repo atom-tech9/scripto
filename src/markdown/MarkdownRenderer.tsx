@@ -1,5 +1,6 @@
 import { memo, useMemo, type ComponentPropsWithoutRef, type ReactNode } from 'react'
 import ReactMarkdown, { defaultUrlTransform, type Components } from 'react-markdown'
+import { startsWithManualNumber } from '@/lib/headingNumbers'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import remarkDirective from 'remark-directive'
@@ -40,6 +41,10 @@ function hastToText(node: HastNode | undefined): string {
   if (node.type === 'text') return node.value ?? ''
   if (!node.children) return ''
   return node.children.map(hastToText).join('')
+}
+
+function selfNumberedAttr(node: HastNode | undefined): { 'data-self-numbered'?: '' } {
+  return startsWithManualNumber(hastToText(node)) ? { 'data-self-numbered': '' } : {}
 }
 
 function languageFromClass(className?: string[] | string): string {
@@ -122,6 +127,19 @@ function MarkdownRendererImpl({ content, resolvedTheme }: MarkdownRendererProps)
           return <input {...rest} type="checkbox" checked={Boolean(checked)} readOnly disabled />
         }
         return <input {...rest} type={type} />
+      },
+      // Headings that already carry a manual number opt out of auto-numbering.
+      h1({ node, children, ...props }) {
+        return <h1 {...props} {...selfNumberedAttr(node as HastNode)}>{children as ReactNode}</h1>
+      },
+      h2({ node, children, ...props }) {
+        return <h2 {...props} {...selfNumberedAttr(node as HastNode)}>{children as ReactNode}</h2>
+      },
+      h3({ node, children, ...props }) {
+        return <h3 {...props} {...selfNumberedAttr(node as HastNode)}>{children as ReactNode}</h3>
+      },
+      h4({ node, children, ...props }) {
+        return <h4 {...props} {...selfNumberedAttr(node as HastNode)}>{children as ReactNode}</h4>
       },
     }
   }, [resolvedTheme])
