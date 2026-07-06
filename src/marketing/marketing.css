@@ -195,10 +195,24 @@ html.dark {
 }
 
 .mk-header-inner {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 0.75rem;
   block-size: 4rem;
+}
+
+@media (min-width: 900px) {
+  .mk-header-inner {
+    gap: 1.25rem;
+  }
+}
+
+/* Hide the wordmark on the very narrowest screens; keep the logo icon. */
+@media (max-width: 359px) {
+  .mk-logo-word {
+    display: none;
+  }
 }
 
 .mk-logo {
@@ -244,16 +258,161 @@ html.dark {
   background: var(--mk-surface-3);
 }
 
+/* Desktop action cluster — collapses into the menu below the nav breakpoint. */
 .mk-header-actions {
-  display: flex;
+  display: none;
   align-items: center;
   gap: 0.625rem;
   margin-inline-start: auto;
 }
 
+@media (min-width: 900px) {
+  .mk-header-actions {
+    display: flex;
+  }
+}
+
+/* Compact cluster (CTA + hamburger) shown below the nav breakpoint. */
+.mk-header-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-inline-start: auto;
+}
+
+@media (min-width: 900px) {
+  .mk-header-compact {
+    display: none;
+  }
+}
+
 @media (max-width: 640px) {
   .mk-gh-label {
     display: none;
+  }
+}
+
+/* ---------- mobile menu (zero-JS: native <details>) ---------- */
+
+.mk-menu {
+  display: inline-flex;
+}
+
+.mk-menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 2.75rem;
+  min-block-size: 2.75rem;
+  border-radius: 0.75rem;
+  color: var(--mk-fg);
+  background: var(--mk-chip-bg);
+  border: 1px solid var(--mk-border-strong);
+  cursor: pointer;
+  list-style: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.mk-menu-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.mk-menu-toggle:hover {
+  border-color: var(--mk-accent-border);
+  background: var(--mk-surface-3);
+}
+
+.mk-menu-toggle:focus-visible {
+  outline: 2px solid var(--mk-accent-fg);
+  outline-offset: 2px;
+}
+
+/* hamburger ↔ X reflects the open state */
+.mk-icon-close {
+  display: none;
+}
+
+.mk-menu[open] .mk-icon-open {
+  display: none;
+}
+
+.mk-menu[open] .mk-icon-close {
+  display: block;
+}
+
+.mk-menu-panel {
+  position: absolute;
+  inset-block-start: calc(100% + 0.5rem);
+  inset-inline: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  max-block-size: calc(100dvh - 5rem);
+  overflow-y: auto;
+  padding: 0.75rem;
+  border: 1px solid var(--mk-border);
+  border-radius: 1rem;
+  background: var(--mk-bg);
+  box-shadow: var(--mk-card-shadow);
+}
+
+.mk-menu[open] .mk-menu-panel {
+  animation: mk-menu-in 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mk-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+}
+
+.mk-menu-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.mk-menu-nav a {
+  padding: 0.75rem 0.875rem;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-weight: 550;
+  color: var(--mk-fg);
+  transition: background-color 0.15s ease;
+}
+
+.mk-menu-nav a:hover {
+  background: var(--mk-surface-3);
+}
+
+.mk-menu-divider {
+  block-size: 1px;
+  border: 0;
+  margin: 0.625rem 0;
+  background: var(--mk-border);
+}
+
+.mk-menu-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Always label GitHub inside the menu, even under the 640px cutoff. */
+.mk-menu-actions .mk-gh-label {
+  display: inline;
+}
+
+/* Lock background scroll while the menu is open (ENHANCE_SCRIPT toggles the class). */
+html.mk-menu-open body {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mk-menu[open] .mk-menu-panel {
+    animation: none;
   }
 }
 
@@ -313,6 +472,11 @@ html:not(.dark) .mk-theme-toggle .tt-sun {
 .mk-btn-md {
   padding: 0.625rem 1.125rem;
   font-size: 0.9375rem;
+}
+
+.mk-btn-sm {
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
 }
 
 .mk-btn-primary {
