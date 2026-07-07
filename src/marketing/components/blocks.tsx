@@ -43,9 +43,11 @@ interface PageHeroProps {
   breadcrumbs: { name: string; path: string }[]
   lang: MarketingLang
   cta?: { label: string; href: string }
+  /** Analytics location label for the hero CTA. */
+  trackLocation?: string
 }
 
-export function PageHero({ h1, intro, breadcrumbs, lang, cta }: PageHeroProps) {
+export function PageHero({ h1, intro, breadcrumbs, lang, cta, trackLocation = 'page-hero' }: PageHeroProps) {
   return (
     <div className="mk-container mk-section-tight" style={{ paddingBlockStart: '3.5rem' }}>
       <Breadcrumbs items={breadcrumbs} lang={lang} />
@@ -60,7 +62,12 @@ export function PageHero({ h1, intro, breadcrumbs, lang, cta }: PageHeroProps) {
         ))}
       </div>
       <div style={{ marginBlockStart: '2rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-        <a href={cta?.href ?? APP_PATH} className="mk-btn mk-btn-primary mk-btn-lg">
+        <a
+          href={cta?.href ?? APP_PATH}
+          className="mk-btn mk-btn-primary mk-btn-lg"
+          data-track="Open App"
+          data-track-location={trackLocation}
+        >
           {cta?.label ?? chrome('openAppFree', lang)}
         </a>
       </div>
@@ -192,9 +199,11 @@ interface CtaBandProps {
   href?: string
   label?: string
   children?: ReactNode
+  /** Analytics location label for the CTA. */
+  trackLocation?: string
 }
 
-export function CtaBand({ lang, title, lead, href, label, children }: CtaBandProps) {
+export function CtaBand({ lang, title, lead, href, label, children, trackLocation = 'cta-band' }: CtaBandProps) {
   return (
     <section className="mk-section-tight">
       <div className="mk-cta-band mk-reveal">
@@ -205,7 +214,12 @@ export function CtaBand({ lang, title, lead, href, label, children }: CtaBandPro
           </p>
         ) : null}
         <div style={{ marginBlockStart: '1.75rem', display: 'flex', justifyContent: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <a href={href ?? APP_PATH} className="mk-btn mk-btn-primary mk-btn-lg">
+          <a
+            href={href ?? APP_PATH}
+            className="mk-btn mk-btn-primary mk-btn-lg"
+            data-track="Open App"
+            data-track-location={trackLocation}
+          >
             {label ?? chrome('openAppFree', lang)}
           </a>
           {children}

@@ -94,6 +94,7 @@ import { AiInputDialog, type AiInputRequest } from '@/components/layout/AiInputD
 import { AI_PROMPTS } from '@/lib/aiPrompts'
 import { DEFAULT_AI_CONFIG, isAiConfigured, runAi, type AiConfig } from '@/lib/ai'
 import { ACCEPTED_IMPORT, importFile } from '@/io/importers'
+import { trackEvent } from '@/lib/analytics'
 import { exportHtml, exportMarkdown, exportWord } from '@/io/exporters'
 import type { AppLockApi } from '@/hooks/useAppLock'
 import type { DocumentSkin, PdfConfig, ViewMode } from '@/types'
@@ -150,6 +151,19 @@ export default function App({ lock }: AppProps) {
       setOnboarding((prev) => (prev[step] ? prev : { ...prev, [step]: true })),
     [setOnboarding],
   )
+  // Track the completing transition only — never on load for returning users.
+  const onboardingBaselineRef = useRef<boolean | null>(null)
+  useEffect(() => {
+    const done = onboarding.template && onboarding.edit && onboarding.export
+    if (onboardingBaselineRef.current === null) {
+      onboardingBaselineRef.current = done
+      return
+    }
+    if (done && !onboardingBaselineRef.current) {
+      onboardingBaselineRef.current = true
+      trackEvent('Onboarding Completed')
+    }
+  }, [onboarding])
 
   const isDesktop = useMediaQuery('(min-width: 1024px)')
   const [configOpen, setConfigOpen] = useState(false)
@@ -305,6 +319,7 @@ export default function App({ lock }: AppProps) {
       try {
         const result = await importFile(file)
         library.createDoc(result.markdown, result.name)
+        trackEvent('Import', { source: file.name.split('.').pop()?.toLowerCase() || 'file' })
         toast.success(`${t('toast.imported')} “${file.name}”`)
       } catch (error) {
         toast.error(getErrorMessage(error))
@@ -330,13 +345,15 @@ export default function App({ lock }: AppProps) {
       return
     }
     setPrintOpen(true)
+    trackEvent('Export PDF', { skin: effectiveConfig.skin, paper: effectiveConfig.paperSize })
     markOnboarding('export')
-  }, [bodyEmpty, t, markOnboarding])
+  }, [bodyEmpty, t, markOnboarding, effectiveConfig.skin, effectiveConfig.paperSize])
 
   const handleExportWord = useCallback(() => {
     const doc = ensureDoc()
     if (!doc) return
     exportWord(doc, effectiveConfig, effectiveConfig.meta.title || 'document')
+    trackEvent('Document Exported', { format: 'word' })
     toast.success(t('toast.wordExported'))
   }, [ensureDoc, effectiveConfig, t])
 
@@ -344,11 +361,13 @@ export default function App({ lock }: AppProps) {
     const doc = ensureDoc()
     if (!doc) return
     exportHtml(doc, effectiveConfig, effectiveConfig.meta.title || 'document')
+    trackEvent('Document Exported', { format: 'html' })
     toast.success(t('toast.htmlExported'))
   }, [ensureDoc, effectiveConfig, t])
 
   const handleExportMarkdown = useCallback(() => {
     exportMarkdown(markdown, effectiveConfig.meta.title || 'document')
+    trackEvent('Document Exported', { format: 'markdown' })
     toast.success(t('toast.markdownExported'))
   }, [markdown, effectiveConfig.meta.title, t])
 
@@ -368,6 +387,7 @@ export default function App({ lock }: AppProps) {
   const handleTemplate = useCallback(
     (template: DocumentTemplate) => {
       markOnboarding('template')
+      trackEvent('Template Used', { template: template.id, source: 'picker' })
       // Résumé templates first collect the user's header details.
       if (template.resume) {
         setPendingResume(template)
@@ -420,10 +440,12 @@ export default function App({ lock }: AppProps) {
       const { data } = parseFrontmatter(template.content)
       if (Object.keys(data).length > 0) setConfig((prev) => applyFrontmatter(prev, data))
       toast.success(`${t('toast.templateLoaded')} “${name}”`)
+      trackEvent('Template Used', { template: template.id, source: 'deeplink' })
       markOnboarding('template')
     }
     if (skin) {
       setConfig((prev) => ({ ...prev, skin }))
+      trackEvent('Skin Applied', { skin, source: 'deeplink' })
       toast.success(t('toast.skinApplied'))
     }
 
@@ -687,6 +709,7 @@ export default function App({ lock }: AppProps) {
 
   const handleAiAction = useCallback(
     (action: AiToolbarAction) => {
+      if (action !== 'settings') trackEvent('AI Action', { action })
       switch (action) {
         case 'improve':
           return runSelectionTransform(AI_PROMPTS.improve, t('ai.improving'))

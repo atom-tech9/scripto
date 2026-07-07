@@ -96,7 +96,13 @@ export function TemplatePage() {
           typeset PDF — free, no signup, nothing uploaded.
         </p>
         <div style={{ marginBlockStart: '1.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <a href={`${APP_PATH}?template=${template.id}`} className="mk-btn mk-btn-primary mk-btn-lg">
+          <a
+            href={`${APP_PATH}?template=${template.id}`}
+            className="mk-btn mk-btn-primary mk-btn-lg"
+            data-track="Open App"
+            data-track-location="template-page"
+            data-track-template={template.id}
+          >
             Use this template
           </a>
           <a href="/templates" className="mk-btn mk-btn-ghost mk-btn-lg">
@@ -168,6 +174,7 @@ export function TemplatePage() {
           lead="One click opens this template in the editor with a live paginated preview."
           href={`${APP_PATH}?template=${template.id}`}
           label="Open in Scripto"
+          trackLocation="template-cta"
         />
       </div>
     </MarketingLayout>
