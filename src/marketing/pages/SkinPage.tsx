@@ -57,7 +57,13 @@ export function SkinPage() {
               <strong style={{ color: 'var(--mk-fg)' }}>Best for:</strong> {blurb.bestFor}
             </p>
             <div style={{ marginBlockStart: '1.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <a href={`${APP_PATH}?skin=${skin.value}`} className="mk-btn mk-btn-primary mk-btn-lg">
+              <a
+                href={`${APP_PATH}?skin=${skin.value}`}
+                className="mk-btn mk-btn-primary mk-btn-lg"
+                data-track="Open App"
+                data-track-location="skin-page"
+                data-track-skin={skin.value}
+              >
                 Use the {name} skin
               </a>
               <a href="/skins" className="mk-btn mk-btn-ghost mk-btn-lg">
@@ -122,6 +128,7 @@ export function SkinPage() {
           lead="Paste your Markdown, apply the skin, export — under a minute, free."
           href={`${APP_PATH}?skin=${skin.value}`}
           label={`Open Scripto with ${name}`}
+          trackLocation="skin-cta"
         />
       </div>
     </MarketingLayout>

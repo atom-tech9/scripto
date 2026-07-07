@@ -95,17 +95,27 @@ export function SiteFooter({ lang }: SiteFooterProps) {
             <div key={column.heading}>
               <h3>{chrome(column.heading, lang)}</h3>
               <ul>
-                {column.links.map((link) => (
-                  <li key={link.to}>
-                    {link.external ? (
-                      <a href={link.to} target="_blank" rel="noopener">
-                        {link.label}
-                      </a>
-                    ) : (
-                      <a href={link.to}>{link.label}</a>
-                    )}
-                  </li>
-                ))}
+                {column.links.map((link) => {
+                  const track =
+                    link.to === APP_PATH
+                      ? { 'data-track': 'Open App', 'data-track-location': 'footer' }
+                      : link.to === GITHUB_URL
+                        ? { 'data-track': 'GitHub', 'data-track-location': 'footer' }
+                        : undefined
+                  return (
+                    <li key={link.to}>
+                      {link.external ? (
+                        <a href={link.to} target="_blank" rel="noopener" {...track}>
+                          {link.label}
+                        </a>
+                      ) : (
+                        <a href={link.to} {...track}>
+                          {link.label}
+                        </a>
+                      )}
+                    </li>
+                  )
+                })}
               </ul>
             </div>
           ))}

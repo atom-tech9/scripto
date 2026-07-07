@@ -108,7 +108,13 @@ export function CheatSheetPage() {
           the template.
         </p>
         <div style={{ marginBlockStart: '1.75rem' }}>
-          <a href={`${APP_PATH}?template=cheatsheet`} className="mk-btn mk-btn-primary mk-btn-lg">
+          <a
+            href={`${APP_PATH}?template=cheatsheet`}
+            className="mk-btn mk-btn-primary mk-btn-lg"
+            data-track="Open App"
+            data-track-location="cheatsheet"
+            data-track-template="cheatsheet"
+          >
             Open as editable template
           </a>
         </div>

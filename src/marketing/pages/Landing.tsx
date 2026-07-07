@@ -101,10 +101,22 @@ export function Landing({ lang }: { lang: MarketingLang }) {
             {c.sub}
           </p>
           <div style={{ marginBlockStart: '2.25rem', display: 'flex', justifyContent: 'center', gap: '0.875rem', flexWrap: 'wrap' }}>
-            <a href={APP_PATH} className="mk-btn mk-btn-primary mk-btn-lg">
+            <a
+              href={APP_PATH}
+              className="mk-btn mk-btn-primary mk-btn-lg"
+              data-track="Open App"
+              data-track-location="hero"
+            >
               {c.ctaPrimary}
             </a>
-            <a href={GITHUB_URL} target="_blank" rel="noopener" className="mk-btn mk-btn-ghost mk-btn-lg">
+            <a
+              href={GITHUB_URL}
+              target="_blank"
+              rel="noopener"
+              className="mk-btn mk-btn-ghost mk-btn-lg"
+              data-track="GitHub"
+              data-track-location="hero"
+            >
               {c.ctaSecondary}
             </a>
           </div>
@@ -192,7 +204,15 @@ export function Landing({ lang }: { lang: MarketingLang }) {
           {SAMPLE_EXPORTS.map((sample) => {
             const copy = sample[lang]
             return (
-              <a key={sample.href} href={sample.href} target="_blank" rel="noopener" className="mk-card mk-reveal">
+              <a
+                key={sample.href}
+                href={sample.href}
+                target="_blank"
+                rel="noopener"
+                className="mk-card mk-reveal"
+                data-track="Sample Download"
+                data-track-sample={sample.href.split('/').pop()?.replace('.pdf', '') || 'sample'}
+              >
                 <span className="mk-card-icon" aria-hidden="true">
                   📄
                 </span>
