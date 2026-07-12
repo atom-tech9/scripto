@@ -6,7 +6,7 @@
 
 **Write Markdown, export pixel-perfect paginated PDFs — entirely in your browser.**
 
-What you see in the live preview is exactly what lands in the PDF: same stylesheet, same rendered DOM. No backend, no uploads.
+What you see in the live preview is exactly you will see what lands in the PDF: same stylesheet, same rendered DOM. No backend, no uploads.
 
 Built by [Atom](https://atom.sa) · Live at [md.atom.sa](https://md.atom.sa)
 
@@ -50,6 +50,7 @@ Most "Markdown to PDF" tools render your document twice — once for the screen,
 ### Features
 
 #### ✍️ Editor
+
 - CodeMirror 6: Markdown highlighting, line numbers, word-wrap, undo/redo
 - Formatting toolbar + shortcuts (`⌘B` / `⌘I` / `⌘E` / `⌘K`, lists, quotes)
 - Find & replace (`⌘F`), autosave to `localStorage`, cross-tab sync
@@ -57,6 +58,7 @@ Most "Markdown to PDF" tools render your document twice — once for the screen,
 - Optional AI assist — bring-your-own-key, direct browser → provider
 
 #### 📝 Rich Markdown
+
 - GitHub-Flavored Markdown, tables, task lists, footnotes, definition lists
 - Emoji (`:rocket:`), `==highlight==`, `~sub~`, `^super^`
 - Callouts / admonitions (`:::tip … :::`)
@@ -64,6 +66,7 @@ Most "Markdown to PDF" tools render your document twice — once for the screen,
 - Math (KaTeX), Mermaid diagrams, HTML passthrough
 
 #### 📄 PDF export (Paged.js)
+
 - A4 / Letter / Legal / A3 / A5 / custom sizes; portrait & landscape
 - Margin presets + custom margins
 - Running headers (from the H1) & footers, page numbers (`x / y`)
@@ -71,19 +74,23 @@ Most "Markdown to PDF" tools render your document twice — once for the screen,
 - Repeating table headers; rows never split across pages
 
 #### 🎨 Design
+
 - 21 document skins, one-click theme presets, visual theme gallery
-- Custom accent color + custom CSS injected into preview *and* output
+- Custom accent color + custom CSS injected into preview _and_ output
 
 #### 🔒 Privacy
+
 - No server; everything stays in the browser (`localStorage`)
 - Optional passphrase lock: AES-256 (Web Crypto) encryption at rest
 - Zero-knowledge — passphrase never stored or sent; auto-lock on inactivity
 
 #### 🌍 Internationalization
+
 - Full English + Arabic UI with correct RTL layout and Arabic fonts (Cairo)
 - Configurable document direction
 
 #### 🔁 Import / export
+
 - **Import:** Markdown, Word (`.docx`), HTML, and GitHub README (paste a repo URL)
 - **Export:** PDF, Word (`.doc`), self-contained HTML, Markdown
 
@@ -117,22 +124,22 @@ The `dist/` output is fully static — deploy it to any static host (Vercel, Net
 
 ## 🧱 Tech stack
 
-| Concern | Choice | Why |
-| --- | --- | --- |
-| Build / dev | **Vite 5** | Fast HMR, ESM, simple config; pinned to 5.x for Node 20 compat. |
-| UI | **React 18 + TypeScript (strict)** | Mature ecosystem; strict typing for safety. |
-| Styling | **Tailwind CSS 3** + CSS variables | Utility speed for app chrome; CSS vars for theming and the document stylesheet. |
-| Editor | **CodeMirror 6** (`@uiw/react-codemirror`) | Best-in-class code editor: extensions, decorations, search. |
-| Markdown | **react-markdown** + remark/rehype | Plugin-based AST pipeline; full control over rendering. |
-| Math | **KaTeX** | Fast, print-friendly math. |
-| Code highlight | **Prism** (`rehype-prism-plus`) | AST-level highlighting + line numbers. |
-| Diagrams | **Mermaid** (lazy) | Text-to-diagram, renders to inline SVG. |
-| Pagination | **Paged.js** | Real CSS Paged Media: page boxes, running headers/footers, page numbers, repeating table headers. |
-| Import | **mammoth** (DOCX→HTML) + **turndown** (HTML→MD) | Reliable Word and HTML import. |
-| Offline | **vite-plugin-pwa** (Workbox) | Service worker + precache + runtime caching. |
-| Crypto | **Web Crypto API** | Native AES-GCM / PBKDF2 — no crypto dependency. |
-| Marketing/SEO | **vite-react-ssg** + react-router | Prerenders ~100 content pages to static, zero-JS HTML (landing, guides, per-template/skin pages, blog) with sitemap, hreflang and JSON-LD. |
-| Tests | **Vitest** | Unit coverage for the SEO build transforms and blog loader. |
+| Concern        | Choice                                           | Why                                                                                                                                        |
+| -------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Build / dev    | **Vite 5**                                       | Fast HMR, ESM, simple config; pinned to 5.x for Node 20 compat.                                                                            |
+| UI             | **React 18 + TypeScript (strict)**               | Mature ecosystem; strict typing for safety.                                                                                                |
+| Styling        | **Tailwind CSS 3** + CSS variables               | Utility speed for app chrome; CSS vars for theming and the document stylesheet.                                                            |
+| Editor         | **CodeMirror 6** (`@uiw/react-codemirror`)       | Best-in-class code editor: extensions, decorations, search.                                                                                |
+| Markdown       | **react-markdown** + remark/rehype               | Plugin-based AST pipeline; full control over rendering.                                                                                    |
+| Math           | **KaTeX**                                        | Fast, print-friendly math.                                                                                                                 |
+| Code highlight | **Prism** (`rehype-prism-plus`)                  | AST-level highlighting + line numbers.                                                                                                     |
+| Diagrams       | **Mermaid** (lazy)                               | Text-to-diagram, renders to inline SVG.                                                                                                    |
+| Pagination     | **Paged.js**                                     | Real CSS Paged Media: page boxes, running headers/footers, page numbers, repeating table headers.                                          |
+| Import         | **mammoth** (DOCX→HTML) + **turndown** (HTML→MD) | Reliable Word and HTML import.                                                                                                             |
+| Offline        | **vite-plugin-pwa** (Workbox)                    | Service worker + precache + runtime caching.                                                                                               |
+| Crypto         | **Web Crypto API**                               | Native AES-GCM / PBKDF2 — no crypto dependency.                                                                                            |
+| Marketing/SEO  | **vite-react-ssg** + react-router                | Prerenders ~100 content pages to static, zero-JS HTML (landing, guides, per-template/skin pages, blog) with sitemap, hreflang and JSON-LD. |
+| Tests          | **Vitest**                                       | Unit coverage for the SEO build transforms and blog loader.                                                                                |
 
 For the full design rationale, the rendering pipeline, and the "preview === PDF" mechanism, see **[ARCHITECTURE.md](ARCHITECTURE.md)** — the static marketing/SEO layer is documented there (§19) and operationally in **[docs/SEO_PLAYBOOK.md](docs/SEO_PLAYBOOK.md)**.
 
