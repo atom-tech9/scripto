@@ -11,10 +11,13 @@ import rehypeKatex from 'rehype-katex'
 import rehypeSlug from 'rehype-slug'
 import rehypePrismPlus from 'rehype-prism-plus'
 import { rehypeSourceLine } from './plugins/rehypeSourceLine'
+import { rehypeFenceMeta } from './plugins/rehypeFenceMeta'
 import { remarkCallouts } from './plugins/remarkCallouts'
 import { remarkMarks } from './plugins/remarkMarks'
 import { CodeBlock } from './components/CodeBlock'
 import { Mermaid } from './components/Mermaid'
+import { AsciiDiagram } from './components/AsciiDiagram'
+import { ASCII_DIAGRAM_LANGUAGES, isAsciiDiagram, parseFenceTitle } from './asciiDiagram'
 import type { ResolvedTheme } from '@/types'
 
 interface MarkdownRendererProps {
@@ -26,7 +29,7 @@ interface HastNode {
   type: string
   tagName?: string
   value?: string
-  properties?: { className?: string[] | string }
+  properties?: { className?: string[] | string; dataMeta?: unknown }
   children?: HastNode[]
 }
 
@@ -69,6 +72,7 @@ const rehypePlugins = [
   // First, while mdast positions are intact, so scroll-sync anchors survive
   // rehype-raw's reserialization of raw HTML.
   rehypeSourceLine,
+  rehypeFenceMeta,
   rehypeRaw,
   rehypeKatex,
   rehypeSlug,
@@ -91,6 +95,17 @@ function MarkdownRendererImpl({ content, resolvedTheme }: MarkdownRendererProps)
 
         if (language === 'mermaid') {
           return <Mermaid code={raw} resolvedTheme={resolvedTheme} />
+        }
+        // ```text/```txt/```plain force plain rendering; any other tagged
+        // language is never hijacked — the heuristic runs on untagged blocks only.
+        if (ASCII_DIAGRAM_LANGUAGES.has(language) || (!language && isAsciiDiagram(raw))) {
+          const meta = codeChild?.properties?.dataMeta
+          return (
+            <AsciiDiagram
+              code={raw}
+              title={parseFenceTitle(typeof meta === 'string' ? meta : undefined)}
+            />
+          )
         }
         return (
           <CodeBlock language={language} raw={raw}>

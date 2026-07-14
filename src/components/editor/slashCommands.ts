@@ -58,7 +58,7 @@ const S_AI: SlashSection = { titleKey: 'slash.section.ai', rank: 0 }
 const S_TEXT: SlashSection = { titleKey: 'slash.section.text', rank: 1 }
 const S_LISTS: SlashSection = { titleKey: 'slash.section.lists', rank: 2 }
 const S_INSERT: SlashSection = { titleKey: 'slash.section.insert', rank: 3 }
-const S_DIAGRAM: SlashSection = { titleKey: 'slash.section.diagram', title: 'Diagrams (Mermaid)', rank: 3.5 }
+const S_DIAGRAM: SlashSection = { titleKey: 'slash.section.diagram', title: 'Diagrams', rank: 3.5 }
 const S_CALLOUT: SlashSection = { titleKey: 'slash.section.callout', rank: 4 }
 const S_TEMPLATE: SlashSection = { titleKey: 'slash.section.template', rank: 5 }
 const S_HELP: SlashSection = { titleKey: 'slash.section.help', rank: 6 }
@@ -390,6 +390,28 @@ const ITEMS: SlashItem[] = [
     section: S_DIAGRAM,
     insert:
       '```mermaid\ntimeline\n  title Product history\n  2021 : Founded\n  2023 : Public launch\n  2026 : 1M users\n```\n',
+  },
+  {
+    label: 'Diagram (ASCII)',
+    detail: 'Diagram',
+    info: 'A text-drawn box diagram, rendered as a crisp auto-fitted figure. Pasted ASCII art is detected automatically.',
+    labelKey: 'slash.asciiDiagram.label',
+    detailKey: 'slash.detail.diagram',
+    descKey: 'slash.asciiDiagram.desc',
+    section: S_DIAGRAM,
+    insert:
+      '```ascii title="Architecture"\n┌──────────┐      ┌──────────┐\n│  Client  │ ───► │  Server  │\n└──────────┘      └──────────┘\n```\n',
+  },
+  {
+    label: 'Folder tree (ASCII)',
+    detail: 'Diagram',
+    info: 'A project or folder layout drawn with tree characters.',
+    labelKey: 'slash.asciiTree.label',
+    detailKey: 'slash.detail.diagram',
+    descKey: 'slash.asciiTree.desc',
+    section: S_DIAGRAM,
+    insert:
+      '```ascii title="Project layout"\nsrc/\n├── components/\n│   ├── App.tsx\n│   └── Button.tsx\n└── index.ts\n```\n',
   },
 
   // ---- Highlight boxes (callouts) ----

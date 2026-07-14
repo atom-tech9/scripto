@@ -1586,6 +1586,75 @@ timeline
 `,
   },
   {
+    id: 'diagram-ascii-architecture',
+    name: 'ASCII Architecture',
+    description: 'A text-drawn infrastructure diagram that exports crisp and auto-fitted.',
+    nameKey: 'template.diagram-ascii-architecture.name',
+    descKey: 'template.diagram-ascii-architecture.desc',
+    category: 'diagram',
+    emoji: '🖥️',
+    content: `# Server Architecture
+
+Everything below runs on a single server behind Cloudflare.
+
+\`\`\`ascii title="Production topology"
+                 Internet (your users & clients)
+                          │
+                          ▼
+                 ┌──────────────────┐
+                 │    Cloudflare     │  DNS + proxy/CDN in front of the domain
+                 └────────┬─────────┘
+                          │
+        ══════════════════▼══════════════════════════════════
+        ONE ECS SERVER (ARM64) — everything below is this box
+        ══════════════════════════════════════════════════════
+                 ┌──────────────────┐
+                 │      Nginx        │  Terminates HTTPS, forwards to:
+                 │   (ports 80/443)  │
+                 └────────┬─────────┘
+                          │
+          ┌───────────────┼───────────────────────┐
+          ▼               ▼                       ▼
+   :3000 sqcm-prod   :3003 marketing        :3002 hr-backend
+                       │
+              ┌────────┴─────────────────────────────┐
+              │ PM2 (process manager)                 │
+              │  ├─ marketing         (Next.js web)   │
+              │  └─ marketing-worker  (BullMQ jobs)   │
+              └────────┬──────────────┬──────────────┘
+                       ▼              ▼
+              MongoDB (Docker)   Redis (queues)
+\`\`\`
+
+Untagged ASCII art in a plain fence is detected automatically; tag a fence
+as \`text\` to force plain rendering instead.
+`,
+  },
+  {
+    id: 'diagram-ascii-tree',
+    name: 'ASCII Folder Tree',
+    description: 'A project layout drawn with tree characters, with a caption.',
+    nameKey: 'template.diagram-ascii-tree.name',
+    descKey: 'template.diagram-ascii-tree.desc',
+    category: 'diagram',
+    emoji: '🌳',
+    content: `# Project Layout
+
+The folders that matter, at a glance.
+
+\`\`\`ascii title="Source layout"
+src/
+├── markdown/
+│   ├── MarkdownRenderer.tsx
+│   └── components/
+│       ├── Mermaid.tsx
+│       └── AsciiDiagram.tsx
+└── styles/
+    └── document.css
+\`\`\`
+`,
+  },
+  {
     id: 'pitch-one-pager',
     name: 'Startup One-Pager',
     description: 'Investor-ready one-pager: problem, solution, market, traction, ask.',

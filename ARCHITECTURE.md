@@ -334,6 +334,7 @@ data URLs into an atomic `🖼 image` chip — display-only; the underlying text
 | A **use-case page** | Add a `UseCaseContent` file under `marketing/content/use-cases/` and register it in that folder's `index.ts` (Arabic variant → `USE_CASES_AR`). |
 | A **config option** | Add to `PdfConfig` (types) + `DEFAULT_CONFIG` + a control in `ConfigPanel` + consume in `documentStyle.ts`/`document.css`/`pageStyles.ts`. |
 | A **Markdown feature** | Add a remark/rehype plugin (or a custom one under `markdown/plugins/`) in `MarkdownRenderer.tsx`. |
+| A **diagram flavor** | Branch on the fence language in `MarkdownRenderer.tsx`'s `pre` override (see the `mermaid` / `ascii` branches) → render a dedicated component under `markdown/components/`; styles in `document.css`; detection/measurement helpers live in `markdown/asciiDiagram.ts`; mirror the branch in `marketing/pages/TemplatePage.tsx` so template pages match. |
 | An **export format** | Add to `io/exporters.ts` + a `MenuItem`/command. |
 | A **command / dialog** | See the wiring recipe in [docs/P1_FEATURES.md](docs/P1_FEATURES.md) §0. |
 

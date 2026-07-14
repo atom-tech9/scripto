@@ -60,6 +60,11 @@ const GROUPS: SyntaxGroup[] = [
       { element: 'Inline math', syntax: '$E = mc^2$', note: 'KaTeX syntax' },
       { element: 'Display math', syntax: '$$\\int_a^b f(x)\\,dx$$' },
       { element: 'Mermaid diagram', syntax: '```mermaid\nflowchart LR\nA --> B\n```' },
+      {
+        element: 'ASCII diagram',
+        syntax: '```ascii title="Layers"\n┌───┐   ┌───┐\n│ A │──►│ B │\n└───┘   └───┘\n```',
+        note: 'Crisp auto-fitted diagram figure with an optional caption; untagged box art is auto-detected',
+      },
       { element: 'Callout', syntax: ':::note Title\nBody text\n:::', note: 'note / tip / warning / danger' },
       { element: 'Highlight', syntax: '==marked text==' },
       { element: 'Definition list', syntax: 'Term\n: definition' },
