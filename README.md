@@ -64,6 +64,7 @@ Most "Markdown to PDF" tools render your document twice — once for the screen,
 - Callouts / admonitions (`:::tip … :::`)
 - Syntax-highlighted code (Prism, 4 themes, copy button)
 - Math (KaTeX), Mermaid diagrams, HTML passthrough
+- ASCII / box-drawing diagrams (` ```ascii `, auto-detected in plain fences) — crisp, auto-fitted figures with optional `title="…"` captions
 
 #### 📄 PDF export (Paged.js)
 

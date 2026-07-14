@@ -124,6 +124,18 @@ export function buildPageCss(config: PdfConfig): string {
       width: auto;
       height: auto;
     }
+    /* ASCII diagram figures are unbreakable text: a max-height alone would not
+       reflow them, so the page box converts to a font-size cap instead —
+       height ≈ rows × 1.2 line-height (+ padding slack). The 45mm reserve
+       keeps a preceding heading, the figure margins, and a caption on the same
+       page. The width term mirrors document.css; the smallest bound wins. */
+    .scripto-doc .ascii-diagram pre {
+      font-size: min(
+        0.82em,
+        calc(100cqw / (var(--diagram-cols, 60) * 0.6 + 2)),
+        calc(${round(Math.max(40, height - top - bottom - 45))}mm / (var(--diagram-rows, 10) * 1.2 + 6))
+      );
+    }
     /* Tables flow across pages: header repeats, rows never split. */
     .scripto-doc .table-wrap { break-inside: auto; overflow: visible; border: none; }
     .scripto-doc table { break-inside: auto; }

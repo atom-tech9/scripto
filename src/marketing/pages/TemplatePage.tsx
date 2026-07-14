@@ -1,6 +1,5 @@
-import type { ComponentProps, ReactElement } from 'react'
-import { isValidElement } from 'react'
-import ReactMarkdown from 'react-markdown'
+import type { CSSProperties } from 'react'
+import ReactMarkdown, { type Components } from 'react-markdown'
 import { useLocation } from 'react-router-dom'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
@@ -10,6 +9,13 @@ import rehypeKatex from 'rehype-katex'
 import 'katex/dist/katex.min.css'
 import { TEMPLATES } from '@/data/templates'
 import { parseFrontmatter } from '@/lib/frontmatter'
+import {
+  ASCII_DIAGRAM_LANGUAGES,
+  diagramRowCount,
+  isAsciiDiagram,
+  maxVisualColumns,
+  parseFenceTitle,
+} from '@/markdown/asciiDiagram'
 import { remarkCallouts } from '@/markdown/plugins/remarkCallouts'
 import { remarkMarks } from '@/markdown/plugins/remarkMarks'
 import { Breadcrumbs, CtaBand } from '../components/blocks'
@@ -34,13 +40,52 @@ const PREVIEW_REMARK_PLUGINS = [
 const languageOf = (className: string | undefined): string | undefined =>
   /language-([\w-]+)/.exec(className ?? '')?.[1]
 
+interface PreviewHastNode {
+  type: string
+  tagName?: string
+  value?: string
+  properties?: { className?: string[] | string }
+  data?: { meta?: unknown }
+  children?: PreviewHastNode[]
+}
+
+const hastToText = (node: PreviewHastNode | undefined): string => {
+  if (!node) return ''
+  if (node.type === 'text') return node.value ?? ''
+  return (node.children ?? []).map(hastToText).join('')
+}
+
 /**
  * Fenced code with the app's chrome: a header bar carrying the language label
- * and a copy button (wired by the site's inline enhancement script).
+ * and a copy button (wired by the site's inline enhancement script). ASCII
+ * diagram fences get the same chrome-free figure treatment as the app, so a
+ * diagram template's marketing page matches what the editor renders.
  */
-function PreviewCodeBlock(props: ComponentProps<'pre'>) {
-  const child = props.children as ReactElement<{ className?: string }> | undefined
-  const language = isValidElement(child) ? languageOf(child.props.className) : undefined
+const PreviewCodeBlock: Components['pre'] = ({ node, children }) => {
+  const codeChild = (node as PreviewHastNode | undefined)?.children?.find(
+    (c) => c.tagName === 'code',
+  )
+  const classNames = codeChild?.properties?.className
+  const classList = Array.isArray(classNames) ? classNames.join(' ') : classNames
+  const language = languageOf(classList)
+  const raw = hastToText(codeChild)
+
+  if ((language && ASCII_DIAGRAM_LANGUAGES.has(language)) || (!language && isAsciiDiagram(raw))) {
+    const meta = codeChild?.data?.meta
+    const title = parseFenceTitle(typeof meta === 'string' ? meta : undefined)
+    const text = raw.replace(/\n+$/, '')
+    const style = {
+      '--diagram-cols': String(Math.max(1, maxVisualColumns(text))),
+      '--diagram-rows': String(diagramRowCount(text)),
+    } as CSSProperties
+    return (
+      <figure className="mk-ascii-diagram" role="img" aria-label={title ?? 'ASCII diagram'} style={style}>
+        <pre aria-hidden="true">{text}</pre>
+        {title ? <figcaption>{title}</figcaption> : null}
+      </figure>
+    )
+  }
+
   return (
     <div className="mk-codebox">
       <div className="mk-codebox-bar">
@@ -49,7 +94,7 @@ function PreviewCodeBlock(props: ComponentProps<'pre'>) {
           Copy
         </button>
       </div>
-      <pre>{props.children}</pre>
+      <pre>{children}</pre>
     </div>
   )
 }

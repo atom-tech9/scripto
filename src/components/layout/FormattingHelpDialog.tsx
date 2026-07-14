@@ -121,6 +121,18 @@ const ROWS: FormatRow[] = [
       </span>
     ),
   },
+  {
+    labelKey: 'formatHelp.row.asciiDiagram',
+    syntax: '```ascii\n┌───┐   ┌───┐\n│ A │──►│ B │\n└───┘   └───┘\n```',
+    sample: (
+      <pre
+        dir="ltr"
+        className="rounded-md bg-muted px-2 py-1 font-mono text-[10px] leading-[1.2] [font-variant-ligatures:none]"
+      >
+        {'┌───┐   ┌───┐\n│ A │──►│ B │\n└───┘   └───┘'}
+      </pre>
+    ),
+  },
 ]
 
 /** Beginner cheat-sheet showing "you type" (Markdown) → "you get" (a live preview). */

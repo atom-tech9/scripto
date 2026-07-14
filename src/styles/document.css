@@ -1556,3 +1556,51 @@
   font-family: 'JetBrains Mono', monospace;
   text-align: left;
 }
+
+/* ---------- ASCII / box-drawing diagrams ---------- */
+/* Deliberately chrome-free (no header, line numbers, or syntax colors) and
+   kept LAST in this sheet so it out-cascades the skins' heavy `pre` /
+   `.code-block` treatments. Skins may theme `.ascii-diagram` deliberately. */
+.scripto-doc .ascii-diagram {
+  margin: 1.5em 0;
+  text-align: center;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  direction: ltr;
+  container-type: inline-size;
+}
+.scripto-doc .ascii-diagram pre {
+  display: inline-block;
+  max-inline-size: 100%;
+  margin: 0;
+  padding: 0.9em 1em;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--doc-fg) 3.5%, transparent);
+  border: none;
+  border-radius: 10px;
+  box-shadow: none;
+  color: var(--doc-fg);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  /* Auto-fit: 0.6 ≈ JetBrains Mono advance width in em; the +2 term absorbs
+     the horizontal padding. --diagram-cols/rows are emitted per-figure by the
+     AsciiDiagram component from measured visual columns (tabs expanded,
+     wide chars counted as 2). */
+  font-size: min(0.82em, calc(100cqw / (var(--diagram-cols, 60) * 0.6 + 2)));
+  /* Fixed leading, independent of --doc-leading: stacked │ glyphs must touch. */
+  line-height: 1.2;
+  font-variant-ligatures: none;
+  font-feature-settings:
+    'liga' 0,
+    'calt' 0;
+  font-kerning: none;
+  letter-spacing: 0;
+  white-space: pre;
+  tab-size: 4;
+  text-align: start;
+  direction: ltr;
+}
+.scripto-doc .ascii-diagram figcaption {
+  margin-top: 0.7em;
+  font-size: 0.82em;
+  color: var(--doc-muted);
+}

@@ -1115,6 +1115,42 @@ html.js .mk-reveal.in {
   border-radius: 0;
 }
 
+/* ASCII diagram figures — mirrors the app's .ascii-diagram treatment. */
+.mk-prose .mk-ascii-diagram {
+  margin-block: 1.5em;
+  text-align: center;
+  direction: ltr;
+  container-type: inline-size;
+}
+.mk-prose .mk-ascii-diagram pre {
+  display: inline-block;
+  max-inline-size: 100%;
+  margin: 0;
+  padding: 0.9em 1em;
+  overflow: hidden;
+  border: none;
+  border-radius: 0.625rem;
+  background: color-mix(in srgb, var(--mk-fg) 4%, transparent);
+  color: var(--mk-fg);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: min(0.8125rem, calc(100cqw / (var(--diagram-cols, 60) * 0.6 + 2)));
+  line-height: 1.2;
+  font-variant-ligatures: none;
+  font-feature-settings:
+    'liga' 0,
+    'calt' 0;
+  font-kerning: none;
+  letter-spacing: 0;
+  white-space: pre;
+  tab-size: 4;
+  text-align: start;
+}
+.mk-prose .mk-ascii-diagram figcaption {
+  margin-block-start: 0.6em;
+  font-size: 0.8125rem;
+  color: var(--mk-muted);
+}
+
 .mk-prose .callout {
   --co: hsl(220 12% 55%);
   display: grid;
