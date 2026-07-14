@@ -63,7 +63,7 @@ const GROUPS: SyntaxGroup[] = [
       {
         element: 'ASCII diagram',
         syntax: '```ascii title="Layers"\n┌───┐   ┌───┐\n│ A │──►│ B │\n└───┘   └───┘\n```',
-        note: 'Crisp auto-fitted diagram figure with an optional caption; untagged box art is auto-detected',
+        note: 'Crisp auto-fitted diagram figure with an optional caption; box art in untagged or ```text fences is auto-detected (```plain opts out)',
       },
       { element: 'Callout', syntax: ':::note Title\nBody text\n:::', note: 'note / tip / warning / danger' },
       { element: 'Highlight', syntax: '==marked text==' },

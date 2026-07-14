@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   ASCII_DIAGRAM_LANGUAGES,
-  PLAIN_TEXT_LANGUAGES,
   codePointWidth,
   diagramRowCount,
   isAsciiDiagram,
   maxVisualColumns,
   parseFenceTitle,
+  shouldRenderAsDiagram,
 } from '../src/markdown/asciiDiagram'
 
 // —— Fixtures (verbatim from the feature spec) ——————————————————————————
@@ -150,25 +150,34 @@ describe('isAsciiDiagram', () => {
   })
 })
 
-describe('language routing sets', () => {
-  it('recognises all three explicit aliases', () => {
-    expect(ASCII_DIAGRAM_LANGUAGES.has('ascii')).toBe(true)
-    expect(ASCII_DIAGRAM_LANGUAGES.has('diagram')).toBe(true)
-    expect(ASCII_DIAGRAM_LANGUAGES.has('ascii-art')).toBe(true)
-    expect(ASCII_DIAGRAM_LANGUAGES.has('js')).toBe(false)
+describe('shouldRenderAsDiagram (language routing)', () => {
+  it('explicit aliases always render as diagrams, whatever the content', () => {
+    for (const lang of ['ascii', 'diagram', 'ascii-art', 'asciiart', 'ascii-diagram']) {
+      expect(ASCII_DIAGRAM_LANGUAGES.has(lang)).toBe(true)
+      expect(shouldRenderAsDiagram(lang, 'just prose')).toBe(true)
+    }
   })
 
-  it('recognises the plain-text escape hatch', () => {
-    expect(PLAIN_TEXT_LANGUAGES.has('text')).toBe(true)
-    expect(PLAIN_TEXT_LANGUAGES.has('txt')).toBe(true)
-    expect(PLAIN_TEXT_LANGUAGES.has('plain')).toBe(true)
+  it('untagged fences are heuristic-gated', () => {
+    expect(shouldRenderAsDiagram('', FIXTURE_B)).toBe(true)
+    expect(shouldRenderAsDiagram('', NEGATIVE_JS)).toBe(false)
   })
 
-  it('escape hatch beats the heuristic (fixture A under ```text)', () => {
-    // The renderer never calls the heuristic for tagged blocks; assert the
-    // routing contract: 'text' is plain, not a diagram alias.
-    expect(PLAIN_TEXT_LANGUAGES.has('text')).toBe(true)
-    expect(ASCII_DIAGRAM_LANGUAGES.has('text')).toBe(false)
+  it('AI-style text/txt/plaintext fences are heuristic-gated too', () => {
+    for (const lang of ['text', 'txt', 'plaintext', 'TEXT']) {
+      expect(shouldRenderAsDiagram(lang, FIXTURE_A)).toBe(true)
+      expect(shouldRenderAsDiagram(lang, NEGATIVE_YAML)).toBe(false)
+    }
+  })
+
+  it('```plain is the hard opt-out, even for box art', () => {
+    expect(shouldRenderAsDiagram('plain', FIXTURE_A)).toBe(false)
+  })
+
+  it('real languages are never hijacked (fixture B inside ```js)', () => {
+    expect(shouldRenderAsDiagram('js', FIXTURE_B)).toBe(false)
+    expect(shouldRenderAsDiagram('python', FIXTURE_A)).toBe(false)
+    expect(shouldRenderAsDiagram('mermaid', FIXTURE_A)).toBe(false)
   })
 })
 

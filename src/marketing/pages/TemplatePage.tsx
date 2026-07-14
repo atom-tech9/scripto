@@ -10,11 +10,10 @@ import 'katex/dist/katex.min.css'
 import { TEMPLATES } from '@/data/templates'
 import { parseFrontmatter } from '@/lib/frontmatter'
 import {
-  ASCII_DIAGRAM_LANGUAGES,
   diagramRowCount,
-  isAsciiDiagram,
   maxVisualColumns,
   parseFenceTitle,
+  shouldRenderAsDiagram,
 } from '@/markdown/asciiDiagram'
 import { remarkCallouts } from '@/markdown/plugins/remarkCallouts'
 import { remarkMarks } from '@/markdown/plugins/remarkMarks'
@@ -70,7 +69,7 @@ const PreviewCodeBlock: Components['pre'] = ({ node, children }) => {
   const language = languageOf(classList)
   const raw = hastToText(codeChild)
 
-  if ((language && ASCII_DIAGRAM_LANGUAGES.has(language)) || (!language && isAsciiDiagram(raw))) {
+  if (shouldRenderAsDiagram(language ?? '', raw)) {
     const meta = codeChild?.data?.meta
     const title = parseFenceTitle(typeof meta === 'string' ? meta : undefined)
     const text = raw.replace(/\n+$/, '')

@@ -17,7 +17,7 @@ import { remarkMarks } from './plugins/remarkMarks'
 import { CodeBlock } from './components/CodeBlock'
 import { Mermaid } from './components/Mermaid'
 import { AsciiDiagram } from './components/AsciiDiagram'
-import { ASCII_DIAGRAM_LANGUAGES, isAsciiDiagram, parseFenceTitle } from './asciiDiagram'
+import { parseFenceTitle, shouldRenderAsDiagram } from './asciiDiagram'
 import type { ResolvedTheme } from '@/types'
 
 interface MarkdownRendererProps {
@@ -96,9 +96,10 @@ function MarkdownRendererImpl({ content, resolvedTheme }: MarkdownRendererProps)
         if (language === 'mermaid') {
           return <Mermaid code={raw} resolvedTheme={resolvedTheme} />
         }
-        // ```text/```txt/```plain force plain rendering; any other tagged
-        // language is never hijacked — the heuristic runs on untagged blocks only.
-        if (ASCII_DIAGRAM_LANGUAGES.has(language) || (!language && isAsciiDiagram(raw))) {
+        // Explicit ascii aliases always render as diagrams; untagged and
+        // text/txt/plaintext fences are heuristic-gated (AI habitually tags
+        // ASCII art that way); ```plain opts out; real languages never hijacked.
+        if (shouldRenderAsDiagram(language, raw)) {
           const meta = codeChild?.properties?.dataMeta
           return (
             <AsciiDiagram
