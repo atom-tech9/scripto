@@ -1626,8 +1626,8 @@ Everything below runs on a single server behind Cloudflare.
               MongoDB (Docker)   Redis (queues)
 \`\`\`
 
-Untagged ASCII art in a plain fence is detected automatically; tag a fence
-as \`text\` to force plain rendering instead.
+ASCII art in untagged (or \`text\`-tagged) fences is detected automatically;
+tag a fence as \`plain\` to force plain rendering instead.
 `,
   },
   {

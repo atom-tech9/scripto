@@ -9,10 +9,33 @@ export const ASCII_DIAGRAM_LANGUAGES: ReadonlySet<string> = new Set([
   'ascii',
   'diagram',
   'ascii-art',
+  'asciiart',
+  'ascii-diagram',
 ])
 
-/** Fence languages that force plain rendering — never a diagram, never highlighted. */
-export const PLAIN_TEXT_LANGUAGES: ReadonlySet<string> = new Set(['text', 'txt', 'plain'])
+/**
+ * Plain-ish languages AI assistants habitually put around ASCII art. These are
+ * heuristic-gated: box art renders as a diagram, ordinary text stays a plain
+ * code block.
+ */
+export const HEURISTIC_LANGUAGES: ReadonlySet<string> = new Set(['text', 'txt', 'plaintext'])
+
+/** The explicit opt-out: never a diagram, whatever the content looks like. */
+export const FORCED_PLAIN_LANGUAGES: ReadonlySet<string> = new Set(['plain'])
+
+/**
+ * Central routing for the `pre` overrides (app renderer + marketing template
+ * pages): explicit aliases always win, `plain` always opts out, untagged and
+ * plain-ish fences fall through to the content heuristic, and every other
+ * tagged language is never hijacked.
+ */
+export function shouldRenderAsDiagram(language: string, raw: string): boolean {
+  const lang = language.toLowerCase()
+  if (ASCII_DIAGRAM_LANGUAGES.has(lang)) return true
+  if (FORCED_PLAIN_LANGUAGES.has(lang)) return false
+  if (lang === '' || HEURISTIC_LANGUAGES.has(lang)) return isAsciiDiagram(raw)
+  return false
+}
 
 // Strong signals: box drawing U+2500–257F, block elements/shades U+2580–259F,
 // arrows U+2190–21FF, geometric shapes (▲ ▼ ◄ ►, …) U+25A0–25FF.
