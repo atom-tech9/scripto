@@ -1,4 +1,5 @@
 import { buildCoverHtml, resolveDocDirection } from './pageStyles'
+import { prepareForPaging } from './prepareForPaging'
 import { startsWithManualNumber } from '@/lib/headingNumbers'
 import { escapeHtml } from '@/lib/utils'
 import type { PdfConfig, TocEntry } from '@/types'
@@ -103,6 +104,7 @@ export function buildExportContent(
 
   const clone = liveDoc.cloneNode(true) as HTMLElement
   namespaceIds(clone)
+  prepareForPaging(clone, config)
   // Number headings as literal text and turn off the CSS counters (data-numbered)
   // so they don't double up — Paged.js can't reset baked-in text across pages.
   if (config.numberedHeadings) {
