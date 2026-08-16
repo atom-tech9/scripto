@@ -225,6 +225,10 @@
   text-decoration: none;
   border-bottom: 1px solid color-mix(in srgb, var(--doc-accent) 35%, transparent);
   transition: border-color 0.15s ease;
+  /* Bare URLs have no break opportunities of their own; without this a long one
+     runs straight off the page box and is clipped in the PDF. `anywhere` (not
+     `break-word`) so the link can also shrink inside a narrow table cell. */
+  overflow-wrap: anywhere;
 }
 .scripto-doc a:hover {
   border-bottom-color: var(--doc-accent);
@@ -259,7 +263,13 @@
   padding: 0.12em 0.4em;
   border-radius: 5px;
   border: 1px solid var(--doc-rule);
-  word-break: break-word;
+  /* `overflow-wrap`, NOT `word-break: break-word` — the latter is an alias for
+     `overflow-wrap: anywhere`, which lets the break opportunities count towards
+     the element's min-content size. Inside any shrink-to-fit box (flex item,
+     grid track, narrow table cell) that collapses a token to a one-character
+     column. `break-word` still wraps long tokens, it just doesn't lie about
+     how narrow the element can get. */
+  overflow-wrap: break-word;
 }
 
 /* ---------- Code blocks ---------- */
@@ -309,12 +319,17 @@
 .scripto-doc pre {
   margin: 0;
   padding: 0.9em 0;
-  overflow-x: auto;
   background: var(--c-bg);
   color: var(--c-fg);
   font-size: 0.82em;
   line-height: 1.65;
   tab-size: 2;
+  /* Long lines wrap instead of scrolling: a scrollbar means nothing on paper,
+     where the overflow is simply clipped. `pre-wrap` keeps the indentation.
+     No `overflow-x` — a scroll container is monolithic, so it could never be
+     split across pages (see the code-block rules in pageStyles.ts). */
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
 }
 .scripto-doc pre code {
   font-family: 'JetBrains Mono', ui-monospace, monospace;
@@ -323,10 +338,49 @@
   padding: 0;
   display: block;
 }
+/* A long listing is cut into consecutive atomic blocks for export
+   (chunkCodeBlocks.ts). Suppress every interior edge so the pieces read as one
+   block, and let only the outer two carry the border, radius and margins. */
+.scripto-doc .code-block[data-code-chunk] {
+  margin: 0;
+  border-radius: 0;
+  border-top: none;
+  border-bottom: none;
+  box-shadow: none;
+}
+.scripto-doc .code-block[data-code-chunk] pre {
+  padding-block: 0;
+}
+.scripto-doc .code-block[data-code-chunk='first'] {
+  margin-top: 1.2em;
+  border-top: 1px solid color-mix(in srgb, var(--c-fg) 14%, transparent);
+  border-start-start-radius: 10px;
+  border-start-end-radius: 10px;
+}
+.scripto-doc .code-block[data-code-chunk='first'] pre {
+  padding-block-start: 0.9em;
+}
+.scripto-doc .code-block[data-code-chunk='last'] {
+  margin-bottom: 1.2em;
+  border-bottom: 1px solid color-mix(in srgb, var(--c-fg) 14%, transparent);
+  border-end-start-radius: 10px;
+  border-end-end-radius: 10px;
+}
+.scripto-doc .code-block[data-code-chunk='last'] pre {
+  padding-block-end: 0.9em;
+}
+
 .scripto-doc .code-line {
   display: block;
   padding: 0 1.1em;
   border-left: 3px solid transparent;
+}
+/* When a wrapped line continues onto the next visual row, hang it past the
+   line-number gutter (1.4em number + 1.1em margin) so it reads as a
+   continuation of the statement above rather than as a new line of code. */
+.scripto-doc .code-line.line-number {
+  padding-inline-start: 3.6em;
+  text-indent: -2.5em;
 }
 .scripto-doc .code-line.highlight-line {
   background: color-mix(in srgb, var(--doc-accent) 16%, transparent);
@@ -460,24 +514,32 @@
 .scripto-doc li > p:last-child {
   margin-bottom: 0;
 }
-.scripto-doc ul.contains-task-list {
+/* Task lists (GFM). The item MUST stay in normal inline flow: as a flex (or
+   grid) container every inline child — <strong>, <code>, <a>, a text run —
+   becomes its own column, and a nested list becomes a sibling column. The
+   checkbox instead hangs into the list's existing indent with a negative
+   inline-start margin, so wrapped lines align under the text, in LTR and RTL
+   alike. `list-style` is cleared on the item, not the list, so plain bullets
+   sitting alongside task items keep their markers.
+   Both GFM shapes are covered: tight items put the checkbox directly in the
+   <li>, loose items put it inside the item's first <p>. */
+.scripto-doc li.task-list-item {
   list-style: none;
-  padding-inline-start: 0.2em;
 }
-.scripto-doc .task-list-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.55em;
-}
-.scripto-doc .task-list-item::marker {
+.scripto-doc li.task-list-item::marker {
   content: '';
 }
 .scripto-doc .task-list-item input[type='checkbox'] {
-  margin-top: 0.34em;
+  /* Explicit, because the standalone HTML export ships document.css without
+     Tailwind's preflight — without it the UA font-size applies and every `em`
+     below resolves against the wrong value. */
+  font: inherit;
   width: 1.05em;
   height: 1.05em;
+  margin-block: 0;
+  margin-inline: -1.55em 0.5em;
+  vertical-align: -0.14em;
   accent-color: var(--doc-accent);
-  flex: none;
 }
 
 /* ---------- Horizontal rule ---------- */
@@ -514,6 +576,16 @@
   text-align: start;
   vertical-align: top;
   border-bottom: 1px solid var(--doc-rule);
+  /* A table is sized from its cells' min-content widths, so what may break
+     decides the column widths. Ordinary words only break when they can't fit —
+     otherwise a long free-text column starves the rest and headers come out as
+     "Platfor / m". */
+  overflow-wrap: break-word;
+}
+/* Long tokens and URLs are the ones that must be allowed to shrink, so the
+   table can still fit the page box without a scrollbar to fall back on. */
+.scripto-doc :is(th, td) :is(code, a) {
+  overflow-wrap: anywhere;
 }
 .scripto-doc th {
   font-family: Inter, sans-serif;
@@ -523,6 +595,29 @@
   color: var(--doc-fg);
   border-bottom: 2px solid color-mix(in srgb, var(--doc-accent) 30%, var(--doc-rule));
 }
+/* Wide tables: step type and padding down as the column count grows, so a 7-
+   or 9-column table still fits the page box instead of overflowing it. Gated on
+   an nth-child column existing, so it needs no markup from the author. */
+.scripto-doc table:has(> thead > tr > th:nth-child(6)),
+.scripto-doc table:has(> tbody > tr > td:nth-child(6)) {
+  font-size: 0.82em;
+}
+.scripto-doc table:has(> thead > tr > th:nth-child(6)) :is(th, td),
+.scripto-doc table:has(> tbody > tr > td:nth-child(6)) :is(th, td) {
+  padding: 0.4em 0.5em;
+}
+.scripto-doc table:has(> thead > tr > th:nth-child(8)),
+.scripto-doc table:has(> tbody > tr > td:nth-child(8)) {
+  font-size: 0.74em;
+}
+.scripto-doc table:has(> thead > tr > th:nth-child(8)) :is(th, td),
+.scripto-doc table:has(> tbody > tr > td:nth-child(8)) :is(th, td) {
+  padding: 0.3em 0.35em;
+}
+.scripto-doc table:has(> thead > tr > th:nth-child(8)) th {
+  letter-spacing: -0.01em;
+}
+
 .scripto-doc[data-table-style='striped'] tbody tr:nth-child(even) {
   background: color-mix(in srgb, var(--doc-fg) 3.5%, transparent);
 }
@@ -1455,6 +1550,11 @@
   letter-spacing: 0.03em;
   text-transform: uppercase;
   align-self: center;
+}
+/* Grid items default to `min-width: auto`, so a long token in the body would
+   push the 1fr track wider than the callout and spill past its border. */
+.scripto-doc .callout__body {
+  min-width: 0;
 }
 .scripto-doc .callout__body > :first-child {
   margin-top: 0;

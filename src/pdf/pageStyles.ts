@@ -102,11 +102,17 @@ export function buildPageCss(config: PdfConfig): string {
     /* Break controls layered on top of document.css */
     .scripto-doc h1, .scripto-doc h2, .scripto-doc h3 { break-after: avoid; }
     /* Small, atomic blocks stay whole; large tables are allowed to flow. */
-    .scripto-doc pre, .scripto-doc .code-block,
     .scripto-doc figure, .scripto-doc blockquote, .scripto-doc .callout,
     .scripto-doc .katex-display, .scripto-doc .mermaid-figure {
       break-inside: avoid;
     }
+
+    /* Code blocks stay atomic — a long listing was already cut into page-sized
+       pieces by chunkCodeBlocks, so Paged.js only ever places whole ones. */
+    .scripto-doc .code-block, .scripto-doc pre { break-inside: avoid; }
+    .scripto-doc .code-block__header { break-after: avoid; }
+    /* Interactive-only chrome has no place on paper. */
+    .scripto-doc .code-block__copy { display: none; }
 
     /* Tall diagrams / images are scaled to fit within one page's content box,
        WITH the heading that precedes them (headings set break-after: avoid). An

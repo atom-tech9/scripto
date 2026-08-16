@@ -15,7 +15,9 @@ declare module 'pagedjs' {
     on(event: string, handler: (...args: unknown[]) => void): void
   }
 
-  export class Handler {}
+  export class Handler {
+    constructor(chunker?: unknown, polisher?: unknown, caller?: unknown)
+  }
   export function registerHandlers(...handlers: unknown[]): void
 }
 

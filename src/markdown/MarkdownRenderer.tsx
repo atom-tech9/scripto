@@ -1,4 +1,4 @@
-import { memo, useMemo, type ComponentPropsWithoutRef, type ReactNode } from 'react'
+import { memo, useMemo, type ReactNode } from 'react'
 import ReactMarkdown, { defaultUrlTransform, type Components } from 'react-markdown'
 import { startsWithManualNumber } from '@/lib/headingNumbers'
 import remarkGfm from 'remark-gfm'
@@ -131,18 +131,22 @@ function MarkdownRendererImpl({ content, resolvedTheme }: MarkdownRendererProps)
       a({ href, children }) {
         const isExternal = typeof href === 'string' && /^https?:\/\//.test(href)
         return (
-          <a
-            href={href}
-            {...(isExternal ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
-          >
+          <a href={href} {...(isExternal ? { target: '_blank', rel: 'noreferrer noopener' } : {})}>
             {children as ReactNode}
           </a>
         )
       },
       img({ src, alt }) {
-        return <img src={typeof src === 'string' ? src : ''} alt={alt ?? ''} loading="lazy" decoding="async" />
+        return (
+          <img
+            src={typeof src === 'string' ? src : ''}
+            alt={alt ?? ''}
+            loading="lazy"
+            decoding="async"
+          />
+        )
       },
-      input({ type, checked, onChange: _onChange, ...rest }: ComponentPropsWithoutRef<'input'>) {
+      input({ node: _node, type, checked, onChange: _onChange, ...rest }) {
         if (type === 'checkbox') {
           return <input {...rest} type="checkbox" checked={Boolean(checked)} readOnly disabled />
         }
@@ -150,16 +154,32 @@ function MarkdownRendererImpl({ content, resolvedTheme }: MarkdownRendererProps)
       },
       // Headings that already carry a manual number opt out of auto-numbering.
       h1({ node, children, ...props }) {
-        return <h1 {...props} {...selfNumberedAttr(node as HastNode)}>{children as ReactNode}</h1>
+        return (
+          <h1 {...props} {...selfNumberedAttr(node as HastNode)}>
+            {children as ReactNode}
+          </h1>
+        )
       },
       h2({ node, children, ...props }) {
-        return <h2 {...props} {...selfNumberedAttr(node as HastNode)}>{children as ReactNode}</h2>
+        return (
+          <h2 {...props} {...selfNumberedAttr(node as HastNode)}>
+            {children as ReactNode}
+          </h2>
+        )
       },
       h3({ node, children, ...props }) {
-        return <h3 {...props} {...selfNumberedAttr(node as HastNode)}>{children as ReactNode}</h3>
+        return (
+          <h3 {...props} {...selfNumberedAttr(node as HastNode)}>
+            {children as ReactNode}
+          </h3>
+        )
       },
       h4({ node, children, ...props }) {
-        return <h4 {...props} {...selfNumberedAttr(node as HastNode)}>{children as ReactNode}</h4>
+        return (
+          <h4 {...props} {...selfNumberedAttr(node as HastNode)}>
+            {children as ReactNode}
+          </h4>
+        )
       },
     }
   }, [resolvedTheme])
