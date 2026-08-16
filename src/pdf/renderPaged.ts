@@ -1,6 +1,7 @@
 import { Previewer } from 'pagedjs'
 import { buildExportContent, type ExportStrings } from './buildExportContent'
 import { buildPageCss } from './pageStyles'
+import { fitToPage } from './fitToPage'
 import { getErrorMessage, logger } from '@/lib/logger'
 import type { ExportProgress, PdfConfig, TocEntry } from '@/types'
 
@@ -16,6 +17,8 @@ interface RenderOptions {
 export interface RenderResult {
   pageCount: number
   toc: TocEntry[]
+  /** Content too wide for the page: scaled down to fit, or still clipped. */
+  fit: { scaled: number; clipped: number }
 }
 
 // A dead/slow image host must never hang the export.
@@ -128,9 +131,13 @@ export async function renderPagedPreview({
       ),
     )
 
+    // Anything that could not reflow into the page box is scaled to fit now
+    // that real widths exist. Shrinking only frees space, so the layout holds.
+    const fit = fitToPage(container)
+
     const pageCount = flow?.total ?? container.querySelectorAll('.pagedjs_page').length
     onProgress?.({ stage: 'done', message: `${pageCount} page${pageCount === 1 ? '' : 's'} ready`, percent: 100 })
-    return { pageCount, toc }
+    return { pageCount, toc, fit }
   } catch (error) {
     logger.error('Paged.js rendering failed', error)
     onProgress?.({ stage: 'error', message: getErrorMessage(error), percent: 0 })

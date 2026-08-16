@@ -13,6 +13,7 @@ import rehypePrismPlus from 'rehype-prism-plus'
 import { rehypeSourceLine } from './plugins/rehypeSourceLine'
 import { rehypeFenceMeta } from './plugins/rehypeFenceMeta'
 import { remarkCallouts } from './plugins/remarkCallouts'
+import { remarkPageDirectives } from './plugins/remarkPageDirectives'
 import { remarkMarks } from './plugins/remarkMarks'
 import { CodeBlock } from './components/CodeBlock'
 import { Mermaid } from './components/Mermaid'
@@ -63,6 +64,7 @@ const remarkPlugins = [
   remarkMath,
   remarkDirective,
   remarkCallouts,
+  remarkPageDirectives,
   remarkDefinitionList,
   remarkMarks,
   remarkGemoji,

@@ -542,6 +542,23 @@
   accent-color: var(--doc-accent);
 }
 
+/* ---------- Page layout directives ---------- */
+/* `::page-break`, `:::keep-together`, `:::landscape` — see
+   remarkPageDirectives.ts. Inert on screen; the break behaviour is in
+   pageStyles.ts, which only runs under the paginator. */
+.scripto-doc .page-break {
+  height: 0;
+  margin: 0;
+}
+.scripto-doc .keep-together > :first-child,
+.scripto-doc .page-landscape > :first-child {
+  margin-top: 0;
+}
+.scripto-doc .keep-together > :last-child,
+.scripto-doc .page-landscape > :last-child {
+  margin-bottom: 0;
+}
+
 /* ---------- Horizontal rule ---------- */
 .scripto-doc hr {
   border: none;
@@ -616,6 +633,46 @@
 }
 .scripto-doc table:has(> thead > tr > th:nth-child(8)) th {
   letter-spacing: -0.01em;
+}
+
+/* Past ~10 columns compaction stops being readable, so each row becomes a
+   labelled block instead. The labels are copied from the header cells at export
+   time (stackWideTables.ts) — CSS cannot reach across rows to fetch them. */
+.scripto-doc table.table--stacked {
+  font-size: 0.9em;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.scripto-doc table.table--stacked thead {
+  display: none;
+}
+.scripto-doc table.table--stacked tbody,
+.scripto-doc table.table--stacked tr,
+.scripto-doc table.table--stacked td {
+  display: block;
+  width: auto;
+}
+.scripto-doc table.table--stacked tr {
+  border: 1px solid var(--doc-rule);
+  border-radius: 8px;
+  padding: 0.5em 0.8em;
+  margin-bottom: 0.6em;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.scripto-doc table.table--stacked td {
+  display: grid;
+  grid-template-columns: minmax(5em, 28%) 1fr;
+  gap: 0 0.9em;
+  border: none;
+  padding: 0.16em 0;
+}
+.scripto-doc table.table--stacked td::before {
+  content: attr(data-label);
+  font-family: Inter, sans-serif;
+  font-weight: 600;
+  font-size: 0.85em;
+  color: var(--doc-muted);
 }
 
 .scripto-doc[data-table-style='striped'] tbody tr:nth-child(even) {

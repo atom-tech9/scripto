@@ -1,4 +1,5 @@
 import documentCss from '@/styles/document.css?inline'
+import katexCss from 'katex/dist/katex.min.css?inline'
 import { downloadTextFile, escapeHtml } from '@/lib/utils'
 import { documentDataAttrs, documentStyleVars } from '@/pdf/documentStyle'
 import { FONT_STACKS } from '@/lib/constants'
@@ -6,7 +7,6 @@ import type { PdfConfig } from '@/types'
 
 const FONTS_HREF =
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Lora:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap'
-const KATEX_HREF = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css'
 
 /** `<html>` lang/dir attributes for an exported document. */
 function htmlLangDir(config: PdfConfig): string {
@@ -55,8 +55,10 @@ ${author ? `<meta name="author" content="${escapeHtml(author)}" />` : ''}
 ${keywords ? `<meta name="keywords" content="${escapeHtml(keywords)}" />` : ''}
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="${FONTS_HREF}" rel="stylesheet" />
-<link href="${KATEX_HREF}" rel="stylesheet" />
 <style>
+/* Inlined, not linked: an unreachable CDN would stop hiding .katex-mathml and
+   every equation would render twice — once typeset, once as raw MathML text. */
+${katexCss}
 ${documentCss}
 body { margin: 0; background: #f1f3f7; color: #1f2532; font-family: ${FONT_STACKS[config.font]}; }
 .page { max-width: 820px; margin: 0 auto; padding: 48px 24px; }
@@ -92,6 +94,7 @@ export function exportWord(docElement: HTMLElement, config: PdfConfig, name: str
 <meta charset="utf-8" />
 <title>${escapeHtml(config.meta.title || 'Document')}</title>
 <style>
+${katexCss}
 ${documentCss}
 body { font-family: ${FONT_STACKS[config.font]}; }
 ${config.customCss}

@@ -77,6 +77,23 @@ export function buildPageCss(config: PdfConfig): string {
       ${marginBoxes.join('\n      ')}
     }
 
+    /* Rotated page for content that is simply wider than portrait allows.
+       Opt-in via the :::landscape directive, since it costs a break either
+       side. */
+    @page landscape {
+      size: ${round(height)}mm ${round(width)}mm;
+      ${marginBoxes.join('\n      ')}
+    }
+    .scripto-doc .page-landscape {
+      page: landscape;
+      break-before: page;
+      break-after: page;
+    }
+
+    /* Author-controlled breaks (remarkPageDirectives.ts) */
+    .scripto-doc .page-break { break-after: page; }
+    .scripto-doc .keep-together { break-inside: avoid; page-break-inside: avoid; }
+
     /* Cover page: full-bleed, no margin boxes */
     @page cover {
       margin: 0;
