@@ -1183,6 +1183,7 @@
 /* --- one card ------------------------------------------------------------ */
 
 .skin-card {
+  position: relative;
   cursor: pointer;
   border-radius: 0.6rem;
   border: 1px solid hsl(var(--border));
@@ -1205,6 +1206,40 @@
 .skin-card--selected {
   border-color: hsl(var(--primary));
   box-shadow: 0 0 0 1px hsl(var(--primary));
+}
+
+/* Hand affinity, shown only while the document is handwritten. Sits over the
+   miniature's corner so it never reflows the grid. */
+.skin-card__affinity {
+  position: absolute;
+  inset-block-start: 6px;
+  inset-inline-end: 6px;
+  z-index: 2;
+  max-width: calc(100% - 12px);
+  overflow: hidden;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+
+.skin-card__affinity--native {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.skin-card__affinity--adapts {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+.skin-card__affinity--discouraged {
+  background: hsl(var(--destructive) / 0.15);
+  color: hsl(var(--destructive));
 }
 
 .skin-card__paper {

@@ -433,6 +433,7 @@ export const PreviewSurface = forwardRef<PreviewHandle, PreviewSurfaceProps>(
             onClose={closeSkins}
             skin={config.skin}
             accentColor={viewConfig.accentColor}
+            handwritten={viewConfig.hand.hand !== 'none'}
             onPreview={previewSkin}
             onCommit={commitSkin}
           />

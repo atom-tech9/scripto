@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Search, X } from 'lucide-react'
-import { SKIN_GROUPS, SKIN_OPTIONS } from '@/data/skins'
+import { SKIN_GROUPS, SKIN_OPTIONS, type HandAffinity } from '@/data/skins'
 import { STAGES } from '@/preview/stage/stages'
 import { useLanguage } from '@/i18n'
 import { cn } from '@/lib/utils'
@@ -13,6 +13,12 @@ interface SkinPaletteProps {
   skin: DocumentSkin
   /** Keeps the miniatures on the document's own accent colour. */
   accentColor: string
+  /**
+   * True when the document is being written by hand. Affinity badges only
+   * appear then -- on a typeset document they would be noise about a setting
+   * that is off.
+   */
+  handwritten: boolean
   /** Applies a skin to the live preview only; null restores the committed one. */
   onPreview: (skin: DocumentSkin | null) => void
   onCommit: (skin: DocumentSkin) => void
@@ -33,6 +39,7 @@ export const SkinPalette = memo(function SkinPalette({
   onClose,
   skin,
   accentColor,
+  handwritten,
   onPreview,
   onCommit,
 }: SkinPaletteProps) {
@@ -132,6 +139,10 @@ export const SkinPalette = memo(function SkinPalette({
               {group.options.map((option) => {
                 const selected = option.value === skin
                 const name = t(option.labelKey).split(' — ')[0]
+                // 'good' is the unremarkable case: badging it would put a label
+                // on most of the grid and tell the reader nothing.
+                const affinity: HandAffinity | null =
+                  handwritten && option.handAffinity !== 'good' ? option.handAffinity : null
                 return (
                   <div
                     key={option.value}
@@ -161,6 +172,14 @@ export const SkinPalette = memo(function SkinPalette({
                     }}
                     className={cn('skin-card', selected && 'skin-card--selected')}
                   >
+                    {affinity && (
+                      <span
+                        className={`skin-card__affinity skin-card__affinity--${affinity}`}
+                        title={t(`skin.affinity.${affinity}` as 'skin.affinity.native')}
+                      >
+                        {t(`skin.affinity.${affinity}` as 'skin.affinity.native')}
+                      </span>
+                    )}
                     <span className="skin-card__paper" aria-hidden>
                       <span
                         className="skin-card__doc scripto-doc"

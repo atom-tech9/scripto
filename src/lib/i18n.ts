@@ -920,6 +920,9 @@ export const EN_STRINGS = {
   'preview.skins.hint': 'Hover to preview · click to apply',
 
   // Handwriting
+  'skin.affinity.native': 'Made for handwriting',
+  'skin.affinity.adapts': 'Adapts',
+  'skin.affinity.discouraged': 'Fights the hand',
   'hand.section': 'Handwriting',
   'hand.custom.title': 'Your own handwriting',
   'hand.custom.description': 'Use a font made from your writing — import one, or draw an alphabet here.',
@@ -1980,6 +1983,9 @@ export const STRINGS: Record<UiLanguage, Dictionary> = {
     'hand.ink.gel': 'قلم جل',
     'hand.ink.chalk-white': 'طباشير أبيض',
     'hand.ink.sepia': 'بني داكن',
+    'skin.affinity.native': 'مصمم للكتابة اليدوية',
+    'skin.affinity.adapts': 'يتكيّف',
+    'skin.affinity.discouraged': 'لا يناسب الخط اليدوي',
     'hand.custom.title': 'خط يدك أنت',
     'hand.custom.description': 'استخدم خطًا مصنوعًا من كتابتك — استورد ملفًا أو ارسم الأبجدية هنا.',
     'hand.custom.import': 'استيراد ملف خط',
