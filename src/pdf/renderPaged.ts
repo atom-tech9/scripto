@@ -1,5 +1,6 @@
 import { Previewer } from 'pagedjs'
 import { buildExportContent, type ExportStrings } from './buildExportContent'
+import { flattenImages } from './flattenImages'
 import { buildPageCss } from './pageStyles'
 import { fitToPage } from './fitToPage'
 import { getErrorMessage, logger } from '@/lib/logger'
@@ -37,6 +38,14 @@ function markImageUnavailable(img: HTMLImageElement): void {
  * unreachable host after a short timeout. */
 async function preloadImages(root: HTMLElement): Promise<void> {
   const images = Array.from(root.querySelectorAll('img'))
+  // The renderer marks images `loading="lazy"`, which never resolves for
+  // anything below the fold -- and the export clone is never scrolled at all.
+  // Left lazy, an image reports no intrinsic size and Paged.js has to lay out a
+  // box it cannot measure.
+  images.forEach((img) => {
+    img.loading = 'eager'
+    img.decoding = 'sync'
+  })
   await Promise.allSettled(
     images.map(
       (img) =>
@@ -121,6 +130,9 @@ export async function renderPagedPreview({
       percent: 28,
     })
     await preloadImages(content)
+    // Only now do the images report intrinsic sizes, which is what turning them
+    // into measurable non-replaced boxes depends on.
+    flattenImages(content)
 
     container.innerHTML = ''
     // Paginate in an LTR context: under the app's RTL UI (<html dir="rtl">),

@@ -85,22 +85,17 @@ suite(
     })
 
     /**
-     * Known upstream defect, kept as a tripwire.
+     * Was an upstream stall, now a regression guard.
      *
-     * Paged.js 0.4.3 stalls when an `<img>` has to be placed at a page boundary:
-     * it lays out two pages and then stops dead — no further pages, and the
-     * `after` hook never fires. Bisected down from the `checklists` fixture; it is
-     * the replaced element itself, not RTL, task lists, `break-inside: avoid`,
-     * `overflow-x`, image dimensions or image preloading. Replacing the `<img>`
-     * with any non-replaced element paginates fine.
+     * Paged.js 0.4.3 stalls when a replaced element has to be placed at a page
+     * boundary: two pages lay out and the chunker stops dead, never firing its
+     * `after` hook. `flattenImages` swaps every `<img>` for an equivalent
+     * background-image box before pagination, which the chunker handles fine.
      *
-     * `it.fails` passes while the bug is present and starts failing the moment it
-     * is fixed, so the mitigation can be removed deliberately rather than by
-     * accident. The 25 s cap keeps the suite fast — the real stall is unbounded.
-     *
-     * See docs/PAGEDJS_IMAGE_STALL.md.
+     * The 25 s cap keeps a regression fast to spot -- the original stall was
+     * unbounded. See docs/PAGEDJS_IMAGE_STALL.md.
      */
-    it.fails('stalls when an image lands on a page boundary (pagedjs#0.4.3)', async () => {
+    it('paginates an image sitting on a page boundary', async () => {
       const { pages } = await paginate('image-stall', {}, { timeoutMs: 25_000 })
       expect(pages).toBeGreaterThan(0)
     })

@@ -1,34 +1,38 @@
-# Paged.js stalls on an image at a page boundary
+# Paged.js stalls on an image at a page boundary — fixed
 
 Findings from the Phase D investigation in `docs/V2_FRONTEND_PROMPT.md` §5, which
 started from `docs/PAGEDJS_RTL_DEBUG_PROMPT.md`. The original hypothesis there —
 `overflow-x: auto` + `dir=rtl` preventing the chunker from converging — is
 **wrong**. The trigger is narrower and has nothing to do with RTL.
 
-## What happens
+**Status: fixed.** `src/pdf/flattenImages.ts` swaps every `<img>` for an
+equivalent `background-image` box before pagination. The `image-stall` fixture
+went from an unbounded hang to 3 pages in under 3 seconds, and the visual suite
+is green at 26/26.
 
-Paged.js 0.4.3 lays out two pages and then stops dead. The page count never
-grows, `PagedConfig.after` never fires, and nothing throws. It is a **stall, not
+## What happened
+
+Paged.js 0.4.3 laid out two pages and then stopped dead. The page count never
+grew, `PagedConfig.after` never fired, and nothing threw. It was a **stall, not
 a runaway loop** — an important distinction, because a runaway would have been
 capped by a page limit.
 
-In the app the 45 s watchdog in `src/pdf/renderPaged.ts` turns this into a clean
-error, so users see a failure rather than a frozen tab. That safety net stays.
+The 45 s watchdog in `src/pdf/renderPaged.ts` turned this into a clean error
+rather than a frozen tab. That safety net stays.
 
 ## Repro
 
 `tests/visual/fixtures/image-stall.md` — the minimal case, bisected down from the
-`checklists` fixture. It is seven sections of ordinary content followed by a
-paragraph containing one 1×1 GIF data-URI image. The image has to be placed at a
-page boundary; that is the whole trigger.
+`checklists` fixture. Seven sections of ordinary content followed by a paragraph
+containing one 1×1 GIF data-URI image, which has to be placed at a page
+boundary.
 
 ```bash
 SCRIPTO_VISUAL=1 npx vitest run tests/visual/layout.test.ts
 ```
 
-`layout.test.ts` carries it as an `it.fails` tripwire: it passes while the bug
-exists and starts failing the moment it is fixed, so any mitigation gets removed
-deliberately instead of by accident.
+`layout.test.ts` now carries `paginates an image sitting on a page boundary` as
+an ordinary regression test.
 
 ## Ruled out
 
@@ -42,40 +46,44 @@ Each of these was tested against the minimal repro and did **not** fix the stall
 | `overflow-x: auto` on `pre` / `.table-wrap` | Not involved; already `overflow: visible` while paginating |
 | Unresolved image box | Still stalls with an explicit `width`/`height` in the page CSS |
 | `display: block` + `margin: auto` | Still stalls as `display: inline; margin: 0` |
-| Image not decoded before layout | Still stalls after awaiting every image, as the export does |
+| Image not decoded before layout | Still stalls after awaiting every image |
 | Image is the last node in the document | Still stalls with a paragraph and a whole section after it |
 | Wrapping the `img` in an explicitly sized `div` | Still stalls |
 
-## The actual cause
+## The cause
 
 Replacing the `<img>` with **any non-replaced element** — a `div` carrying the
 same picture as a `background-image` — paginates cleanly, every time. The
 chunker's difficulty is with the replaced element itself.
 
-## Why no fix has shipped
+## Why the fix was safe to ship this time
 
-The obvious workaround is to swap `<img>` for a sized `div` with a
-`background-image` during pagination. It is not safe to ship as-is:
+The workaround was written up but held back because browsers do not print
+background images unless `print-color-adjust: exact` applies, and Chrome's
+"Background graphics" toggle is **off by default**. Getting that wrong would
+silently drop images from exported PDFs — far worse than the stall.
 
-- Browsers do not print background images unless `print-color-adjust: exact`
-  applies, and the print dialog's "Background graphics" toggle is off by default.
-  Getting this wrong means images silently vanish from the exported PDF — a far
-  worse bug than the one being fixed.
-- It needs verification through a real Save-as-PDF on Chrome, Safari and Firefox
-  before it can be trusted, not just a green pagination run.
+That objection is now closed. `.pagedjs_page, .pagedjs_page *` carry
+`print-color-adjust: exact`, and the flattened boxes set it inline as well, so
+the picture no longer depends on the dialog. Verified end to end by driving the
+real export over the DevTools Protocol with `printBackground: false`: the
+exported PDF contains the image as a 64×64 XObject and renders it correctly.
 
-Paged.js 0.4.3 is the latest stable release; 0.5.0 exists only as a beta, so
-upgrading the PDF engine is not a safe fix either.
+## Two ordering bugs found along the way
 
-## Recommended next step
+Both were real, and either alone would have defeated the workaround:
 
-Prototype the swap behind a flag in `src/pdf/prepareForPaging.ts`:
+1. **`preloadImages` ran *after* `buildExportContent`**, so the DOM transforms
+   saw images that had not decoded and reported no intrinsic size.
+2. **The renderer marks images `loading="lazy"`.** Anything below the fold never
+   loads, and an export clone is never scrolled — so those images reported no
+   intrinsic size at all. `preloadImages` now forces `loading="eager"` and
+   `decoding="sync"` on the clone before waiting.
 
-1. Measure each image's rendered box on the **live** document before cloning —
-   `prepareForPaging` runs on a detached clone, where `getBoundingClientRect`
-   returns zero.
-2. Replace the `img` with `<div role="img" aria-label="{alt}">` carrying the
-   `background-image`, and set `print-color-adjust: exact` on those boxes only.
-3. Verify a real Save-as-PDF in Chrome, Safari and Firefox, with the print
-   dialog's background-graphics option **off**, before enabling it by default.
-4. Delete the `it.fails` tripwire once the stall is gone.
+## Sizing
+
+`flattenImages` sizes each box from the image's **intrinsic** dimensions, not a
+measured box: it runs against the editor pane, whose width is not the printed
+page's width, so a baked pixel size would be wrong on paper. `width` +
+`max-width: 100%` + `aspect-ratio` reproduces how an `<img>` with `height: auto`
+behaves in flow. An image with no intrinsic size is left as an `<img>`.

@@ -29,15 +29,27 @@ export function findChrome(): string | null {
   return CHROME_CANDIDATES.find((path) => existsSync(path)) ?? null
 }
 
-/** Every code line in a fenced block, in source order, for the whole document. */
+/**
+ * Every code line in a fenced block, in source order, for the whole document.
+ *
+ * An unclosed fence runs to the end of the document (CommonMark 4.5), and the
+ * `tables` fixture has one on purpose. Matching only closed fences made this
+ * report nothing while the renderer correctly emitted the block, so the suite
+ * blamed the renderer for the harness's own reading of the source.
+ */
 export function sourceCodeLines(markdown: string): string[] {
   const lines: string[] = []
-  const fence = /^([ \t]*)(?:```|~~~)([^\n]*)\n([\s\S]*?)^[ \t]*(?:```|~~~)[ \t]*$/gm
+  const fence = /^([ \t]*)(?:```|~~~)([^\n]*)\n([\s\S]*?)(?:^[ \t]*(?:```|~~~)[ \t]*$|(?![\s\S]))/gm
   for (const match of markdown.matchAll(fence)) {
     const language = match[2].trim().split(/\s+/)[0] ?? ''
     // Mermaid and ASCII fences render as figures, not `.code-line` runs.
     if (language === 'mermaid') continue
-    lines.push(...match[3].replace(/\n$/, '').split('\n'))
+    // An indented opening fence strips up to that much leading whitespace from
+    // every content line (CommonMark 4.5). The renderer does this; reading the
+    // raw source without it made correct output look like a rendering bug.
+    const indent = match[1].length
+    const strip = (line: string) => line.replace(new RegExp(`^[ \\t]{0,${indent}}`), '')
+    lines.push(...match[3].replace(/\n$/, '').split('\n').map(strip))
   }
   return lines
 }
@@ -84,8 +96,15 @@ async function bundleTransforms(): Promise<string> {
   writeFileSync(
     entry,
     `import { prepareForPaging } from '${ROOT}/src/pdf/prepareForPaging'
+     import { flattenImages } from '${ROOT}/src/pdf/flattenImages'
      window.__prepare = (config) => {
-       document.querySelectorAll('.scripto-doc').forEach((doc) => prepareForPaging(doc, config))
+       // Same order as renderPaged: chunk and stack, then flatten images once
+       // they have loaded and can report an intrinsic size.
+       document.querySelectorAll('.scripto-doc').forEach((doc) => {
+         prepareForPaging(doc, config)
+         flattenImages(doc)
+       })
+       document.documentElement.dataset.scriptoPrepared = 'yes'
      }`,
   )
   await build({
@@ -152,7 +171,9 @@ ${buildPageCss(config)}
 
   const probe = () => {
     const pages = [...document.querySelectorAll('.pagedjs_page')]
-    const report = { pages: pages.length, overflowing: [], codeLines: [], emptiedElements: [] }
+    const report = { pages: pages.length, overflowing: [], codeLines: [], emptiedElements: [],
+      imgs: document.querySelectorAll('.scripto-doc img').length,
+      imgBoxes: document.querySelectorAll('.scripto-doc div[role="img"]').length }
 
     pages.forEach((page, index) => {
       const content = page.querySelector('.pagedjs_page_content')
@@ -160,6 +181,10 @@ ${buildPageCss(config)}
       const box = content.getBoundingClientRect()
 
       page.querySelectorAll('.scripto-doc *').forEach((el) => {
+        // KaTeX ships a MathML twin of every formula for screen readers. It is
+        // hidden by clipping rather than by zero size, so it still measures at
+        // full width and reported dozens of overflows that no reader can see.
+        if (el.closest('.katex-mathml')) return
         const r = el.getBoundingClientRect()
         if (r.width <= 0 || r.height <= 0) return
         const by = Math.round(Math.max(r.right - box.right, box.left - r.left))
@@ -189,7 +214,35 @@ ${buildPageCss(config)}
     document.body.appendChild(out)
   }
 </script>
-<script>${polyfill}</script>`
+<script type="text/plain" id="pagedjs-src">${polyfill}</script>
+<script>
+  // Paged.js must not start until every image has loaded: the export transforms
+  // a clone of an on-screen document, so its images always report intrinsic
+  // sizes, and flattenImages needs the same guarantee here. Waiting on load
+  // rather than decode() -- decode() on a not-yet-rendered document can never
+  // settle, which stalls the whole polyfill before it lays out a single page.
+  (async () => {
+    document.documentElement.dataset.step = 'start'
+    await Promise.all(
+      [...document.images].map((img) => {
+        // renderPaged does the same: a lazy image below the fold never loads,
+        // so it would report no intrinsic size and hang this wait forever.
+        img.loading = 'eager'
+        img.decoding = 'sync'
+        if (img.complete && img.naturalWidth) return null
+        return new Promise((resolve) => {
+          img.onload = img.onerror = resolve
+          setTimeout(resolve, 5000)
+        })
+      }),
+    )
+    document.documentElement.dataset.step = 'images-loaded'
+    const script = document.createElement('script')
+    script.textContent = document.getElementById('pagedjs-src').textContent
+    document.body.appendChild(script)
+    document.documentElement.dataset.step = 'injected'
+  })().catch((e) => { document.documentElement.dataset.step = 'threw:' + e })
+</script>`
 }
 
 /** How long to wait for Paged.js to finish laying a fixture out. */
@@ -334,7 +387,19 @@ export async function paginate(
       // eslint-disable-next-line no-console
       console.error(`[visual] page kept at ${page}`)
     }
-    throw new Error('probe produced no output')
+    // A stall leaves no probe element, so report what the page did manage --
+    // how far the chunker got, and whether the DOM transforms ran at all.
+    const snapshot = (await session.send('Runtime.evaluate', {
+      expression: `JSON.stringify({
+        pages: document.querySelectorAll('.pagedjs_page').length,
+        imgs: document.querySelectorAll('img').length,
+        imgBoxes: document.querySelectorAll('div[role="img"]').length,
+        prepared: document.documentElement.dataset.scriptoPrepared ?? 'no',
+        step: document.documentElement.dataset.step ?? 'never-ran',
+      })`,
+      returnByValue: true,
+    })) as { result?: { value?: string } } | undefined
+    throw new Error(`probe produced no output; page state: ${snapshot?.result?.value ?? 'unknown'}`)
   } finally {
     session?.close()
     browser.kill('SIGKILL')
