@@ -97,6 +97,24 @@
   .pagedjs_page {
     box-shadow: none !important;
     margin: 0 !important;
+  }
+
+  /* Break *between* sheets, never after the last one: a trailing forced break
+   * makes the browser emit one extra blank page, so a 14-page preview saved as
+   * a 15-page PDF. */
+  .pagedjs_page:not(:last-child) {
     break-after: page;
+  }
+
+  /* Everything a sheet paints is design, not decoration: ruled and graph
+   * stationery, aged parchment, callout and code-block fills, table banding,
+   * skin accents. Chrome ships "Background graphics" unticked in Save as PDF,
+   * which would silently drop all of it and hand back a different document
+   * from the one on screen, so every sheet opts in explicitly. The dialog's
+   * checkbox then has nothing left to change. */
+  .pagedjs_page,
+  .pagedjs_page * {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
   }
 }
