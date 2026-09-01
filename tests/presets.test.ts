@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { capturePreset, mergePreset, parsePresets, serializePresets } from '@/lib/presets'
 import { DEFAULT_CONFIG, MARGIN_PRESETS } from '@/lib/constants'
 import { DOCUMENT_PRESETS } from '@/data/presets'
-import type { ExportPreset } from '@/types'
+import type { ExportPreset, PdfConfig } from '@/types'
 
 describe('export presets', () => {
   describe('mergePreset', () => {
@@ -96,5 +96,38 @@ describe('export presets', () => {
       expect(imported.id).toBeTruthy()
       expect(imported.createdAt).toBeGreaterThan(0)
     })
+  })
+})
+
+describe('handwriting in presets', () => {
+  it('round-trips a hand block through save, export and import', () => {
+    const config = {
+      ...DEFAULT_CONFIG,
+      hand: { ...DEFAULT_CONFIG.hand, hand: 'copperplate', ink: 'sepia', stationery: 'parchment' },
+    } as PdfConfig
+    const saved = capturePreset(config)
+    const file = serializePresets([{ id: 'a', name: 'Keepsake', config: saved, createdAt: 1 }])
+    const [back] = parsePresets(file)
+    expect(back.config.hand).toMatchObject({
+      hand: 'copperplate',
+      ink: 'sepia',
+      stationery: 'parchment',
+    })
+  })
+
+  it('narrows a hand block that arrives from someone else file', () => {
+    // Preset files are shared, so the hand block is untrusted input like any
+    // other: an unknown value must fall back rather than reach the renderer.
+    const file = JSON.stringify([
+      {
+        name: 'Hostile',
+        config: { hand: { hand: '<script>', ink: 'nope', neatness: 99, drawnElements: 'yes' } },
+      },
+    ])
+    const [back] = parsePresets(file)
+    expect(back.config.hand?.hand).toBe(DEFAULT_CONFIG.hand.hand)
+    expect(back.config.hand?.ink).toBe(DEFAULT_CONFIG.hand.ink)
+    expect(back.config.hand?.neatness).toBe(1)
+    expect(back.config.hand?.drawnElements).toBe(DEFAULT_CONFIG.hand.drawnElements)
   })
 })

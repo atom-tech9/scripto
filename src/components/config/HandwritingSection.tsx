@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
-import { Loader2, PenLine } from 'lucide-react'
+import { Link2, Loader2, PenLine } from 'lucide-react'
+import { toast } from 'sonner'
 import { Field, Slider, Switch } from '@/components/ui/Field'
 import { HANDS, handsForScript, type HandScript } from '@/lib/handwriting/hands'
 import { loadHand } from '@/lib/handwriting/fonts'
@@ -14,6 +15,7 @@ const DrawAlphabetDialog = lazy(() =>
   import('./DrawAlphabetDialog').then((m) => ({ default: m.DrawAlphabetDialog })),
 )
 import { listCustomHands } from '@/lib/handwriting/customHands'
+import { encodeHandRecipe } from '@/lib/handwriting/recipe'
 import { cn } from '@/lib/utils'
 import type { HandConfig, HandStyle, InkStyle, PdfConfig, Stationery } from '@/types'
 
@@ -223,6 +225,21 @@ export function HandwritingSection({ config, onChange, onFontError }: Handwritin
               />
             </Suspense>
           )}
+
+          {/* A HandConfig is small enough to live in a URL, so "here is my exact
+              setup" becomes something a person can post. The custom hand is
+              deliberately left out: it names a font only this browser has. */}
+          <button
+            type="button"
+            onClick={() => {
+              const url = `${window.location.origin}/app?hand=${encodeHandRecipe(hand)}`
+              void navigator.clipboard?.writeText(url).then(() => toast.success(t('hand.shareCopied')))
+            }}
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+          >
+            <Link2 size={13} />
+            {t('hand.share')}
+          </button>
 
           <Field label={t('hand.ink')}>
             <div className="flex flex-wrap gap-1.5">

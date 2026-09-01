@@ -1,4 +1,5 @@
-import { MARGIN_PRESETS } from '@/lib/constants'
+import { DEFAULT_CONFIG, MARGIN_PRESETS } from '@/lib/constants'
+import { sanitiseHandConfig } from '@/lib/handwriting/vocabulary'
 import type { ExportPreset, PdfConfig } from '@/types'
 
 /** File format version, so a future change can migrate rather than guess. */
@@ -42,10 +43,13 @@ function toPreset(value: unknown): ExportPreset | null {
   if (!isRecord(config)) return null
   // `meta` can carry a title and author from whoever exported the file.
   const { meta: _meta, ...presentation } = config
+  // The hand block comes straight out of someone else's file, so it is narrowed
+  // to values we ship rather than trusted as-is.
+  const hand = 'hand' in presentation ? sanitiseHandConfig(presentation.hand, DEFAULT_CONFIG.hand) : undefined
   return {
     id: typeof id === 'string' && id ? id : crypto.randomUUID(),
     name: name.trim().slice(0, 60),
-    config: presentation as Partial<PdfConfig>,
+    config: { ...(presentation as Partial<PdfConfig>), ...(hand ? { hand } : {}) },
     createdAt: typeof createdAt === 'number' ? createdAt : Date.now(),
   }
 }
