@@ -1,0 +1,280 @@
+/*
+ * stationery.css — the paper a handwritten document is written on.
+ *
+ * Every paper is built from repeating gradients: zero image bytes, and it
+ * scales to any print DPI without resampling. Painted on the sheet itself so
+ * the preview and the export agree; the paginated pages additionally repaint
+ * the rules per page box (see pageStyles.ts) so they restart in phase on every
+ * sheet instead of drifting.
+ *
+ * `--hw-pitch` is the rule spacing, set from the active stationery. Text sits
+ * ON the rules only if the pitch, the leading and the top margin all agree —
+ * see lib/handwriting/rules.ts.
+ */
+
+.scripto-doc[data-stationery] {
+  /* The paper overlays are absolutely positioned children. */
+  position: relative;
+  --hw-pitch: 7.1mm;
+  --hw-rule: #a8c4e0;
+  --hw-rule-soft: #cfe0ee;
+  --hw-margin-rule: #e59b9b;
+  --hw-paper: transparent;
+  /* The opaque colour of the sheet, for masking rules behind large type.
+     `--hw-paper` can be transparent; this one never is. */
+  --hw-paper-solid: #fff;
+  background-color: var(--hw-paper);
+  background-repeat: repeat;
+}
+
+/* Blank paper is the absence of all of it. */
+.scripto-doc[data-stationery='blank'] {
+  background-image: none;
+}
+
+/* --- ruled ---------------------------------------------------------------- */
+
+.scripto-doc[data-stationery='ruled-college'],
+.scripto-doc[data-stationery='ruled-wide'],
+.scripto-doc[data-stationery='ruled-narrow'] {
+  background-image: repeating-linear-gradient(
+    180deg,
+    transparent 0,
+    transparent calc(var(--hw-pitch) - 1px),
+    var(--hw-rule) calc(var(--hw-pitch) - 1px),
+    var(--hw-rule) var(--hw-pitch)
+  );
+}
+
+.scripto-doc[data-stationery='ruled-wide'] {
+  --hw-pitch: 8.7mm;
+}
+
+.scripto-doc[data-stationery='ruled-narrow'] {
+  --hw-pitch: 6.35mm;
+}
+
+/* A legal pad: yellow stock, two red margin rules. */
+.scripto-doc[data-stationery='legal-pad'] {
+  --hw-paper-solid: #fdf6c8;
+  --hw-pitch: 8.7mm;
+  --hw-paper: #fdf6c8;
+  --hw-rule: #9fb8d4;
+  background-image:
+    linear-gradient(
+      90deg,
+      transparent 14mm,
+      var(--hw-margin-rule) 14mm,
+      var(--hw-margin-rule) calc(14mm + 1px),
+      transparent calc(14mm + 1px)
+    ),
+    linear-gradient(
+      90deg,
+      transparent 15.5mm,
+      var(--hw-margin-rule) 15.5mm,
+      var(--hw-margin-rule) calc(15.5mm + 1px),
+      transparent calc(15.5mm + 1px)
+    ),
+    repeating-linear-gradient(
+      180deg,
+      transparent 0,
+      transparent calc(var(--hw-pitch) - 1px),
+      var(--hw-rule) calc(var(--hw-pitch) - 1px),
+      var(--hw-rule) var(--hw-pitch)
+    );
+}
+
+/* Cornell: a cue column on the inline-start, a summary band at the foot. */
+.scripto-doc[data-stationery='cornell'] {
+  background-image:
+    linear-gradient(
+      90deg,
+      transparent 32mm,
+      var(--hw-margin-rule) 32mm,
+      var(--hw-margin-rule) calc(32mm + 1px),
+      transparent calc(32mm + 1px)
+    ),
+    repeating-linear-gradient(
+      180deg,
+      transparent 0,
+      transparent calc(var(--hw-pitch) - 1px),
+      var(--hw-rule) calc(var(--hw-pitch) - 1px),
+      var(--hw-rule) var(--hw-pitch)
+    );
+}
+
+/* Steno: a centre rule splitting the page into two writing columns. */
+.scripto-doc[data-stationery='steno'] {
+  background-image:
+    linear-gradient(
+      90deg,
+      transparent 50%,
+      var(--hw-margin-rule) 50%,
+      var(--hw-margin-rule) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    ),
+    repeating-linear-gradient(
+      180deg,
+      transparent 0,
+      transparent calc(var(--hw-pitch) - 1px),
+      var(--hw-rule) calc(var(--hw-pitch) - 1px),
+      var(--hw-rule) var(--hw-pitch)
+    );
+}
+
+/*
+ * Practice lines — four lines with a dashed midline, the paper handwriting is
+ * actually taught on. Built for teachers making worksheets, which is a real and
+ * badly served audience.
+ */
+.scripto-doc[data-stationery='practice-lines'] {
+  --hw-pitch: 12.7mm;
+  background-image: repeating-linear-gradient(
+    180deg,
+    var(--hw-rule) 0,
+    var(--hw-rule) 1px,
+    transparent 1px,
+    transparent calc(var(--hw-pitch) * 0.5),
+    var(--hw-rule-soft) calc(var(--hw-pitch) * 0.5),
+    var(--hw-rule-soft) calc(var(--hw-pitch) * 0.5 + 1px),
+    transparent calc(var(--hw-pitch) * 0.5 + 1px),
+    transparent var(--hw-pitch)
+  );
+}
+
+/* The midline is dashed, the way school paper marks x-height. */
+.scripto-doc[data-stationery='practice-lines']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--hw-rule-soft) 0 3px,
+    transparent 3px 7px
+  );
+  background-size: 100% 1px;
+  background-repeat: repeat-y;
+  background-position: 0 calc(var(--hw-pitch) * 0.5);
+  opacity: 0.6;
+}
+
+.scripto-doc[data-stationery='music-staff'] {
+  --hw-pitch: 10mm;
+  background-image: repeating-linear-gradient(
+    180deg,
+    var(--hw-rule) 0 1px,
+    transparent 1px 2mm,
+    var(--hw-rule) 2mm calc(2mm + 1px),
+    transparent calc(2mm + 1px) 4mm,
+    var(--hw-rule) 4mm calc(4mm + 1px),
+    transparent calc(4mm + 1px) 6mm,
+    var(--hw-rule) 6mm calc(6mm + 1px),
+    transparent calc(6mm + 1px) 8mm,
+    var(--hw-rule) 8mm calc(8mm + 1px),
+    transparent calc(8mm + 1px) var(--hw-pitch)
+  );
+}
+
+/* --- grids ---------------------------------------------------------------- */
+
+.scripto-doc[data-stationery='graph'],
+.scripto-doc[data-stationery='graph-blue'] {
+  --hw-paper-solid: #f4f9fd;
+  --hw-pitch: 5mm;
+  background-image:
+    repeating-linear-gradient(90deg, var(--hw-rule-soft) 0 1px, transparent 1px var(--hw-pitch)),
+    repeating-linear-gradient(180deg, var(--hw-rule-soft) 0 1px, transparent 1px var(--hw-pitch));
+}
+
+.scripto-doc[data-stationery='graph-blue'] {
+  --hw-rule-soft: #b9d3ea;
+  --hw-paper: #f4f9fd;
+}
+
+/* Engineering paper: a fine grid with a heavier rule every fifth line. */
+.scripto-doc[data-stationery='engineering'] {
+  --hw-paper-solid: #f2f7ee;
+  --hw-pitch: 5mm;
+  --hw-paper: #f2f7ee;
+  --hw-rule-soft: #bcd6b4;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      var(--hw-rule) 0 1px,
+      transparent 1px calc(var(--hw-pitch) * 5)
+    ),
+    repeating-linear-gradient(
+      180deg,
+      var(--hw-rule) 0 1px,
+      transparent 1px calc(var(--hw-pitch) * 5)
+    ),
+    repeating-linear-gradient(90deg, var(--hw-rule-soft) 0 1px, transparent 1px var(--hw-pitch)),
+    repeating-linear-gradient(180deg, var(--hw-rule-soft) 0 1px, transparent 1px var(--hw-pitch));
+}
+
+.scripto-doc[data-stationery='dot-grid'] {
+  --hw-pitch: 5mm;
+  background-image: radial-gradient(circle at 1px 1px, var(--hw-rule) 1px, transparent 1.4px);
+  background-size: var(--hw-pitch) var(--hw-pitch);
+}
+
+.scripto-doc[data-stationery='isometric'] {
+  --hw-pitch: 5mm;
+  background-image:
+    repeating-linear-gradient(60deg, var(--hw-rule-soft) 0 1px, transparent 1px var(--hw-pitch)),
+    repeating-linear-gradient(-60deg, var(--hw-rule-soft) 0 1px, transparent 1px var(--hw-pitch)),
+    repeating-linear-gradient(180deg, var(--hw-rule-soft) 0 1px, transparent 1px var(--hw-pitch));
+}
+
+/* --- stocks --------------------------------------------------------------- */
+
+.scripto-doc[data-stationery='index-card'] {
+  --hw-paper-solid: #fffdf7;
+  --hw-pitch: 7.1mm;
+  --hw-paper: #fffdf7;
+  background-image:
+    linear-gradient(180deg, #d98a8a 0 2px, transparent 2px),
+    repeating-linear-gradient(
+      180deg,
+      transparent 0,
+      transparent calc(var(--hw-pitch) - 1px),
+      var(--hw-rule) calc(var(--hw-pitch) - 1px),
+      var(--hw-rule) var(--hw-pitch)
+    );
+}
+
+.scripto-doc[data-stationery='parchment'] {
+  --hw-paper-solid: #f6ecd6;
+  --hw-paper: #f6ecd6;
+  background-image:
+    radial-gradient(120% 90% at 50% 0%, rgb(255 255 255 / 0.6), transparent 60%),
+    repeating-linear-gradient(92deg, transparent 0 3px, rgb(120 90 50 / 0.035) 3px 4px);
+}
+
+.scripto-doc[data-stationery='kraft'] {
+  --hw-paper-solid: #cbab84;
+  --hw-paper: #cbab84;
+  --hw-ink: #2c2318;
+  background-image:
+    repeating-linear-gradient(77deg, transparent 0 2px, rgb(70 50 25 / 0.05) 2px 3px),
+    repeating-linear-gradient(167deg, transparent 0 3px, rgb(70 50 25 / 0.04) 3px 4px);
+}
+
+/* --- aging ---------------------------------------------------------------- */
+
+/* Yellowing, edge vignette and two faint fold creases. All of it stays subtle
+   at 1: this is seasoning, not a filter, and it is deliberately not an
+   "authenticity" simulator. */
+.scripto-doc[data-stationery][data-aged]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(180deg, rgb(180 140 60 / 0.1), rgb(150 110 40 / 0.16)),
+    radial-gradient(120% 100% at 50% 50%, transparent 55%, rgb(90 60 20 / 0.18)),
+    linear-gradient(90deg, transparent 33%, rgb(120 90 40 / 0.1) 33.2%, transparent 33.5%),
+    linear-gradient(90deg, transparent 67%, rgb(120 90 40 / 0.08) 67.2%, transparent 67.5%);
+  opacity: var(--hw-aging, 0);
+}

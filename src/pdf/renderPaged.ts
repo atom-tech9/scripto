@@ -1,5 +1,6 @@
 import { Previewer } from 'pagedjs'
 import { buildExportContent, type ExportStrings } from './buildExportContent'
+import { flattenImages } from './flattenImages'
 import { buildPageCss } from './pageStyles'
 import { fitToPage } from './fitToPage'
 import { getErrorMessage, logger } from '@/lib/logger'
@@ -37,6 +38,14 @@ function markImageUnavailable(img: HTMLImageElement): void {
  * unreachable host after a short timeout. */
 async function preloadImages(root: HTMLElement): Promise<void> {
   const images = Array.from(root.querySelectorAll('img'))
+  // The renderer marks images `loading="lazy"`, which never resolves for
+  // anything below the fold -- and the export clone is never scrolled at all.
+  // Left lazy, an image reports no intrinsic size and Paged.js has to lay out a
+  // box it cannot measure.
+  images.forEach((img) => {
+    img.loading = 'eager'
+    img.decoding = 'sync'
+  })
   await Promise.allSettled(
     images.map(
       (img) =>
@@ -107,12 +116,23 @@ export async function renderPagedPreview({
   strings,
 }: RenderOptions): Promise<RenderResult> {
   try {
-    onProgress?.({ stage: 'preparing', message: 'Preparing document…', percent: 12 })
+    onProgress?.({
+      stage: 'preparing',
+      message: strings?.preparing ?? 'Preparing document…',
+      percent: 12,
+    })
     const { content, toc } = buildExportContent(liveDoc, config, strings)
     const pageCss = buildPageCss(config)
 
-    onProgress?.({ stage: 'rendering', message: 'Loading images…', percent: 28 })
+    onProgress?.({
+      stage: 'rendering',
+      message: strings?.loadingImages ?? 'Loading images…',
+      percent: 28,
+    })
     await preloadImages(content)
+    // Only now do the images report intrinsic sizes, which is what turning them
+    // into measurable non-replaced boxes depends on.
+    flattenImages(content)
 
     container.innerHTML = ''
     // Paginate in an LTR context: under the app's RTL UI (<html dir="rtl">),
@@ -120,14 +140,19 @@ export async function renderPagedPreview({
     // document keeps its own direction via `.scripto-doc[dir]`, so RTL text is
     // unaffected — only the page mechanics are forced LTR.
     container.setAttribute('dir', 'ltr')
-    onProgress?.({ stage: 'paginating', message: 'Laying out pages…', percent: 45 })
+    onProgress?.({
+      stage: 'paginating',
+      message: strings?.paginating ?? 'Laying out pages…',
+      percent: 45,
+    })
 
     const previewer = new Previewer()
     const flow = await withResizeObserverDisabled(() =>
       withTimeout(
         previewer.preview(content, [{ pageStyle: pageCss }], container),
         RENDER_TIMEOUT_MS,
-        'PDF layout took too long. Try removing broken images or simplifying the document, then retry.',
+        strings?.timedOut ??
+          'PDF layout took too long. Try removing broken images or simplifying the document, then retry.',
       ),
     )
 
@@ -136,7 +161,13 @@ export async function renderPagedPreview({
     const fit = fitToPage(container)
 
     const pageCount = flow?.total ?? container.querySelectorAll('.pagedjs_page').length
-    onProgress?.({ stage: 'done', message: `${pageCount} page${pageCount === 1 ? '' : 's'} ready`, percent: 100 })
+    onProgress?.({
+      stage: 'done',
+      message: strings?.pagesReady
+        ? `${pageCount} ${strings.pagesReady}`
+        : `${pageCount} page${pageCount === 1 ? '' : 's'} ready`,
+      percent: 100,
+    })
     return { pageCount, toc, fit }
   } catch (error) {
     logger.error('Paged.js rendering failed', error)

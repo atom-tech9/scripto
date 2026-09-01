@@ -1,10 +1,16 @@
 import { decryptString, encryptString, type CipherPayload } from './crypto'
 import { logger } from './logger'
+import { clearRecords, exportRecords, importRecords } from './docStore'
 
 /**
  * The vault stores an encrypted snapshot of every `scripto:*` localStorage
- * entry. While unlocked the app uses plaintext entries for speed; the vault is
- * kept in sync and is the only thing left at rest once locked.
+ * entry AND the IndexedDB document store. While unlocked the app uses plaintext
+ * for speed; the vault is kept in sync and is the only thing left at rest once
+ * locked.
+ *
+ * Both stores have to be covered. Documents moved to IndexedDB for the space,
+ * and encrypting only localStorage would leave the entire library readable on
+ * disk while the UI claimed to be locked.
  */
 
 const LOCK_META_KEY = 'scripto:lock'
@@ -40,6 +46,18 @@ export function isLockEnabled(): boolean {
   return getLockMeta()?.enabled === true
 }
 
+/**
+ * The shape written into the vault.
+ *
+ * Documents now live in IndexedDB, so encrypting localStorage alone would leave
+ * the whole library readable while the app claimed to be locked. Both stores go
+ * in, under separate keys, and both come back out on unlock.
+ */
+interface VaultPayload {
+  local: Record<string, string>
+  store: Record<string, unknown>
+}
+
 /** Collect all app data entries except the lock meta and vault themselves. */
 function snapshotPlaintext(): Record<string, string> {
   const snapshot: Record<string, string> = {}
@@ -53,8 +71,14 @@ function snapshotPlaintext(): Record<string, string> {
   return snapshot
 }
 
-/** Remove all plaintext app-data entries (keeps lock meta + vault). */
-export function clearPlaintext(): void {
+/**
+ * Remove all plaintext app data — localStorage entries and the document store
+ * alike, keeping only the lock meta and the ciphertext.
+ *
+ * Awaiting this matters: until the IndexedDB half resolves, the library is
+ * still on disk in the clear.
+ */
+export async function clearPlaintext(): Promise<void> {
   const keys: string[] = []
   for (let i = 0; i < localStorage.length; i += 1) {
     const key = localStorage.key(i)
@@ -63,12 +87,14 @@ export function clearPlaintext(): void {
     }
   }
   keys.forEach((k) => localStorage.removeItem(k))
+  await clearRecords()
 }
 
 /** Encrypt the current plaintext snapshot into the vault. */
 export async function syncVault(key: CryptoKey): Promise<void> {
   try {
-    const payload = await encryptString(JSON.stringify(snapshotPlaintext()), key)
+    const snapshot: VaultPayload = { local: snapshotPlaintext(), store: await exportRecords() }
+    const payload = await encryptString(JSON.stringify(snapshot), key)
     localStorage.setItem(VAULT_KEY, JSON.stringify(payload))
   } catch (error) {
     logger.error('Failed to sync vault', error)
@@ -82,8 +108,14 @@ export async function restoreVault(key: CryptoKey): Promise<boolean> {
     if (!raw) return true // nothing stored yet
     const payload = JSON.parse(raw) as CipherPayload
     const json = await decryptString(payload, key)
-    const data = JSON.parse(json) as Record<string, string>
-    Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, v))
+    const data = JSON.parse(json) as Partial<VaultPayload> & Record<string, unknown>
+    // Vaults written before documents moved to IndexedDB are a flat map of
+    // localStorage entries, so read either shape.
+    const local = (data.local ?? data) as Record<string, string>
+    for (const [k, v] of Object.entries(local)) {
+      if (typeof v === 'string') localStorage.setItem(k, v)
+    }
+    if (data.store) await importRecords(data.store)
     return true
   } catch (error) {
     logger.error('Failed to restore vault', error)

@@ -22,6 +22,20 @@ describe('startsWithManualNumber', () => {
     expect(startsWithManualNumber('1.5x Faster')).toBe(false)
   })
 
+  it('detects a number separated by a middot, dash or colon', () => {
+    // Reported from a real document: every "# 1 · Meta" heading was numbered
+    // again by the auto counter, giving "2.  1 · Meta" and pushing every
+    // following section one out.
+    expect(startsWithManualNumber('1 · META — Facebook Pages')).toBe(true)
+    expect(startsWithManualNumber('2 · TikTok')).toBe(true)
+    expect(startsWithManualNumber('4 — Rollout')).toBe(true)
+    expect(startsWithManualNumber('5 – Alternatives')).toBe(true)
+    expect(startsWithManualNumber('6 - Appendix')).toBe(true)
+    expect(startsWithManualNumber('7: Glossary')).toBe(true)
+    expect(startsWithManualNumber('8 | Index')).toBe(true)
+    expect(startsWithManualNumber('10 · Apple Business Connect')).toBe(true)
+  })
+
   it('leaves ordinary headings alone', () => {
     expect(startsWithManualNumber('Executive Summary')).toBe(false)
     expect(startsWithManualNumber('2024 Annual Report')).toBe(false)

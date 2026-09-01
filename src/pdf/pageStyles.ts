@@ -1,6 +1,8 @@
 import { FONT_STACKS, resolvePageDimensions } from '@/lib/constants'
 import { escapeHtml } from '@/lib/utils'
 import type { PdfConfig } from '@/types'
+import { resolveMargins } from '@/lib/handwriting/rules'
+import { handFontStack } from '@/lib/handwriting/hands'
 
 /** Resolve a concrete direction for the generated cover/TOC pages. */
 export function resolveDocDirection(config: PdfConfig): 'ltr' | 'rtl' {
@@ -16,7 +18,13 @@ export function resolveDocDirection(config: PdfConfig): 'ltr' | 'rtl' {
  */
 export function buildPageCss(config: PdfConfig): string {
   const { width, height } = resolvePageDimensions(config)
-  const { top, right, bottom, left } = config.margins
+  // Ruled handwriting paper needs the top margin on a whole rule (see
+  // lib/handwriting/rules.ts); every other document keeps its own margins.
+  const { top, right, bottom, left } = resolveMargins(
+    config.margins,
+    config.hand.stationery,
+    config.hand.hand !== 'none',
+  )
   const accent = config.accentColor
   const docDir = resolveDocDirection(config)
   const rtl = docDir === 'rtl' || config.font === 'arabic'
@@ -43,8 +51,15 @@ export function buildPageCss(config: PdfConfig): string {
     )
   }
   if (config.attribution) {
+    // Signed in the document's own hand when it has one. A handwritten page
+    // with a typeset line of sans-serif under it reads as a watermark someone
+    // stamped on; in the same hand it reads as the writer signing their work.
+    const attributionFont =
+      config.hand.hand === 'none'
+        ? ''
+        : `font-family: ${handFontStack(config.hand.hand, config.hand.customHand) ?? 'inherit'};`
     marginBoxes.push(
-      `@bottom-center { content: "Made with Scripto \\00b7 md.atom.sa"; ${marginBoxStyle()} font-size: 7pt; opacity: 0.85; }`,
+      `@bottom-center { content: "Made with Scripto \\00b7 md.atom.sa"; ${marginBoxStyle()} ${attributionFont} font-size: 7pt; opacity: 0.85; }`,
     )
   }
 
@@ -167,6 +182,10 @@ export function buildPageCss(config: PdfConfig): string {
     .scripto-doc tr { break-inside: avoid; break-after: auto; }
     .scripto-doc img { break-inside: avoid; }
 
+    /* Handout: one topic per page, so every section starts a fresh sheet. */
+    .scripto-doc[data-skin='handout'] h2 { break-before: page; }
+    .scripto-doc[data-skin='handout'] h2:first-of-type { break-before: auto; }
+
     /* Images that failed to load get a fixed box so the paginator can place them. */
     .scripto-doc img[data-unavailable] {
       display: block;
@@ -243,8 +262,16 @@ const MUTED_COLOR = '#5b6472'
 /** HTML for the optional cover page, honouring the chosen style, direction, and
  * the document's cover fields. Used by both the live preview and the export. */
 export function buildCoverHtml(config: PdfConfig, locale?: string): string {
-  const { title, author, subject, subtitle, organization, date: customDate, version, docType } =
-    config.meta
+  const {
+    title,
+    author,
+    subject,
+    subtitle,
+    organization,
+    date: customDate,
+    version,
+    docType,
+  } = config.meta
   const accent = config.accentColor
   const dir = resolveDocDirection(config)
   const font = dir === 'rtl' || config.font === 'arabic' ? FONT_STACKS.arabic : 'Inter, sans-serif'
@@ -266,7 +293,8 @@ export function buildCoverHtml(config: PdfConfig, locale?: string): string {
       : ''
   const metaHtml = (align: 'start' | 'center'): string => {
     const rows = [
-      author.trim() && `<div style="font-weight:600;color:${TITLE_COLOR};">${escapeHtml(author)}</div>`,
+      author.trim() &&
+        `<div style="font-weight:600;color:${TITLE_COLOR};">${escapeHtml(author)}</div>`,
       organization.trim() && `<div>${escapeHtml(organization)}</div>`,
       date && `<div>${escapeHtml(date)}</div>`,
       version.trim() && `<div>${escapeHtml(version)}</div>`,

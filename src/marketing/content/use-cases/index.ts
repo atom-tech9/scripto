@@ -1,4 +1,5 @@
 import type { MarketingLang, UseCaseContent } from '../../types'
+import { aiOutputToPdf, aiOutputToPdfAr } from './ai-output-to-pdf'
 import { htmlToMarkdown } from './html-to-markdown'
 import { markdownToPdf } from './markdown-to-pdf'
 import { markdownToPdfArabic, markdownToPdfArabicAr } from './markdown-to-pdf-arabic'
@@ -11,6 +12,7 @@ import { wordToMarkdown } from './word-to-markdown'
 /** English use-case pages, in nav/footer order. */
 export const USE_CASES: UseCaseContent[] = [
   markdownToPdf,
+  aiOutputToPdf,
   readmeToPdf,
   resumeToPdf,
   markdownToPdfArabic,
@@ -23,6 +25,7 @@ export const USE_CASES: UseCaseContent[] = [
 /** Arabic variants, keyed by slug (only pages translated so far). */
 export const USE_CASES_AR: Record<string, UseCaseContent> = {
   'markdown-to-pdf-arabic': markdownToPdfArabicAr,
+  'ai-output-to-pdf': aiOutputToPdfAr,
 }
 
 export const findUseCase = (slug: string, lang: MarketingLang): UseCaseContent | undefined =>

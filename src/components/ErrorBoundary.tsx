@@ -2,7 +2,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { logger } from '@/lib/logger'
 import { Button } from '@/components/ui/Button'
-import { translate } from '@/lib/i18n'
+import { translate, type TranslationKey } from '@/lib/i18n'
 import type { UiLanguage } from '@/types'
 
 /**
@@ -19,7 +19,8 @@ function persistedLang(): UiLanguage {
 
 interface Props {
   children: ReactNode
-  fallbackTitle?: string
+  /** Translation key for the heading. Falls back to the generic one. */
+  titleKey?: TranslationKey
 }
 
 interface State {
@@ -50,7 +51,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <AlertTriangle size={24} />
           </div>
           <h2 className="text-base font-semibold text-foreground">
-            {this.props.fallbackTitle ?? translate(lang, 'error.boundaryTitle')}
+            {translate(lang, this.props.titleKey ?? 'error.boundaryTitle')}
           </h2>
           <p className="max-w-sm text-sm text-muted-foreground">{this.state.message}</p>
           <Button variant="outline" size="sm" onClick={this.reset}>

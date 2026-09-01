@@ -41,8 +41,10 @@ export function useAppLock(): AppLockApi {
   const mirrorTimer = useRef<number | undefined>(undefined)
 
   // On a locked cold start, remove stale plaintext so only ciphertext remains.
+  // Now covers the IndexedDB document store as well as localStorage, so this is
+  // asynchronous — the gate in AppRoot already keeps App unmounted meanwhile.
   useEffect(() => {
-    if (status === 'locked') clearPlaintext()
+    if (status === 'locked') void clearPlaintext()
   }, [status])
 
   const unlock = useCallback(async (passphrase: string): Promise<boolean> => {
@@ -74,8 +76,10 @@ export function useAppLock(): AppLockApi {
   }, [])
 
   const lockNow = useCallback(async (): Promise<void> => {
+    // Encrypt first, then wipe, then reload — in that order, or a crash between
+    // steps could lose the documents rather than merely fail to lock them.
     if (keyRef.current) await syncVault(keyRef.current)
-    clearPlaintext()
+    await clearPlaintext()
     window.location.reload()
   }, [])
 

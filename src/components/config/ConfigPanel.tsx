@@ -1,9 +1,20 @@
 import { useState } from 'react'
-import { ChevronDown } from 'lucide-react'
-import { Field, Segmented, Select, Slider, Switch, TextArea, TextInput } from '@/components/ui/Field'
+import { Bookmark, ChevronDown } from 'lucide-react'
+import {
+  Field,
+  Segmented,
+  Select,
+  Slider,
+  Switch,
+  TextArea,
+  TextInput,
+} from '@/components/ui/Field'
 import { MARGIN_PRESETS } from '@/lib/constants'
 import { DOCUMENT_PRESETS } from '@/data/presets'
 import { SKIN_OPTIONS } from '@/data/skins'
+import { HandwritingSection } from './HandwritingSection'
+import { DOC_FONTS, fontsForScript } from '@/lib/documentFonts'
+import { loadFontFamily } from '@/lib/handwriting/fonts'
 import { useLanguage } from '@/i18n'
 import { useMode } from '@/mode'
 import type { TranslationKey } from '@/lib/i18n'
@@ -25,6 +36,10 @@ interface ConfigPanelProps {
   config: PdfConfig
   onChange: (patch: Partial<PdfConfig>) => void
   onApplyPreset: (presetId: string) => void
+  /** Opens the saved-presets manager. Omit to hide the entry point. */
+  onManagePresets?: () => void
+  /** Reports a handwriting font that could not be fetched. */
+  onHandFontError?: (family: string) => void
 }
 
 function Section({
@@ -59,18 +74,7 @@ function Section({
 }
 
 const PAPER_OPTIONS: PaperSize[] = ['a4', 'letter', 'legal', 'a3', 'a5', 'custom']
-const FONT_OPTIONS: Array<{ value: DocumentFont; labelKey: TranslationKey }> = [
-  { value: 'serif', labelKey: 'config.font.serif' },
-  { value: 'lora', labelKey: 'config.font.lora' },
-  { value: 'sans', labelKey: 'config.font.sans' },
-  { value: 'system', labelKey: 'config.font.system' },
-  { value: 'arabic', labelKey: 'config.font.arabic' },
-]
-const COVER_STYLE_OPTIONS: Array<{ value: CoverStyle; labelKey: TranslationKey }> = [
-  { value: 'minimal', labelKey: 'config.coverStyle.minimal' },
-  { value: 'banner', labelKey: 'config.coverStyle.banner' },
-  { value: 'centered', labelKey: 'config.coverStyle.centered' },
-]
+
 const CODE_OPTIONS: Array<{ value: CodeTheme; labelKey: TranslationKey }> = [
   { value: 'github-dark', labelKey: 'config.code.githubDark' },
   { value: 'github-light', labelKey: 'config.code.githubLight' },
@@ -92,6 +96,12 @@ const MARGIN_SIDE_KEYS: Record<'top' | 'right' | 'bottom' | 'left', TranslationK
   left: 'config.margin.left',
 }
 
+const COVER_STYLE_OPTIONS: Array<{ value: CoverStyle; labelKey: TranslationKey }> = [
+  { value: 'minimal', labelKey: 'config.coverStyle.minimal' },
+  { value: 'banner', labelKey: 'config.coverStyle.banner' },
+  { value: 'centered', labelKey: 'config.coverStyle.centered' },
+]
+
 const ACCENT_SWATCHES = [
   '#6366f1',
   '#2563eb',
@@ -105,7 +115,13 @@ const ACCENT_SWATCHES = [
   '#334155',
 ]
 
-export function ConfigPanel({ config, onChange, onApplyPreset }: ConfigPanelProps) {
+export function ConfigPanel({
+  config,
+  onChange,
+  onApplyPreset,
+  onManagePresets,
+  onHandFontError = () => {},
+}: ConfigPanelProps) {
   const { t } = useLanguage()
   const { isSimple } = useMode()
 
@@ -139,6 +155,20 @@ export function ConfigPanel({ config, onChange, onApplyPreset }: ConfigPanelProp
             </button>
           ))}
         </div>
+        {onManagePresets && (
+          <button
+            type="button"
+            onClick={onManagePresets}
+            className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+          >
+            <Bookmark size={13} />
+            {t('presets.manage')}
+          </button>
+        )}
+      </Section>
+
+      <Section title={t('hand.section')} defaultOpen={false}>
+        <HandwritingSection config={config} onChange={onChange} onFontError={onHandFontError} />
       </Section>
 
       <Section title={t('config.section.page')}>
@@ -226,13 +256,32 @@ export function ConfigPanel({ config, onChange, onApplyPreset }: ConfigPanelProp
           <Select
             id="font"
             value={config.font}
-            onChange={(e) => onChange({ font: e.target.value as DocumentFont })}
+            onChange={(event) => {
+              const next = event.target.value as DocumentFont
+              // Fetch before applying, so the document never renders a frame in
+              // the fallback and then jump when the real metrics arrive.
+              const descriptor = DOC_FONTS[next]
+              void loadFontFamily(
+                descriptor.family,
+                descriptor.googleParam,
+                descriptor.script === 'arabic' ? 'الخط العربي' : 'Aa',
+              ).then(() => onChange({ font: next }))
+            }}
           >
-            {FONT_OPTIONS.map((f) => (
-              <option key={f.value} value={f.value}>
-                {t(f.labelKey)}
-              </option>
-            ))}
+            <optgroup label={t('font.group.latin')}>
+              {fontsForScript('latin').map((font) => (
+                <option key={font} value={font}>
+                  {DOC_FONTS[font].family}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label={t('font.group.arabic')}>
+              {fontsForScript('arabic').map((font) => (
+                <option key={font} value={font}>
+                  {DOC_FONTS[font].family}
+                </option>
+              ))}
+            </optgroup>
           </Select>
         </Field>
         <Field label={t('config.field.fontSize')} hint={`${config.fontSize}pt`}>
@@ -281,7 +330,11 @@ export function ConfigPanel({ config, onChange, onApplyPreset }: ConfigPanelProp
       </Section>
 
       <Section title={t('config.section.style')}>
-        <Field label={t('config.field.documentSkin')} htmlFor="skin" hint={t('config.hint.documentSkin')}>
+        <Field
+          label={t('config.field.documentSkin')}
+          htmlFor="skin"
+          hint={t('config.hint.documentSkin')}
+        >
           <Select
             id="skin"
             value={config.skin}
@@ -437,7 +490,10 @@ export function ConfigPanel({ config, onChange, onApplyPreset }: ConfigPanelProp
               />
             </Field>
             <Field label={t('config.field.subtitle')}>
-              <TextInput value={config.meta.subtitle} onChange={(e) => setMeta('subtitle', e.target.value)} />
+              <TextInput
+                value={config.meta.subtitle}
+                onChange={(e) => setMeta('subtitle', e.target.value)}
+              />
             </Field>
             <Field label={t('config.field.organization')}>
               <TextInput
@@ -466,7 +522,9 @@ export function ConfigPanel({ config, onChange, onApplyPreset }: ConfigPanelProp
       <Section title={t('config.section.structure')} defaultOpen={false}>
         <Field label={t('config.field.tableOfContents')}>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">{t('config.hint.tableOfContents')}</span>
+            <span className="text-sm text-muted-foreground">
+              {t('config.hint.tableOfContents')}
+            </span>
             <Switch
               checked={config.tableOfContents}
               onChange={(tableOfContents) => onChange({ tableOfContents })}
@@ -487,7 +545,9 @@ export function ConfigPanel({ config, onChange, onApplyPreset }: ConfigPanelProp
         )}
         <Field label={t('config.field.numberedHeadings')}>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">{t('config.hint.numberedHeadings')}</span>
+            <span className="text-sm text-muted-foreground">
+              {t('config.hint.numberedHeadings')}
+            </span>
             <Switch
               checked={config.numberedHeadings}
               onChange={(numberedHeadings) => onChange({ numberedHeadings })}
@@ -506,7 +566,10 @@ export function ConfigPanel({ config, onChange, onApplyPreset }: ConfigPanelProp
           />
         </Field>
         {config.watermarkText.trim() !== '' && (
-          <Field label={t('config.field.opacity')} hint={`${Math.round(config.watermarkOpacity * 100)}%`}>
+          <Field
+            label={t('config.field.opacity')}
+            hint={`${Math.round(config.watermarkOpacity * 100)}%`}
+          >
             <Slider
               min={0.02}
               max={0.3}
@@ -540,10 +603,16 @@ export function ConfigPanel({ config, onChange, onApplyPreset }: ConfigPanelProp
           <TextInput value={config.meta.title} onChange={(e) => setMeta('title', e.target.value)} />
         </Field>
         <Field label={t('config.field.metaAuthor')}>
-          <TextInput value={config.meta.author} onChange={(e) => setMeta('author', e.target.value)} />
+          <TextInput
+            value={config.meta.author}
+            onChange={(e) => setMeta('author', e.target.value)}
+          />
         </Field>
         <Field label={t('config.field.metaSubject')}>
-          <TextInput value={config.meta.subject} onChange={(e) => setMeta('subject', e.target.value)} />
+          <TextInput
+            value={config.meta.subject}
+            onChange={(e) => setMeta('subject', e.target.value)}
+          />
         </Field>
         <Field label={t('config.field.metaKeywords')}>
           <TextInput

@@ -1,16 +1,13 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { execFile } from 'node:child_process'
+import { spawn } from 'node:child_process'
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { promisify } from 'node:util'
 import { build } from 'esbuild'
 import { DEFAULT_CONFIG } from '@/lib/constants'
 import { buildPageCss } from '@/pdf/pageStyles'
 import type { PdfConfig } from '@/types'
-
-const execFileAsync = promisify(execFile)
 
 export const ROOT = new URL('../..', import.meta.url).pathname.replace(/\/$/, '')
 const FIXTURES = `${ROOT}/tests/visual/fixtures`
@@ -32,15 +29,27 @@ export function findChrome(): string | null {
   return CHROME_CANDIDATES.find((path) => existsSync(path)) ?? null
 }
 
-/** Every code line in a fenced block, in source order, for the whole document. */
+/**
+ * Every code line in a fenced block, in source order, for the whole document.
+ *
+ * An unclosed fence runs to the end of the document (CommonMark 4.5), and the
+ * `tables` fixture has one on purpose. Matching only closed fences made this
+ * report nothing while the renderer correctly emitted the block, so the suite
+ * blamed the renderer for the harness's own reading of the source.
+ */
 export function sourceCodeLines(markdown: string): string[] {
   const lines: string[] = []
-  const fence = /^([ \t]*)(?:```|~~~)([^\n]*)\n([\s\S]*?)^[ \t]*(?:```|~~~)[ \t]*$/gm
+  const fence = /^([ \t]*)(?:```|~~~)([^\n]*)\n([\s\S]*?)(?:^[ \t]*(?:```|~~~)[ \t]*$|(?![\s\S]))/gm
   for (const match of markdown.matchAll(fence)) {
     const language = match[2].trim().split(/\s+/)[0] ?? ''
     // Mermaid and ASCII fences render as figures, not `.code-line` runs.
     if (language === 'mermaid') continue
-    lines.push(...match[3].replace(/\n$/, '').split('\n'))
+    // An indented opening fence strips up to that much leading whitespace from
+    // every content line (CommonMark 4.5). The renderer does this; reading the
+    // raw source without it made correct output look like a rendering bug.
+    const indent = match[1].length
+    const strip = (line: string) => line.replace(new RegExp(`^[ \\t]{0,${indent}}`), '')
+    lines.push(...match[3].replace(/\n$/, '').split('\n').map(strip))
   }
   return lines
 }
@@ -71,10 +80,7 @@ function inlineKatexFonts(): string {
     const woff2 = face.match(/url\(fonts\/([\w-]+\.woff2)\)/)
     if (!woff2) return ''
     const data = readFileSync(`${dist}/fonts/${woff2[1]}`).toString('base64')
-    return face.replace(
-      /src:[^;}]+/,
-      `src:url(data:font/woff2;base64,${data}) format("woff2")`,
-    )
+    return face.replace(/src:[^;}]+/, `src:url(data:font/woff2;base64,${data}) format("woff2")`)
   })
 }
 
@@ -90,8 +96,15 @@ async function bundleTransforms(): Promise<string> {
   writeFileSync(
     entry,
     `import { prepareForPaging } from '${ROOT}/src/pdf/prepareForPaging'
+     import { flattenImages } from '${ROOT}/src/pdf/flattenImages'
      window.__prepare = (config) => {
-       document.querySelectorAll('.scripto-doc').forEach((doc) => prepareForPaging(doc, config))
+       // Same order as renderPaged: chunk and stack, then flatten images once
+       // they have loaded and can report an intrinsic size.
+       document.querySelectorAll('.scripto-doc').forEach((doc) => {
+         prepareForPaging(doc, config)
+         flattenImages(doc)
+       })
+       document.documentElement.dataset.scriptoPrepared = 'yes'
      }`,
   )
   await build({
@@ -110,12 +123,16 @@ async function bundleTransforms(): Promise<string> {
  * export does — same stylesheet, same page CSS, same DOM transforms, same
  * paginator — then probes the laid-out result.
  */
-async function buildHarnessPage(markdown: string, config: PdfConfig, rtl: boolean): Promise<string> {
+async function buildHarnessPage(
+  markdown: string,
+  config: PdfConfig,
+  rtl: boolean,
+): Promise<string> {
   const body = renderToStaticMarkup(
-    createElement(
-      (await import('@/markdown/MarkdownRenderer')).MarkdownRenderer,
-      { content: markdown, resolvedTheme: 'light' },
-    ),
+    createElement((await import('@/markdown/MarkdownRenderer')).MarkdownRenderer, {
+      content: markdown,
+      resolvedTheme: 'light',
+    }),
   )
   const documentCss = readFileSync(`${ROOT}/src/styles/document.css`, 'utf8')
   const katexCss = inlineKatexFonts()
@@ -138,7 +155,7 @@ ${buildPageCss(config)}
 <script>
   const fail = (message) => {
     const out = document.createElement('pre')
-    out.id = 'probe'
+    out.id = 'scripto-probe-result'
     out.textContent = JSON.stringify({ error: String(message) })
     document.body.appendChild(out)
   }
@@ -154,7 +171,9 @@ ${buildPageCss(config)}
 
   const probe = () => {
     const pages = [...document.querySelectorAll('.pagedjs_page')]
-    const report = { pages: pages.length, overflowing: [], codeLines: [], emptiedElements: [] }
+    const report = { pages: pages.length, overflowing: [], codeLines: [], emptiedElements: [],
+      imgs: document.querySelectorAll('.scripto-doc img').length,
+      imgBoxes: document.querySelectorAll('.scripto-doc div[role="img"]').length }
 
     pages.forEach((page, index) => {
       const content = page.querySelector('.pagedjs_page_content')
@@ -162,6 +181,10 @@ ${buildPageCss(config)}
       const box = content.getBoundingClientRect()
 
       page.querySelectorAll('.scripto-doc *').forEach((el) => {
+        // KaTeX ships a MathML twin of every formula for screen readers. It is
+        // hidden by clipping rather than by zero size, so it still measures at
+        // full width and reported dozens of overflows that no reader can see.
+        if (el.closest('.katex-mathml')) return
         const r = el.getBoundingClientRect()
         if (r.width <= 0 || r.height <= 0) return
         const by = Math.round(Math.max(r.right - box.right, box.left - r.left))
@@ -186,18 +209,131 @@ ${buildPageCss(config)}
     // Paged.js replaces the body with its own pages, so the probe element can
     // only be created once it is done.
     const out = document.createElement('pre')
-    out.id = 'probe'
+    out.id = 'scripto-probe-result'
     out.textContent = JSON.stringify(report)
     document.body.appendChild(out)
   }
 </script>
-<script>${polyfill}</script>`
+<script type="text/plain" id="pagedjs-src">${polyfill}</script>
+<script>
+  // Paged.js must not start until every image has loaded: the export transforms
+  // a clone of an on-screen document, so its images always report intrinsic
+  // sizes, and flattenImages needs the same guarantee here. Waiting on load
+  // rather than decode() -- decode() on a not-yet-rendered document can never
+  // settle, which stalls the whole polyfill before it lays out a single page.
+  (async () => {
+    document.documentElement.dataset.step = 'start'
+    await Promise.all(
+      [...document.images].map((img) => {
+        // renderPaged does the same: a lazy image below the fold never loads,
+        // so it would report no intrinsic size and hang this wait forever.
+        img.loading = 'eager'
+        img.decoding = 'sync'
+        if (img.complete && img.naturalWidth) return null
+        return new Promise((resolve) => {
+          img.onload = img.onerror = resolve
+          setTimeout(resolve, 5000)
+        })
+      }),
+    )
+    document.documentElement.dataset.step = 'images-loaded'
+    const script = document.createElement('script')
+    script.textContent = document.getElementById('pagedjs-src').textContent
+    document.body.appendChild(script)
+    document.documentElement.dataset.step = 'injected'
+  })().catch((e) => { document.documentElement.dataset.step = 'threw:' + e })
+</script>`
 }
 
-/** Render a fixture through the full export pipeline and report the layout. */
+/** How long to wait for Paged.js to finish laying a fixture out. */
+const PROBE_TIMEOUT_MS = Number(process.env.SCRIPTO_VISUAL_TIMEOUT_MS) || 180_000
+const PROBE_POLL_MS = 250
+
+interface CdpTarget {
+  type: string
+  webSocketDebuggerUrl?: string
+}
+
+/** Minimal DevTools Protocol client: enough to evaluate one expression. */
+class CdpSession {
+  private readonly socket: WebSocket
+  private nextId = 1
+  private readonly pending = new Map<number, (result: unknown) => void>()
+
+  private constructor(socket: WebSocket) {
+    this.socket = socket
+    this.socket.addEventListener('message', (event) => {
+      const frame = JSON.parse(String((event as MessageEvent).data)) as {
+        id?: number
+        result?: unknown
+      }
+      if (frame.id === undefined) return
+      this.pending.get(frame.id)?.(frame.result)
+      this.pending.delete(frame.id)
+    })
+  }
+
+  static async connect(url: string): Promise<CdpSession> {
+    const socket = new WebSocket(url)
+    await new Promise<void>((resolve, reject) => {
+      socket.addEventListener('open', () => resolve(), { once: true })
+      socket.addEventListener('error', () => reject(new Error('CDP socket failed')), { once: true })
+    })
+    return new CdpSession(socket)
+  }
+
+  send(method: string, params: Record<string, unknown> = {}): Promise<unknown> {
+    const id = this.nextId++
+    return new Promise((resolve) => {
+      this.pending.set(id, resolve)
+      this.socket.send(JSON.stringify({ id, method, params }))
+    })
+  }
+
+  close(): void {
+    this.socket.close()
+  }
+}
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+/** Poll DevTools for the debugging port Chrome wrote into its profile. */
+async function readDevToolsPort(profile: string): Promise<number> {
+  const file = join(profile, 'DevToolsActivePort')
+  for (let attempt = 0; attempt < 120; attempt++) {
+    if (existsSync(file)) {
+      const port = Number(readFileSync(file, 'utf8').split('\n')[0])
+      if (Number.isFinite(port) && port > 0) return port
+    }
+    await delay(100)
+  }
+  throw new Error('Chrome never reported a DevTools port')
+}
+
+async function findPageTarget(port: number): Promise<string> {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const response = await fetch(`http://127.0.0.1:${port}/json/list`)
+    const targets = (await response.json()) as CdpTarget[]
+    const page = targets.find((t) => t.type === 'page' && t.webSocketDebuggerUrl)
+    if (page?.webSocketDebuggerUrl) return page.webSocketDebuggerUrl
+    await delay(100)
+  }
+  throw new Error('no DevTools page target appeared')
+}
+
+/**
+ * Render a fixture through the full export pipeline and report the layout.
+ *
+ * Driven over the DevTools Protocol rather than `--dump-dom`: Chrome 132
+ * removed the old headless mode, and the new one ignores
+ * `--virtual-time-budget`, so a DOM dump snapshots the page long before
+ * Paged.js has finished paginating. Polling for the probe element waits for the
+ * real thing instead of a timer.
+ */
 export async function paginate(
   fixture: string,
   overrides: Partial<PdfConfig> = {},
+  options: { timeoutMs?: number } = {},
 ): Promise<PageReport> {
   const chrome = findChrome()
   if (!chrome) throw new Error('no Chrome binary found')
@@ -210,37 +346,64 @@ export async function paginate(
   const page = join(dir, `${fixture}.html`)
   writeFileSync(page, html)
 
-  const { stdout } = await execFileAsync(
+  const profile = mkdtempSync(join(tmpdir(), 'scripto-profile-'))
+  const browser = spawn(
     chrome,
     [
-      '--headless',
+      '--headless=new',
       '--disable-gpu',
       '--no-sandbox',
-      '--virtual-time-budget=120000',
-      '--dump-dom',
+      '--no-first-run',
+      '--disable-extensions',
+      '--force-device-scale-factor=1',
+      `--user-data-dir=${profile}`,
+      '--remote-debugging-port=0',
       `file://${page}`,
     ],
-    { maxBuffer: 64 * 1024 * 1024 },
+    { stdio: 'ignore' },
   )
 
-  const match = stdout.match(/<pre id="probe">([\s\S]*?)<\/pre>/)
-  if (!match || !match[1].trim()) {
+  let session: CdpSession | undefined
+  try {
+    const port = await readDevToolsPort(profile)
+    session = await CdpSession.connect(await findPageTarget(port))
+
+    const deadline = Date.now() + (options.timeoutMs ?? PROBE_TIMEOUT_MS)
+    while (Date.now() < deadline) {
+      const result = (await session.send('Runtime.evaluate', {
+        expression: "document.getElementById('scripto-probe-result')?.textContent ?? ''",
+        returnByValue: true,
+      })) as { result?: { value?: string } } | undefined
+      const value = result?.result?.value
+      if (value) {
+        const report = JSON.parse(value) as PageReport & { error?: string }
+        if (report.error) throw new Error(`pagination failed: ${report.error}`)
+        return report
+      }
+      await delay(PROBE_POLL_MS)
+    }
+
     if (process.env.SCRIPTO_VISUAL_DEBUG) {
       // eslint-disable-next-line no-console
       console.error(`[visual] page kept at ${page}`)
     }
-    throw new Error('probe produced no output')
+    // A stall leaves no probe element, so report what the page did manage --
+    // how far the chunker got, and whether the DOM transforms ran at all.
+    const snapshot = (await session.send('Runtime.evaluate', {
+      expression: `JSON.stringify({
+        pages: document.querySelectorAll('.pagedjs_page').length,
+        imgs: document.querySelectorAll('img').length,
+        imgBoxes: document.querySelectorAll('div[role="img"]').length,
+        prepared: document.documentElement.dataset.scriptoPrepared ?? 'no',
+        step: document.documentElement.dataset.step ?? 'never-ran',
+      })`,
+      returnByValue: true,
+    })) as { result?: { value?: string } } | undefined
+    throw new Error(`probe produced no output; page state: ${snapshot?.result?.value ?? 'unknown'}`)
+  } finally {
+    session?.close()
+    browser.kill('SIGKILL')
   }
-
-  const decoded = match[1]
-    .replace(/&quot;/g, '"')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&#39;/g, "'")
-    .replace(/&amp;/g, '&')
-  const report = JSON.parse(decoded) as PageReport & { error?: string }
-  if (report.error) throw new Error(`pagination failed: ${report.error}`)
-  return report
 }
 
 export const fixtureSource = (fixture: string): string =>

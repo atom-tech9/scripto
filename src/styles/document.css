@@ -19,6 +19,22 @@
   --doc-surface: #f7f8fa;
   --doc-quote: #4f46e5;
 
+  /* Component language. Every shared component — callouts, code blocks, quotes,
+     tables, rules, lists — is drawn from these, so a skin re-declares a handful
+     of values instead of restating the components. Redeclare, don't duplicate. */
+  --doc-radius: 10px;
+  --doc-radius-sm: 6px;
+  --doc-line: 1px;
+  --doc-accent-line: 4px;
+  --doc-fill: 8%;
+  --doc-fill-strong: 14%;
+  --doc-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+  --doc-rule-line: 1px;
+  --doc-ui-font: Inter, sans-serif;
+  --doc-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --doc-label-spacing: 0.03em;
+  --doc-label-transform: uppercase;
+
   /* code theme tokens (default github-dark) */
   --c-bg: #0d1117;
   --c-fg: #e6edf3;
@@ -33,7 +49,10 @@
   --c-operator: #ff7b72;
   --c-line: rgba(255, 255, 255, 0.28);
 
-  font-family: var(--doc-font);
+  /* `--doc-skin-font` lets the handful of skins that ARE their typeface
+     (Terminal, Blueprint, Manuscript) set it; every other skin honours the
+     font chosen in the export settings. */
+  font-family: var(--doc-skin-font, var(--doc-font));
   font-size: var(--doc-size);
   line-height: var(--doc-leading);
   color: var(--doc-fg);
@@ -238,7 +257,10 @@
   color: var(--doc-fg);
 }
 .scripto-doc mark {
-  background: linear-gradient(transparent 55%, color-mix(in srgb, var(--doc-accent) 32%, transparent) 55%);
+  background: linear-gradient(
+    transparent 55%,
+    color-mix(in srgb, var(--doc-accent) 32%, transparent) 55%
+  );
   color: inherit;
   padding: 0 0.05em;
   border-radius: 2px;
@@ -256,12 +278,12 @@
 
 /* ---------- Inline code ---------- */
 .scripto-doc :not(pre) > code {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: var(--doc-mono);
   font-size: 0.86em;
   background: color-mix(in srgb, var(--doc-accent) 12%, var(--doc-surface));
   color: var(--doc-fg);
   padding: 0.12em 0.4em;
-  border-radius: 5px;
+  border-radius: var(--doc-radius-sm);
   border: 1px solid var(--doc-rule);
   /* `overflow-wrap`, NOT `word-break: break-word` — the latter is an alias for
      `overflow-wrap: anywhere`, which lets the break opportunities count towards
@@ -275,13 +297,13 @@
 /* ---------- Code blocks ---------- */
 .scripto-doc .code-block {
   margin: 1.2em 0;
-  border-radius: 10px;
+  border-radius: var(--doc-radius);
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--c-fg) 14%, transparent);
+  border: var(--doc-line) solid color-mix(in srgb, var(--c-fg) 14%, transparent);
   background: var(--c-bg);
   break-inside: avoid;
   page-break-inside: avoid;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--doc-shadow);
 }
 .scripto-doc .code-block__header {
   display: flex;
@@ -292,7 +314,7 @@
   border-bottom: 1px solid color-mix(in srgb, var(--c-fg) 12%, transparent);
 }
 .scripto-doc .code-block__lang {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--doc-mono);
   font-size: 0.7rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -307,7 +329,7 @@
   color: color-mix(in srgb, var(--c-fg) 70%, transparent);
   background: transparent;
   border: 1px solid color-mix(in srgb, var(--c-fg) 22%, transparent);
-  border-radius: 6px;
+  border-radius: var(--doc-radius-sm);
   padding: 0.18em 0.5em;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -332,7 +354,7 @@
   overflow-wrap: break-word;
 }
 .scripto-doc pre code {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: var(--doc-mono);
   background: none;
   border: none;
   padding: 0;
@@ -455,13 +477,13 @@
 .scripto-doc blockquote {
   margin: 1.3em 0;
   padding: 0.4em 1.2em;
-  border-inline-start: 4px solid var(--doc-quote);
-  background: color-mix(in srgb, var(--doc-quote) 7%, transparent);
+  border-inline-start: var(--doc-accent-line) solid var(--doc-quote);
+  background: color-mix(in srgb, var(--doc-quote) var(--doc-fill), transparent);
   color: var(--doc-muted);
   border-start-start-radius: 0;
   border-end-start-radius: 0;
-  border-start-end-radius: 8px;
-  border-end-end-radius: 8px;
+  border-start-end-radius: var(--doc-radius);
+  border-end-end-radius: var(--doc-radius);
   break-inside: avoid;
 }
 .scripto-doc blockquote p {
@@ -562,8 +584,14 @@
 /* ---------- Horizontal rule ---------- */
 .scripto-doc hr {
   border: none;
-  height: 1px;
-  background: linear-gradient(to right, transparent, var(--doc-rule) 20%, var(--doc-rule) 80%, transparent);
+  height: var(--doc-rule-line);
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--doc-rule) 20%,
+    var(--doc-rule) 80%,
+    transparent
+  );
   margin: 2.2em 0;
 }
 
@@ -571,8 +599,9 @@
 .scripto-doc .table-wrap {
   margin: 1.4em 0;
   overflow-x: auto;
-  border-radius: 10px;
-  border: 1px solid var(--doc-rule);
+  border-radius: var(--doc-radius);
+  border: var(--doc-line) solid var(--doc-rule);
+  box-shadow: var(--doc-table-shadow, none);
 }
 .scripto-doc table {
   width: 100%;
@@ -968,11 +997,7 @@
 }
 .scripto-doc[data-skin='blueprint'] hr {
   height: 2px;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--doc-accent) 0 8px,
-    transparent 8px 16px
-  );
+  background: repeating-linear-gradient(90deg, var(--doc-accent) 0 8px, transparent 8px 16px);
 }
 
 /* —— Corporate: accent-underlined H1, filled table headers, card tables —— */
@@ -1586,9 +1611,10 @@
 .scripto-doc .callout {
   margin: 1.4em 0;
   padding: 0.9em 1.1em;
-  border-radius: 10px;
-  border: 1px solid;
-  border-inline-start-width: 4px;
+  border-radius: var(--doc-radius);
+  border: var(--doc-line) solid;
+  border-inline-start-width: var(--doc-accent-line);
+  box-shadow: var(--doc-callout-shadow, none);
   break-inside: avoid;
   page-break-inside: avoid;
   display: grid;
@@ -1601,11 +1627,11 @@
   grid-row: 1 / span 2;
 }
 .scripto-doc .callout__title {
-  font-family: Inter, sans-serif;
+  font-family: var(--doc-ui-font);
   font-weight: 700;
   font-size: 0.85em;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  letter-spacing: var(--doc-label-spacing);
+  text-transform: var(--doc-label-transform);
   align-self: center;
 }
 /* Grid items default to `min-width: auto`, so a long token in the body would
@@ -1639,7 +1665,7 @@
 }
 .scripto-doc .callout {
   border-color: color-mix(in srgb, var(--cl) 40%, var(--doc-rule));
-  background: color-mix(in srgb, var(--cl) 8%, transparent);
+  background: color-mix(in srgb, var(--cl) var(--doc-fill), transparent);
 }
 .scripto-doc .callout__title {
   color: color-mix(in srgb, var(--cl) 80%, var(--doc-fg));
@@ -1760,4 +1786,871 @@
   margin-top: 0.7em;
   font-size: 0.82em;
   color: var(--doc-muted);
+}
+
+/* ==========================================================================
+   Skin component language
+
+   Each skin redeclares the component tokens above, so callouts, code blocks,
+   quotes, tables and rules take on that skin's character without any of them
+   being restated 21 times. Only where a skin's identity genuinely needs a
+   different shape does it add a rule of its own.
+   ========================================================================== */
+
+.scripto-doc[data-skin='modern'] {
+  --doc-radius: 10px;
+  --doc-fill: 8%;
+}
+
+.scripto-doc[data-skin='classic'] {
+  --doc-radius: 2px;
+  --doc-radius-sm: 2px;
+  --doc-fill: 0%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  --doc-ui-font: var(--doc-font);
+  --doc-label-transform: none;
+  --doc-label-spacing: 0.05em;
+}
+
+.scripto-doc[data-skin='editorial'] {
+  --doc-radius: 0;
+  --doc-radius-sm: 2px;
+  --doc-fill: 6%;
+  --doc-accent-line: 3px;
+  --doc-shadow: none;
+  --doc-label-spacing: 0.1em;
+}
+
+.scripto-doc[data-skin='technical'] {
+  --doc-radius: 3px;
+  --doc-radius-sm: 3px;
+  --doc-fill: 5%;
+  --doc-accent-line: 3px;
+  --doc-shadow: none;
+  --doc-ui-font: var(--doc-mono);
+  --doc-label-spacing: 0.06em;
+}
+
+.scripto-doc[data-skin='compact'] {
+  --doc-radius: 4px;
+  --doc-radius-sm: 3px;
+  --doc-fill: 6%;
+  --doc-accent-line: 3px;
+  --doc-shadow: none;
+}
+
+.scripto-doc[data-skin='manuscript'] {
+  --doc-radius: 0;
+  --doc-radius-sm: 0;
+  --doc-fill: 0%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  --doc-ui-font: var(--doc-mono);
+  --doc-label-spacing: 0.14em;
+}
+
+.scripto-doc[data-skin='blueprint'] {
+  --doc-radius: 0;
+  --doc-radius-sm: 0;
+  --doc-fill: 4%;
+  --doc-accent-line: 1px;
+  --doc-shadow: none;
+  --doc-ui-font: var(--doc-mono);
+  --doc-label-spacing: 0.12em;
+}
+
+.scripto-doc[data-skin='corporate'] {
+  --doc-radius: 6px;
+  --doc-radius-sm: 4px;
+  --doc-fill: 7%;
+  --doc-accent-line: 4px;
+  --doc-shadow: 0 1px 3px rgb(15 23 42 / 0.09);
+}
+
+.scripto-doc[data-skin='brutalist'] {
+  --doc-radius: 0;
+  --doc-radius-sm: 0;
+  --doc-line: 3px;
+  --doc-accent-line: 8px;
+  --doc-fill: 0%;
+  --doc-rule-line: 4px;
+  --doc-shadow: 6px 6px 0 0 var(--doc-fg);
+  --doc-callout-shadow: 6px 6px 0 0 var(--doc-fg);
+  --doc-table-shadow: 6px 6px 0 0 var(--doc-fg);
+  --doc-label-spacing: 0.08em;
+}
+
+.scripto-doc[data-skin='notebook'] {
+  --doc-radius: 6px;
+  --doc-radius-sm: 4px;
+  --doc-fill: 14%;
+  --doc-accent-line: 3px;
+  --doc-shadow: none;
+}
+
+.scripto-doc[data-skin='resume'] {
+  --doc-radius: 0;
+  --doc-radius-sm: 2px;
+  --doc-fill: 0%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  --doc-label-spacing: 0.08em;
+}
+
+.scripto-doc[data-skin='swiss'] {
+  --doc-radius: 0;
+  --doc-radius-sm: 0;
+  --doc-line: 2px;
+  --doc-accent-line: 6px;
+  --doc-fill: 0%;
+  --doc-rule-line: 3px;
+  --doc-shadow: none;
+  --doc-label-spacing: 0.1em;
+}
+
+.scripto-doc[data-skin='terminal'] {
+  --doc-radius: 3px;
+  --doc-radius-sm: 2px;
+  --doc-fill: 9%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  --doc-ui-font: var(--doc-mono);
+  --doc-label-spacing: 0.1em;
+}
+
+.scripto-doc[data-skin='newsprint'] {
+  --doc-radius: 0;
+  --doc-radius-sm: 0;
+  --doc-fill: 0%;
+  --doc-accent-line: 0px;
+  --doc-line: 1px;
+  --doc-rule-line: 3px;
+  --doc-shadow: none;
+  --doc-label-spacing: 0.12em;
+}
+
+.scripto-doc[data-skin='elegant'] {
+  --doc-radius: 0;
+  --doc-radius-sm: 0;
+  --doc-fill: 0%;
+  --doc-accent-line: 1px;
+  --doc-shadow: none;
+  --doc-ui-font: var(--doc-font);
+  --doc-label-spacing: 0.2em;
+}
+
+.scripto-doc[data-skin='playful'] {
+  --doc-radius: 18px;
+  --doc-radius-sm: 10px;
+  --doc-line: 2px;
+  --doc-accent-line: 0px;
+  --doc-fill: 16%;
+  --doc-shadow: 0 4px 0 -1px color-mix(in srgb, var(--doc-accent) 35%, transparent);
+  --doc-label-transform: none;
+  --doc-label-spacing: 0;
+}
+
+.scripto-doc[data-skin='dark'] {
+  --doc-radius: 8px;
+  --doc-radius-sm: 5px;
+  --doc-fill: 12%;
+  --doc-accent-line: 3px;
+  --doc-shadow: none;
+}
+
+.scripto-doc[data-skin='ledger'] {
+  --doc-radius: 0;
+  --doc-radius-sm: 0;
+  --doc-fill: 5%;
+  --doc-accent-line: 3px;
+  --doc-shadow: none;
+  --doc-label-spacing: 0.08em;
+}
+
+.scripto-doc[data-skin='zen'] {
+  --doc-radius: 0;
+  --doc-radius-sm: 0;
+  --doc-line: 0px;
+  --doc-accent-line: 2px;
+  --doc-fill: 0%;
+  --doc-shadow: none;
+  --doc-label-transform: none;
+  --doc-label-spacing: 0.08em;
+}
+
+.scripto-doc[data-skin='memo'] {
+  --doc-radius: 0;
+  --doc-radius-sm: 0;
+  --doc-fill: 0%;
+  --doc-accent-line: 3px;
+  --doc-shadow: none;
+  --doc-label-spacing: 0.1em;
+}
+
+.scripto-doc[data-skin='poster'] {
+  --doc-radius: 0;
+  --doc-radius-sm: 0;
+  --doc-line: 2px;
+  --doc-accent-line: 8px;
+  --doc-fill: 12%;
+  --doc-rule-line: 4px;
+  --doc-shadow: none;
+  --doc-label-spacing: 0.14em;
+}
+
+/* --- Identity treatments -------------------------------------------------
+   Only for skins whose character needs a different shape, not just different
+   values. Everything else falls out of the tokens above. */
+
+/* Blueprint: a drawn box, not a tinted card. */
+.scripto-doc[data-skin='blueprint'] .callout {
+  border-inline-start-width: var(--doc-line);
+  border-color: color-mix(in srgb, var(--cl) 55%, transparent);
+}
+.scripto-doc[data-skin='blueprint'] .callout__title::before {
+  content: '// ';
+}
+.scripto-doc[data-skin='blueprint'] li::marker {
+  content: '– ';
+}
+
+/* Terminal: labels read as machine output. */
+.scripto-doc[data-skin='terminal'] .callout {
+  border-inline-start-width: var(--doc-line);
+}
+.scripto-doc[data-skin='terminal'] .callout__title::before {
+  content: '[';
+}
+.scripto-doc[data-skin='terminal'] .callout__title::after {
+  content: ']';
+}
+.scripto-doc[data-skin='terminal'] ul > li::marker {
+  content: '> ';
+}
+
+/* Newsprint: printed rules, never a filled box. */
+.scripto-doc[data-skin='newsprint'] .callout {
+  border-inline: none;
+  border-block: var(--doc-line) solid color-mix(in srgb, var(--cl) 60%, transparent);
+  border-block-start-width: 3px;
+  border-radius: 0;
+  padding-inline: 0;
+}
+.scripto-doc[data-skin='newsprint'] blockquote {
+  border-inline-start: none;
+  border-block: 1px solid var(--doc-rule);
+  padding-inline: 0;
+  font-style: italic;
+}
+
+/* Elegant: a hairline and letterspacing carry it; no boxes. */
+.scripto-doc[data-skin='elegant'] .callout {
+  border-inline: none;
+  border-block-end: none;
+  border-block-start: 1px solid color-mix(in srgb, var(--cl) 55%, transparent);
+  border-radius: 0;
+  padding-inline: 0;
+}
+.scripto-doc[data-skin='elegant'] .callout__icon {
+  display: none;
+}
+
+/* Notebook: drawn by hand, in highlighter. */
+.scripto-doc[data-skin='notebook'] .callout {
+  border-style: dashed;
+  border-inline-start-style: solid;
+}
+.scripto-doc[data-skin='notebook'] .callout__title {
+  background: color-mix(in srgb, var(--cl) 28%, transparent);
+  padding: 0 0.3em;
+  border-radius: 3px;
+}
+
+/* Swiss: one heavy bar, nothing else. */
+.scripto-doc[data-skin='swiss'] .callout {
+  border-block: none;
+  border-inline-end: none;
+  border-radius: 0;
+  padding-inline-end: 0;
+}
+.scripto-doc[data-skin='swiss'] ul > li::marker {
+  content: '■ ';
+  font-size: 0.7em;
+}
+
+/* Manuscript: a typed label, no chrome. */
+.scripto-doc[data-skin='manuscript'] .callout {
+  border: none;
+  border-inline-start: var(--doc-accent-line) solid color-mix(in srgb, var(--cl) 60%, transparent);
+  padding-block: 0.2em;
+}
+.scripto-doc[data-skin='manuscript'] .callout__icon {
+  display: none;
+}
+
+/* Zen: presence without an outline. */
+.scripto-doc[data-skin='zen'] .callout {
+  border: none;
+  border-inline-start: var(--doc-accent-line) solid color-mix(in srgb, var(--cl) 45%, transparent);
+  padding-block: 0.1em;
+}
+.scripto-doc[data-skin='zen'] .callout__icon {
+  display: none;
+}
+
+/* Brutalist: the label is a solid band. */
+.scripto-doc[data-skin='brutalist'] .callout__title {
+  background: var(--cl);
+  color: #fff;
+  padding: 0.1em 0.45em;
+}
+.scripto-doc[data-skin='brutalist'] ul > li::marker {
+  content: '▪ ';
+}
+
+/* Playful: a sticker, so the drop shadow follows the callout's own colour. */
+.scripto-doc[data-skin='playful'] .callout {
+  box-shadow: 0 4px 0 -1px color-mix(in srgb, var(--cl) 45%, transparent);
+}
+
+/* Poster: the label carries the weight. */
+.scripto-doc[data-skin='poster'] .callout__title {
+  font-size: 0.95em;
+  font-weight: 800;
+}
+
+/* Ledger: ruled, tabular, no fill on the body. */
+.scripto-doc[data-skin='ledger'] .callout {
+  border-radius: 0;
+}
+.scripto-doc[data-skin='ledger'] .callout__title {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Skins that are defined by their typeface set it themselves. */
+.scripto-doc[data-skin='terminal'],
+.scripto-doc[data-skin='blueprint'] {
+  --doc-skin-font: var(--doc-mono);
+}
+.scripto-doc[data-skin='manuscript'] {
+  --doc-skin-font: 'Courier New', 'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* Skins with no room for a decorative emoji: the label carries the meaning. */
+.scripto-doc[data-skin='blueprint'] .callout__icon,
+.scripto-doc[data-skin='terminal'] .callout__icon,
+.scripto-doc[data-skin='technical'] .callout__icon,
+.scripto-doc[data-skin='swiss'] .callout__icon,
+.scripto-doc[data-skin='brutalist'] .callout__icon,
+.scripto-doc[data-skin='newsprint'] .callout__icon,
+.scripto-doc[data-skin='ledger'] .callout__icon,
+.scripto-doc[data-skin='memo'] .callout__icon,
+.scripto-doc[data-skin='resume'] .callout__icon,
+.scripto-doc[data-skin='classic'] .callout__icon,
+.scripto-doc[data-skin='rfc'] .callout__icon,
+.scripto-doc[data-skin='invoice'] .callout__icon,
+.scripto-doc[data-skin='contract'] .callout__icon,
+.scripto-doc[data-skin='letter'] .callout__icon,
+.scripto-doc[data-skin='journal'] .callout__icon,
+.scripto-doc[data-skin='thesis'] .callout__icon {
+  display: none;
+}
+
+/* ---------- Light-on-dark skins on a white sheet ----------
+   Terminal and Dark declare a light-on-dark palette, but the sheet they are
+   printed on is white — and print.css forces that same white sheet for the
+   paginated preview. Outside a dark UI the live preview has to match, or the
+   preview shows unreadable pale text for a PDF that is perfectly legible,
+   which breaks the one thing the product promises. The dark atmosphere lives
+   on the Stage instead, where it costs the export nothing. */
+.scripto-doc[data-skin='terminal'] {
+  --doc-fg: #12301a;
+  --doc-muted: #4d7256;
+  --doc-rule: #cbe4d1;
+  --doc-surface: #eff7f1;
+  --doc-accent: #15803d;
+  --doc-quote: #15803d;
+}
+.dark .scripto-doc[data-skin='terminal'] {
+  --doc-fg: #d4f7d4;
+  --doc-muted: #6fa873;
+  --doc-rule: #1f3a22;
+  --doc-surface: #0b0f0a;
+  --doc-accent: #22c55e;
+  --doc-quote: #22c55e;
+}
+
+.scripto-doc[data-skin='dark'] {
+  --doc-fg: #171d2a;
+  --doc-muted: #56617a;
+  --doc-rule: #d3d9e6;
+  --doc-surface: #eff2f8;
+}
+.dark .scripto-doc[data-skin='dark'] {
+  --doc-fg: #e6ebf3;
+  --doc-muted: #97a3b8;
+  --doc-rule: #2e3850;
+  --doc-surface: #161c28;
+}
+
+/* ==========================================================================
+   Business, academic, engineering and teaching skins
+   ========================================================================== */
+
+/* ---------- Invoice — the table is the document ---------- */
+.scripto-doc[data-skin='invoice'] {
+  --doc-radius: 2px;
+  --doc-radius-sm: 2px;
+  --doc-fill: 0%;
+  --doc-accent-line: 3px;
+  --doc-shadow: none;
+  --doc-rule-line: 2px;
+  --doc-label-spacing: 0.09em;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.scripto-doc[data-skin='invoice'] h1 {
+  font-size: 1.7em;
+  letter-spacing: -0.01em;
+  border-bottom: 2px solid var(--doc-accent);
+  padding-bottom: 0.3em;
+}
+.scripto-doc[data-skin='invoice'] h2 {
+  font-size: 0.95em;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--doc-muted);
+  border: none;
+}
+.scripto-doc[data-skin='invoice'] th {
+  text-transform: uppercase;
+  font-size: 0.75em;
+  letter-spacing: 0.09em;
+  border-bottom: 2px solid var(--doc-fg);
+}
+/* Money belongs on the right, and the last row is the total. */
+.scripto-doc[data-skin='invoice'] :is(th, td):last-child {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.scripto-doc[data-skin='invoice'] tbody tr:last-child {
+  font-weight: 700;
+  border-top: 2px solid var(--doc-fg);
+}
+.scripto-doc[data-skin='invoice'] blockquote {
+  border: 1px solid var(--doc-rule);
+  border-inline-start-width: var(--doc-accent-line);
+  padding: 0.8em 1.1em;
+  color: var(--doc-fg);
+}
+
+/* ---------- Contract — clauses, not prose ---------- */
+.scripto-doc[data-skin='contract'] {
+  --doc-radius: 0;
+  --doc-fill: 0%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  text-align: justify;
+  hyphens: auto;
+}
+.scripto-doc[data-skin='contract'] h1 {
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 1.35em;
+  letter-spacing: 0.08em;
+  border: none;
+}
+.scripto-doc[data-skin='contract'] h2 {
+  font-size: 1em;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  border: none;
+  margin-top: 1.9em;
+}
+.scripto-doc[data-skin='contract'] ol {
+  padding-inline-start: 2.4em;
+}
+.scripto-doc[data-skin='contract'] ol > li {
+  margin: 0.75em 0;
+}
+.scripto-doc[data-skin='contract'] ol > li::marker {
+  font-weight: 700;
+  color: var(--doc-fg);
+}
+.scripto-doc[data-skin='contract'] hr {
+  background: var(--doc-rule);
+  margin: 3em 0 2em;
+}
+
+/* ---------- Letterhead — one rule, then you write ---------- */
+.scripto-doc[data-skin='letter'] {
+  --doc-radius: 0;
+  --doc-fill: 0%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+}
+.scripto-doc[data-skin='letter'] h1 {
+  font-size: 1.25em;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border-bottom: 3px solid var(--doc-accent);
+  padding-bottom: 0.6em;
+  margin-bottom: 1.8em;
+}
+.scripto-doc[data-skin='letter'] h2 {
+  font-size: 1em;
+  font-weight: 700;
+  border: none;
+  letter-spacing: 0.02em;
+}
+.scripto-doc[data-skin='letter'] p {
+  margin-bottom: 1.1em;
+}
+.scripto-doc[data-skin='letter'] blockquote {
+  font-style: italic;
+  border-inline-start-color: var(--doc-rule);
+}
+.scripto-doc[data-skin='letter'] hr {
+  background: var(--doc-rule);
+  margin: 2.6em 0;
+}
+
+/* ---------- Journal — the academic register ---------- */
+.scripto-doc[data-skin='journal'] {
+  --doc-radius: 0;
+  --doc-fill: 0%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  --doc-label-spacing: 0.1em;
+  text-align: justify;
+  hyphens: auto;
+}
+.scripto-doc[data-skin='journal'] h1 {
+  text-align: center;
+  font-size: 1.55em;
+  line-height: 1.25;
+  border: none;
+  margin-bottom: 0.9em;
+}
+.scripto-doc[data-skin='journal'] h2 {
+  font-size: 1.02em;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.08em;
+  border: none;
+  margin-top: 1.9em;
+}
+.scripto-doc[data-skin='journal'] h3 {
+  font-size: 0.98em;
+  font-style: italic;
+  font-weight: 600;
+}
+/* The opening quote reads as the abstract. */
+.scripto-doc[data-skin='journal'] > blockquote:first-of-type {
+  border: none;
+  border-block: 1px solid var(--doc-rule);
+  padding: 1em 1.6em;
+  margin-inline: 1.6em;
+  font-size: 0.94em;
+  text-align: start;
+}
+.scripto-doc[data-skin='journal'] table {
+  font-size: 0.88em;
+}
+
+/* ---------- Thesis — chapters, and room to breathe ---------- */
+.scripto-doc[data-skin='thesis'] {
+  --doc-radius: 0;
+  --doc-fill: 0%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  line-height: calc(var(--doc-leading) * 1.12);
+}
+.scripto-doc[data-skin='thesis'] h1 {
+  text-align: center;
+  font-size: 1.8em;
+  border: none;
+  margin-top: 2.4em;
+  margin-bottom: 1.6em;
+  padding-bottom: 0.8em;
+  border-bottom: 1px solid var(--doc-rule);
+}
+.scripto-doc[data-skin='thesis'] h2 {
+  font-size: 1.22em;
+  border: none;
+  margin-top: 2.2em;
+}
+.scripto-doc[data-skin='thesis'] p + p {
+  text-indent: 1.6em;
+  margin-top: -0.5em;
+}
+.scripto-doc[data-skin='thesis'] blockquote {
+  font-size: 0.95em;
+  margin-inline: 1.4em;
+  border-inline-start-color: var(--doc-rule);
+}
+
+/* ---------- Changelog — versions as chips ---------- */
+.scripto-doc[data-skin='changelog'] {
+  --doc-radius: 6px;
+  --doc-radius-sm: 4px;
+  --doc-fill: 9%;
+  --doc-accent-line: 3px;
+  --doc-shadow: none;
+}
+.scripto-doc[data-skin='changelog'] h1 {
+  font-size: 1.5em;
+  border: none;
+}
+.scripto-doc[data-skin='changelog'] h2 {
+  display: inline-block;
+  font-size: 0.95em;
+  font-family: var(--doc-ui-font);
+  background: var(--doc-accent);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.15em 0.8em;
+  margin-top: 2em;
+  letter-spacing: 0.02em;
+}
+.scripto-doc[data-skin='changelog'] h3 {
+  font-size: 0.82em;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--doc-muted);
+  margin-top: 1.3em;
+}
+.scripto-doc[data-skin='changelog'] ul {
+  padding-inline-start: 1.2em;
+}
+.scripto-doc[data-skin='changelog'] li {
+  margin: 0.15em 0;
+}
+.scripto-doc[data-skin='changelog'] ul > li::marker {
+  content: '– ';
+  color: var(--doc-muted);
+}
+
+/* ---------- RFC / ADR — status first, then the argument ---------- */
+.scripto-doc[data-skin='rfc'] {
+  --doc-radius: 0;
+  --doc-radius-sm: 2px;
+  --doc-fill: 5%;
+  --doc-accent-line: 3px;
+  --doc-shadow: none;
+  --doc-ui-font: var(--doc-mono);
+  --doc-label-spacing: 0.1em;
+}
+.scripto-doc[data-skin='rfc'] h1 {
+  font-size: 1.5em;
+  border-bottom: 3px double var(--doc-rule);
+  padding-bottom: 0.45em;
+}
+.scripto-doc[data-skin='rfc'] h2 {
+  font-family: var(--doc-mono);
+  font-size: 0.98em;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: none;
+  margin-top: 2em;
+}
+/* The opening quote is the metadata block: status, date, deciders. */
+.scripto-doc[data-skin='rfc'] > blockquote:first-of-type {
+  font-family: var(--doc-mono);
+  font-size: 0.84em;
+  background: var(--doc-surface);
+  border: 1px solid var(--doc-rule);
+  border-inline-start: var(--doc-accent-line) solid var(--doc-accent);
+  padding: 0.8em 1.1em;
+  color: var(--doc-fg);
+}
+.scripto-doc[data-skin='rfc'] th {
+  font-family: var(--doc-mono);
+  text-transform: uppercase;
+  font-size: 0.75em;
+}
+
+/* ---------- Handout — one topic per page, read from the back row ---------- */
+.scripto-doc[data-skin='handout'] {
+  --doc-radius: 8px;
+  --doc-fill: 10%;
+  --doc-accent-line: 5px;
+  --doc-shadow: none;
+  font-size: calc(var(--doc-size) * 1.12);
+  line-height: calc(var(--doc-leading) * 1.08);
+}
+.scripto-doc[data-skin='handout'] h1 {
+  font-size: 2em;
+  letter-spacing: -0.02em;
+  border: none;
+}
+.scripto-doc[data-skin='handout'] h2 {
+  font-size: 1.5em;
+  border: none;
+  padding-top: 0.5em;
+  border-top: 5px solid var(--doc-accent);
+  margin-top: 1.8em;
+}
+.scripto-doc[data-skin='handout'] h3 {
+  font-size: 1.12em;
+}
+.scripto-doc[data-skin='handout'] li {
+  margin: 0.55em 0;
+}
+.scripto-doc[data-skin='handout'] ul > li::marker {
+  color: var(--doc-accent);
+  font-size: 1.15em;
+}
+
+/* ==========================================================================
+   Handwriting-native skins
+
+   These six ship with a hand rather than merely tolerating one, so they set
+   their own paper colour, ink and rhythm. Each is still a normal skin: a
+   document using one without a hand simply renders in the configured typeface.
+   ========================================================================== */
+
+.scripto-doc[data-skin='handwritten'] {
+  --doc-radius: 3px;
+  --doc-radius-sm: 2px;
+  --doc-fill: 8%;
+  --doc-accent-line: 3px;
+  --doc-shadow: none;
+  --doc-label-transform: none;
+  --doc-label-spacing: 0.02em;
+}
+.scripto-doc[data-skin='handwritten'] :is(h1, h2, h3) {
+  border: none;
+  font-weight: 600;
+}
+
+.scripto-doc[data-skin='journal-hand'] {
+  --doc-radius: 0;
+  --doc-fill: 0%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  --doc-fg: #4a3a28;
+  --doc-muted: #7c6a55;
+  --doc-rule: #d8c7ad;
+  --doc-surface: #f6ecd8;
+  --doc-label-transform: none;
+}
+.scripto-doc[data-skin='journal-hand'] :is(h1, h2, h3) {
+  border: none;
+  font-weight: 600;
+}
+.scripto-doc[data-skin='journal-hand'] blockquote {
+  font-style: italic;
+}
+
+.scripto-doc[data-skin='field-notes'] {
+  --doc-radius: 2px;
+  --doc-fill: 6%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  --doc-label-spacing: 0.08em;
+  font-size: calc(var(--doc-size) * 0.94);
+}
+.scripto-doc[data-skin='field-notes'] :is(h1, h2, h3) {
+  border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 1.05em;
+}
+
+.scripto-doc[data-skin='chalkboard'] {
+  --doc-radius: 0;
+  --doc-fill: 10%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  --doc-fg: #eef2ea;
+  --doc-muted: #b9c4b5;
+  --doc-rule: #4a5a4e;
+  --doc-surface: #26302a;
+  --doc-accent: #ffe58a;
+  --doc-quote: #ffe58a;
+  background: #26302a;
+  /* Backgrounds are off by default when printing, so say explicitly that this
+     one carries meaning — without the slate the light chalk ink is invisible. */
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+  padding: 1.5em;
+}
+.scripto-doc[data-skin='chalkboard'] :is(h1, h2, h3) {
+  border: none;
+  color: #ffe58a;
+}
+
+.scripto-doc[data-skin='letter-hand'] {
+  --doc-radius: 0;
+  --doc-fill: 0%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  --doc-label-transform: none;
+}
+.scripto-doc[data-skin='letter-hand'] h1 {
+  border: none;
+  font-size: 1.3em;
+  font-weight: 600;
+}
+.scripto-doc[data-skin='letter-hand'] p {
+  margin-bottom: 1.1em;
+}
+
+.scripto-doc[data-skin='worksheet'] {
+  --doc-radius: 0;
+  --doc-fill: 0%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  --doc-label-spacing: 0.08em;
+}
+.scripto-doc[data-skin='worksheet'] :is(h1, h2, h3) {
+  border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+/* A worksheet is mostly blank space to write in, so the gaps do the work. */
+.scripto-doc[data-skin='worksheet'] li {
+  margin-block: 0.9em;
+}
+
+/* ---------- Numbering in right-to-left documents ----------
+   Two things go wrong otherwise. A counter reads "1." in source order, but the
+   full stop is a neutral character, so bidi places it on the left and the
+   reader sees ".1" — isolating the number fixes that. And an Arabic document
+   should count in Arabic-Indic digits, not Western ones. */
+.scripto-doc .heading-number,
+.scripto-doc[data-numbered] :is(h1, h2, h3, h4)::before {
+  unicode-bidi: isolate;
+}
+
+.scripto-doc[lang='ar'][data-numbered] h1::before {
+  content: counter(h1, arabic-indic) '.\00a0\00a0';
+}
+
+.scripto-doc[lang='ar'][data-numbered] h2::before {
+  content: counter(h1, arabic-indic) '.' counter(h2, arabic-indic) '\00a0\00a0';
+}
+
+.scripto-doc[lang='ar'][data-numbered] h3::before {
+  content: counter(h1, arabic-indic) '.' counter(h2, arabic-indic) '.' counter(h3, arabic-indic)
+    '\00a0\00a0';
+}
+
+.scripto-doc[lang='ar'][data-numbered] h4::before {
+  content: counter(h1, arabic-indic) '.' counter(h2, arabic-indic) '.' counter(h3, arabic-indic) '.'
+    counter(h4, arabic-indic) '\00a0\00a0';
+}
+
+/* Ordered lists and footnotes count the same way. */
+.scripto-doc[lang='ar'] ol {
+  list-style: arabic-indic outside;
+}
+
+.scripto-doc[lang='ar'] ol ol {
+  list-style: arabic-indic outside;
+}
+
+.scripto-doc[lang='ar'] .footnotes ol {
+  list-style: arabic-indic outside;
 }

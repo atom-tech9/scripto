@@ -1,9 +1,23 @@
 import documentCss from '@/styles/document.css?inline'
+import handwritingCss from '@/styles/handwriting.css?inline'
+import stationeryCss from '@/styles/stationery.css?inline'
+import handwritingDrawnCss from '@/styles/handwritingDrawn.css?inline'
+import handwritingYieldCss from '@/styles/handwritingYield.css?inline'
+import { handStylesheetHref } from '@/lib/handwriting/fonts'
 import katexCss from 'katex/dist/katex.min.css?inline'
 import { downloadTextFile, escapeHtml } from '@/lib/utils'
 import { documentDataAttrs, documentStyleVars } from '@/pdf/documentStyle'
 import { FONT_STACKS } from '@/lib/constants'
 import type { PdfConfig } from '@/types'
+
+/**
+ * The Google Fonts stylesheet for the document's hand, if it has one. Without
+ * it an exported file names a family the reader's browser has never heard of
+ * and quietly falls back to a system cursive.
+ */
+function handHref(config: PdfConfig): string | null {
+  return config.hand.hand === 'none' ? null : handStylesheetHref(config.hand.hand)
+}
 
 const FONTS_HREF =
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Lora:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap'
@@ -55,11 +69,19 @@ ${author ? `<meta name="author" content="${escapeHtml(author)}" />` : ''}
 ${keywords ? `<meta name="keywords" content="${escapeHtml(keywords)}" />` : ''}
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="${FONTS_HREF}" rel="stylesheet" />
+${handHref(config) ? `<link href="${handHref(config)}" rel="stylesheet" />` : ''}
 <style>
 /* Inlined, not linked: an unreachable CDN would stop hiding .katex-mathml and
    every equation would render twice — once typeset, once as raw MathML text. */
 ${katexCss}
 ${documentCss}
+/* A handwritten document exported to HTML used to arrive typeset: only
+   document.css came with it, so every hand, paper and drawn rule was dropped
+   on the way out. */
+${handwritingCss}
+${stationeryCss}
+${handwritingDrawnCss}
+${handwritingYieldCss}
 body { margin: 0; background: #f1f3f7; color: #1f2532; font-family: ${FONT_STACKS[config.font]}; }
 .page { max-width: 820px; margin: 0 auto; padding: 48px 24px; }
 .sheet { background: #fff; border-radius: 12px; padding: 56px 64px; box-shadow: 0 10px 40px -12px rgba(15,23,42,.18); }

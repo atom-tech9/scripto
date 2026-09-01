@@ -19,11 +19,20 @@ import { CodeBlock } from './components/CodeBlock'
 import { Mermaid } from './components/Mermaid'
 import { AsciiDiagram } from './components/AsciiDiagram'
 import { parseFenceTitle, shouldRenderAsDiagram } from './asciiDiagram'
-import type { ResolvedTheme } from '@/types'
+import { rehypeHandwriting } from './plugins/rehypeHandwriting'
+import type { HandConfig, ResolvedTheme } from '@/types'
+
+/**
+ * Past this many words the wrapper is skipped: a thesis should not freeze the
+ * tab so its paragraphs can wobble slightly.
+ */
+const MAX_HANDWRITING_WORDS = 20_000
 
 interface MarkdownRendererProps {
   content: string
   resolvedTheme: ResolvedTheme
+  /** The handwriting axis. Omit, or pass `hand: 'none'`, for typeset text. */
+  hand?: HandConfig
 }
 
 interface HastNode {
@@ -85,7 +94,26 @@ const rehypePlugins = [
  * The single source of truth for rendering Markdown to HTML. The output is used
  * verbatim by both the live preview and the PDF export engine.
  */
-function MarkdownRendererImpl({ content, resolvedTheme }: MarkdownRendererProps) {
+function MarkdownRendererImpl({ content, resolvedTheme, hand }: MarkdownRendererProps) {
+  // The word wrapper runs last, after Prism and KaTeX have produced their exact
+  // trees, and only when a hand is actually active — `hand: 'none'` leaves the
+  // pipeline byte-identical to a document that has never heard of handwriting.
+  const rehype = useMemo(() => {
+    const active =
+      hand &&
+      hand.hand !== 'none' &&
+      hand.variation !== 'none' &&
+      content.length > 0 &&
+      content.split(/\s+/).length <= MAX_HANDWRITING_WORDS
+    if (!active) return rehypePlugins
+    return [
+      ...rehypePlugins,
+      [rehypeHandwriting, { seed: hand.seed, buckets: hand.variation === 'expressive' ? 32 : 16 }],
+    ] as const
+  }, [hand, content])
+
+  const drawnDiagrams = hand !== undefined && hand.hand !== 'none' && hand.drawnElements
+
   const components = useMemo<Components>(() => {
     return {
       pre({ node, children }) {
@@ -96,7 +124,14 @@ function MarkdownRendererImpl({ content, resolvedTheme }: MarkdownRendererProps)
         const raw = hastToText(codeChild)
 
         if (language === 'mermaid') {
-          return <Mermaid code={raw} resolvedTheme={resolvedTheme} />
+          return (
+            <Mermaid
+              code={raw}
+              resolvedTheme={resolvedTheme}
+              handDrawn={drawnDiagrams}
+              handDrawnSeed={hand?.seed ?? 1}
+            />
+          )
         }
         // Explicit ascii aliases always render as diagrams; untagged and
         // text/txt/plaintext fences are heuristic-gated (AI habitually tags
@@ -184,12 +219,12 @@ function MarkdownRendererImpl({ content, resolvedTheme }: MarkdownRendererProps)
         )
       },
     }
-  }, [resolvedTheme])
+  }, [resolvedTheme, drawnDiagrams, hand?.seed])
 
   return (
     <ReactMarkdown
       remarkPlugins={remarkPlugins as never}
-      rehypePlugins={rehypePlugins as never}
+      rehypePlugins={rehype as never}
       remarkRehypeOptions={{ handlers: defListHastHandlers }}
       urlTransform={urlTransform}
       components={components}

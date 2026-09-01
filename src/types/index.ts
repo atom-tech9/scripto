@@ -13,7 +13,28 @@ export type PaperSize = 'a4' | 'letter' | 'legal' | 'a3' | 'a5' | 'custom'
 
 export type Orientation = 'portrait' | 'landscape'
 
-export type DocumentFont = 'serif' | 'sans' | 'lora' | 'system' | 'arabic'
+export type DocumentFont =
+  | 'serif'
+  | 'sans'
+  | 'lora'
+  | 'system'
+  | 'arabic'
+  | 'merriweather'
+  | 'garamond'
+  | 'playfair'
+  | 'crimson'
+  | 'roboto'
+  | 'open-sans'
+  | 'nunito'
+  | 'plex-serif'
+  | 'plex-sans'
+  | 'mono'
+  | 'tajawal'
+  | 'almarai'
+  | 'amiri-doc'
+  | 'noto-kufi'
+  | 'readex'
+  | 'plex-arabic'
 
 export type TextDirection = 'auto' | 'ltr' | 'rtl'
 
@@ -45,6 +66,118 @@ export type DocumentSkin =
   | 'zen'
   | 'memo'
   | 'poster'
+  | 'invoice'
+  | 'contract'
+  | 'letter'
+  | 'journal'
+  | 'thesis'
+  | 'changelog'
+  | 'rfc'
+  | 'handout'
+  | 'handwritten'
+  | 'journal-hand'
+  | 'field-notes'
+  | 'chalkboard'
+  | 'letter-hand'
+  | 'worksheet'
+
+/**
+ * The handwriting axis. Deliberately not a skin: handwriting is
+ * hand x ink x stationery x neatness x slant x variation x aging, which would
+ * need dozens of skin entries. As its own axis it composes with all of them.
+ */
+export type HandStyle =
+  | 'none'
+  // Latin — everyday
+  | 'casual'
+  | 'neat-print'
+  | 'architect'
+  | 'marker'
+  | 'scratchy'
+  | 'rushed'
+  // Latin — expressive
+  | 'script'
+  | 'copperplate'
+  | 'monoline'
+  | 'cursive'
+  | 'chalk'
+  // Arabic
+  | 'ruqaa'
+  | 'naskh-hand'
+  | 'diwani'
+  | 'amiri'
+  | 'scheherazade'
+  | 'katibeh'
+  | 'nastaliq'
+  | 'gulzar'
+  | 'harmattan'
+  | 'rakkas'
+  // User-supplied (see the handwriting brief §7)
+  | 'custom'
+
+export type InkStyle =
+  | 'ballpoint-blue'
+  | 'ballpoint-black'
+  | 'fountain-blue'
+  | 'fountain-black'
+  | 'pencil'
+  | 'marker'
+  | 'red-pen'
+  | 'gel'
+  | 'chalk-white'
+  | 'sepia'
+
+export type Stationery =
+  | 'blank'
+  | 'ruled-college'
+  | 'ruled-wide'
+  | 'ruled-narrow'
+  | 'graph'
+  | 'dot-grid'
+  | 'isometric'
+  | 'legal-pad'
+  | 'engineering'
+  | 'cornell'
+  | 'index-card'
+  | 'steno'
+  | 'practice-lines'
+  | 'music-staff'
+  | 'parchment'
+  | 'kraft'
+  | 'graph-blue'
+
+/** How far the variation engine goes. Higher tiers cost DOM weight. */
+export type HandVariation = 'none' | 'word' | 'expressive'
+
+export interface HandConfig {
+  readonly hand: HandStyle
+  /**
+   * Which imported or drawn hand `hand: 'custom'` refers to. Ignored for every
+   * built-in hand, so a document that never used one carries nothing extra.
+   */
+  readonly customHand?: string
+  /** A second hand for headings — real notes title more carefully than they write. */
+  readonly headingHand: HandStyle | 'same'
+  readonly ink: InkStyle
+  readonly stationery: Stationery
+  /** 0 = careful and even, 1 = rushed and messy. Scales every jitter amplitude. */
+  readonly neatness: number
+  /** -1 = left-handed back-slant, 0 = upright, 1 = strong right lean. */
+  readonly slant: number
+  readonly variation: HandVariation
+  /** 0 = fresh, 1 = yellowed paper, faded ink, fold creases. */
+  readonly aging: number
+  /** Hand-drawn rules, bullets, checkboxes, underlines and table borders. */
+  readonly drawnElements: boolean
+  /**
+   * Hide the paper's rules behind heading text. Off by default: rules running
+   * behind a heading is what ruled paper actually looks like, and masking them
+   * only reads well on some papers.
+   */
+  readonly maskRules: boolean
+  /** A stable seed, so the jitter never changes under the same document. */
+  readonly seed: number
+}
 
 export type MarginPreset = 'narrow' | 'normal' | 'wide' | 'custom'
 
@@ -119,11 +252,24 @@ export interface PdfConfig {
   readonly accentColor: string
   readonly customCss: string
 
+  /** The handwriting axis. `hand: 'none'` must stay a total no-op. */
+  readonly hand: HandConfig
+
   readonly meta: DocumentMeta
 }
 
+/** A user-saved bundle of look-and-feel settings — a reusable house style. */
+export interface ExportPreset {
+  readonly id: string
+  readonly name: string
+  /** The presentation half of a `PdfConfig`; never carries document `meta`. */
+  readonly config: Partial<PdfConfig>
+  readonly createdAt: number
+}
+
 export interface ExportProgress {
-  readonly stage: 'idle' | 'preparing' | 'rendering' | 'paginating' | 'finalizing' | 'done' | 'error'
+  readonly stage:
+    'idle' | 'preparing' | 'rendering' | 'paginating' | 'finalizing' | 'done' | 'error'
   readonly message: string
   readonly percent: number
 }

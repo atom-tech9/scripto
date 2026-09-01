@@ -1,0 +1,1534 @@
+/*
+ * stage.css — the Preview Stage.
+ *
+ * Screen-only: ground, texture, lighting, paper treatment and chrome. None of
+ * it is ever cloned into the PDF / HTML / Word export, because all of it lives
+ * OUTSIDE `.scripto-doc`. The single `.scripto-doc` rule in this file only
+ * positions the wrapper; typography and colour stay in document.css.
+ *
+ * Textures are pure CSS gradients — zero image bytes.
+ */
+
+/* ---------------------------------------------------------------- tokens -- */
+
+.scripto-stage {
+  --stage-lift-1: 0 1px 2px rgb(2 6 23 / 0.05), 0 2px 6px -1px rgb(2 6 23 / 0.06);
+  --stage-lift-2:
+    0 1px 2px rgb(2 6 23 / 0.05), 0 8px 20px -6px rgb(2 6 23 / 0.14),
+    0 24px 48px -18px rgb(2 6 23 / 0.18);
+  --stage-lift-3:
+    0 2px 4px rgb(2 6 23 / 0.06), 0 14px 32px -8px rgb(2 6 23 / 0.2),
+    0 48px 88px -24px rgb(2 6 23 / 0.3);
+
+  --stage-ground: hsl(var(--muted));
+  --stage-ground-2: hsl(var(--background));
+  --stage-vignette: transparent;
+  --stage-edge: hsl(var(--border) / 0.7);
+  --stage-edge-glow: transparent;
+
+  --stage-accent: var(--doc-accent, hsl(var(--primary)));
+  --stage-radius: 0.75rem;
+  --stage-lift: var(--stage-lift-2);
+  /* Container units, not viewport units: the preview pane is often a third of
+     the window, and sizing off `vw` left the sheet absurdly narrow beside an
+     open settings panel. */
+  --stage-gutter: clamp(0.5rem, 4cqi, 3.5rem);
+  --stage-air: clamp(1rem, 5cqi, 3rem);
+  --stage-pad-block: clamp(1.25rem, 6cqi, 3.5rem);
+  --stage-pad-inline: clamp(1rem, 5cqi, 3rem);
+  --stage-sheet-max: 820px;
+
+  --m-snap: 90ms;
+  --m-quick: 160ms;
+  --m-base: 280ms;
+  --m-slow: 480ms;
+  --m-drift: 700ms;
+  --e-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --e-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --e-linear: linear;
+  --e-steps: steps(8, end);
+
+  position: relative;
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  isolation: isolate;
+  background: hsl(var(--muted) / 0.4);
+  container: stage / inline-size;
+}
+
+.dark .scripto-stage {
+  --stage-lift-1: 0 1px 2px rgb(0 0 0 / 0.4), 0 2px 6px -1px rgb(0 0 0 / 0.35);
+  --stage-lift-2: 0 1px 3px rgb(0 0 0 / 0.5), 0 10px 26px -8px rgb(0 0 0 / 0.6);
+  --stage-lift-3: 0 2px 6px rgb(0 0 0 / 0.55), 0 20px 48px -12px rgb(0 0 0 / 0.7);
+  --stage-edge: hsl(var(--border));
+}
+
+/* `off` restores the plain card exactly as it was before the stage system. */
+.scripto-stage[data-stage-level='off'] .stage-backdrop,
+.scripto-stage[data-stage-level='off'] .stage-frame,
+.scripto-stage[data-stage-level='off'] .stage-veil {
+  display: none;
+}
+
+.scripto-stage[data-stage-level='off'] .stage-paper {
+  border-radius: 0.75rem;
+  box-shadow: var(--stage-lift-1);
+  outline: 1px solid hsl(var(--border) / 0.6);
+  outline-offset: -1px;
+}
+
+/* `minimal` keeps the ground but drops textures, marks and heavy depth. */
+.scripto-stage[data-stage-level='minimal'] .stage-texture,
+.scripto-stage[data-stage-level='minimal'] .stage-light,
+.scripto-stage[data-stage-level='minimal'] .stage-mark,
+.scripto-stage[data-stage-level='minimal'] .stage-frame {
+  display: none;
+}
+
+.scripto-stage[data-stage-level='minimal'] .stage-paper {
+  box-shadow: var(--stage-lift-1);
+}
+
+/* --------------------------------------------------------------- backdrop -- */
+
+.stage-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.stage-backdrop__layer {
+  position: absolute;
+  inset: 0;
+}
+
+.stage-ground,
+.stage-texture,
+.stage-light {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.stage-ground {
+  background: linear-gradient(180deg, var(--stage-ground-2), var(--stage-ground));
+}
+
+.stage-light {
+  background: var(--stage-vignette);
+}
+
+.stage-mark {
+  position: absolute;
+  inset-inline: 0;
+  top: clamp(0.35rem, 1.5cqi, 1.25rem);
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-size: clamp(1.35rem, 7cqi, 5rem);
+  color: hsl(var(--foreground) / 0.045);
+  user-select: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-inline: 1rem;
+}
+
+/* ------------------------------------------------------------------ sheet -- */
+
+.stage-scroll {
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  overscroll-behavior: contain;
+  container-type: inline-size;
+}
+
+.stage-stack {
+  margin-inline: auto;
+  display: flex;
+  width: 100%;
+  max-width: var(--stage-sheet-max);
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-inline: var(--stage-gutter);
+  padding-block: var(--stage-air);
+}
+
+/* The animated wrapper. `.scripto-doc` itself is never transformed. */
+.stage-sheet {
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+}
+
+.stage-paper {
+  position: relative;
+  border-radius: var(--stage-radius);
+  background: hsl(var(--surface));
+  box-shadow: var(--stage-lift);
+  padding: var(--stage-pad-block) var(--stage-pad-inline);
+  transition:
+    border-radius var(--m-base) var(--e-out),
+    box-shadow var(--m-base) var(--e-out);
+}
+
+.stage-paper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid var(--stage-edge);
+  box-shadow: var(--stage-edge-glow);
+  pointer-events: none;
+}
+
+/* The only `.scripto-doc` rule here: positioning context for screen overlays. */
+.stage-paper > .scripto-doc {
+  position: relative;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-paper {
+    transition: none;
+  }
+  .stage-sheet {
+    will-change: auto;
+  }
+}
+
+/* ------------------------------------------------------------------ frame -- */
+
+.stage-frame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.stage-frame > span {
+  position: absolute;
+  display: block;
+}
+
+.stage-frame__spine {
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 26px;
+  border-start-start-radius: var(--stage-radius);
+  border-end-start-radius: var(--stage-radius);
+  background: linear-gradient(
+    to var(--stage-inline-end, right),
+    rgb(120 85 45 / 0.22),
+    rgb(120 85 45 / 0.06) 55%,
+    transparent
+  );
+}
+
+.stage-frame__tab {
+  top: -1.5rem;
+  inset-inline-end: 2rem;
+  height: 1.75rem;
+  width: 7.5rem;
+  border-radius: 0.5rem 0.5rem 0 0;
+  background: linear-gradient(180deg, #e6cf9c, #d9bd81);
+  box-shadow: var(--stage-lift-1);
+}
+
+.dark .stage-frame__tab {
+  background: linear-gradient(180deg, #8a7442, #6d5b34);
+}
+
+.stage-frame__ticks {
+  inset: -14px;
+  border: 0;
+  background:
+    linear-gradient(var(--stage-tick, hsl(var(--foreground) / 0.35)) 0 0) 0 0 / 14px 1px no-repeat,
+    linear-gradient(var(--stage-tick, hsl(var(--foreground) / 0.35)) 0 0) 0 0 / 1px 14px no-repeat,
+    linear-gradient(var(--stage-tick, hsl(var(--foreground) / 0.35)) 0 0) 100% 0 / 14px 1px
+      no-repeat,
+    linear-gradient(var(--stage-tick, hsl(var(--foreground) / 0.35)) 0 0) 100% 0 / 1px 14px
+      no-repeat,
+    linear-gradient(var(--stage-tick, hsl(var(--foreground) / 0.35)) 0 0) 0 100% / 14px 1px
+      no-repeat,
+    linear-gradient(var(--stage-tick, hsl(var(--foreground) / 0.35)) 0 0) 0 100% / 1px 14px
+      no-repeat,
+    linear-gradient(var(--stage-tick, hsl(var(--foreground) / 0.35)) 0 0) 100% 100% / 14px 1px
+      no-repeat,
+    linear-gradient(var(--stage-tick, hsl(var(--foreground) / 0.35)) 0 0) 100% 100% / 1px 14px
+      no-repeat;
+}
+
+.stage-frame__registration {
+  inset: -18px;
+  background:
+    radial-gradient(circle at 0 0, transparent 5px, #06b6d4 5px 6px, transparent 6px) no-repeat,
+    radial-gradient(circle at 100% 0, transparent 5px, #ec4899 5px 6px, transparent 6px) no-repeat,
+    radial-gradient(circle at 0 100%, transparent 5px, #eab308 5px 6px, transparent 6px) no-repeat,
+    radial-gradient(circle at 100% 100%, transparent 5px, #111 5px 6px, transparent 6px) no-repeat;
+  opacity: 0.75;
+}
+
+.stage-frame__spiral {
+  inset-block: 1.25rem;
+  inset-inline-start: -7px;
+  width: 14px;
+  border-radius: 999px;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0 10px,
+      hsl(var(--foreground) / 0.28) 10px 13px,
+      transparent 13px 26px
+    ),
+    linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.05));
+}
+
+.stage-frame__margin-rule {
+  inset-block: 0;
+  inset-inline-start: calc(var(--stage-pad-inline) * 0.62);
+  width: 1px;
+  background: linear-gradient(180deg, transparent, #ef4444 8%, #ef4444 92%, transparent);
+  opacity: 0.4;
+}
+
+.stage-frame__title-block {
+  inset-inline-end: 0;
+  bottom: 0;
+  height: 3.25rem;
+  width: min(15rem, 55%);
+  border-start-start-radius: 0.35rem;
+  border-end-end-radius: var(--stage-radius);
+  border: 1px solid rgb(255 255 255 / 0.5);
+  background:
+    linear-gradient(rgb(255 255 255 / 0.16) 0 0) no-repeat,
+    repeating-linear-gradient(
+      180deg,
+      transparent 0 1rem,
+      rgb(255 255 255 / 0.4) 1rem calc(1rem + 1px)
+    );
+}
+
+.stage-frame__header-band {
+  inset-inline: 0;
+  top: 0;
+  height: 0.4rem;
+  border-start-start-radius: var(--stage-radius);
+  border-start-end-radius: var(--stage-radius);
+  background: linear-gradient(
+    90deg,
+    var(--stage-accent),
+    color-mix(in oklab, var(--stage-accent) 40%, transparent)
+  );
+}
+
+.stage-frame__platen {
+  inset-inline: -0.5rem;
+  top: -0.75rem;
+  height: 0.75rem;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(180deg, rgb(90 70 50 / 0.28), transparent);
+}
+
+.stage-frame__gutter-rules {
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: var(--stage-pad-inline);
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 calc(50% - 4px),
+    hsl(160 30% 35% / 0.28) calc(50% - 4px) calc(50% - 3px),
+    transparent calc(50% - 3px) calc(50% + 3px),
+    hsl(160 30% 35% / 0.28) calc(50% + 3px) calc(50% + 4px),
+    transparent calc(50% + 4px)
+  );
+}
+
+.stage-frame__accent-band {
+  inset-inline: 0;
+  top: -1.1rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--stage-accent),
+    color-mix(in oklab, var(--stage-accent) 25%, transparent)
+  );
+  transform-origin: left center;
+}
+
+[dir='rtl'] .stage-frame__accent-band {
+  transform-origin: right center;
+  background: linear-gradient(
+    270deg,
+    var(--stage-accent),
+    color-mix(in oklab, var(--stage-accent) 25%, transparent)
+  );
+}
+
+.stage-frame__edge-glow {
+  inset: -1px;
+  border-radius: calc(var(--stage-radius) + 1px);
+  border: 1px solid color-mix(in oklab, var(--stage-accent) 55%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--stage-accent) 12%, transparent),
+    0 0 28px -4px color-mix(in oklab, var(--stage-accent) 45%, transparent);
+}
+
+/* Mirror the asymmetric frames under RTL. */
+[dir='rtl'] .stage-frame__spine {
+  background: linear-gradient(
+    to left,
+    rgb(120 85 45 / 0.22),
+    rgb(120 85 45 / 0.06) 55%,
+    transparent
+  );
+}
+
+[dir='rtl'] .stage-frame__spiral {
+  background:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0 10px,
+      hsl(var(--foreground) / 0.28) 10px 13px,
+      transparent 13px 26px
+    ),
+    linear-gradient(270deg, transparent, hsl(var(--foreground) / 0.05));
+}
+
+/* ------------------------------------------------------------------- veil -- */
+
+.stage-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  border-radius: var(--stage-radius);
+  pointer-events: none;
+}
+
+.stage-veil__part {
+  position: absolute;
+  display: block;
+  background: var(--stage-ground);
+}
+
+.stage-veil--sweep .stage-veil__part {
+  inset: 0;
+  transform-origin: right center;
+  background: linear-gradient(
+    90deg,
+    var(--stage-ground) 0 92%,
+    color-mix(in oklab, var(--stage-accent) 70%, var(--stage-ground)) 100%
+  );
+}
+
+[dir='rtl'] .stage-veil--sweep .stage-veil__part {
+  transform-origin: left center;
+  background: linear-gradient(
+    270deg,
+    var(--stage-ground) 0 92%,
+    color-mix(in oklab, var(--stage-accent) 70%, var(--stage-ground)) 100%
+  );
+}
+
+.stage-veil--rules .stage-veil__part {
+  background: var(--stage-accent);
+}
+
+.stage-veil--rules .stage-veil__part[data-index='0'] {
+  inset-inline: 0;
+  top: 0;
+  height: 2px;
+  transform-origin: left center;
+}
+.stage-veil--rules .stage-veil__part[data-index='1'] {
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: 2px;
+  transform-origin: center top;
+}
+.stage-veil--rules .stage-veil__part[data-index='2'] {
+  inset-inline: 0;
+  bottom: 0;
+  height: 2px;
+  transform-origin: right center;
+}
+.stage-veil--rules .stage-veil__part[data-index='3'] {
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 2px;
+  transform-origin: center bottom;
+}
+
+[dir='rtl'] .stage-veil--rules .stage-veil__part[data-index='0'] {
+  transform-origin: right center;
+}
+[dir='rtl'] .stage-veil--rules .stage-veil__part[data-index='2'] {
+  transform-origin: left center;
+}
+
+.stage-veil--steps .stage-veil__part {
+  inset: 0;
+  transform-origin: center bottom;
+  background: linear-gradient(
+    180deg,
+    var(--stage-ground) 0 calc(100% - 2px),
+    color-mix(in oklab, var(--stage-accent) 60%, var(--stage-ground)) 100%
+  );
+}
+
+.stage-veil--bands .stage-veil__part {
+  inset-inline: 0;
+  height: calc(100% / 6 + 1px);
+  transform-origin: center top;
+}
+.stage-veil--bands .stage-veil__part[data-index='0'] {
+  top: 0;
+}
+.stage-veil--bands .stage-veil__part[data-index='1'] {
+  top: calc(100% / 6);
+}
+.stage-veil--bands .stage-veil__part[data-index='2'] {
+  top: calc(200% / 6);
+}
+.stage-veil--bands .stage-veil__part[data-index='3'] {
+  top: calc(300% / 6);
+}
+.stage-veil--bands .stage-veil__part[data-index='4'] {
+  top: calc(400% / 6);
+}
+.stage-veil--bands .stage-veil__part[data-index='5'] {
+  top: calc(500% / 6);
+}
+
+.stage-veil--halo {
+  border-radius: var(--stage-radius);
+  overflow: hidden;
+}
+
+.stage-veil--halo .stage-veil__part {
+  inset: -60%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    color-mix(in oklab, var(--stage-accent) 85%, transparent) 24deg,
+    transparent 60deg,
+    transparent 360deg
+  );
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+}
+
+.stage-veil--aperture {
+  overflow: visible;
+}
+
+.stage-veil--aperture .stage-veil__part {
+  inset: -25%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    transparent 42%,
+    color-mix(in oklab, var(--stage-ground) 88%, transparent) 68%,
+    var(--stage-ground) 100%
+  );
+}
+
+/* ------------------------------------------------------------- 21 stages -- */
+
+/* 1 · Studio — soft neutral gradient, sheet floating on layered lift. */
+[data-stage='modern'] {
+  --stage-ground: hsl(220 20% 92%);
+  --stage-ground-2: hsl(220 30% 97%);
+  --stage-lift: var(--stage-lift-2);
+  --stage-vignette: radial-gradient(120% 80% at 50% -10%, hsl(0 0% 100% / 0.7), transparent 60%);
+}
+.dark [data-stage='modern'] {
+  --stage-ground: hsl(224 34% 9%);
+  --stage-ground-2: hsl(223 30% 13%);
+  --stage-vignette: radial-gradient(120% 80% at 50% -10%, hsl(240 40% 30% / 0.35), transparent 62%);
+}
+
+/* 2 · Library — warm cream, faint grain, bound-page spine. */
+[data-stage='classic'] {
+  --stage-ground: hsl(38 34% 87%);
+  --stage-ground-2: hsl(40 46% 93%);
+  --stage-radius: 0.25rem;
+  --stage-lift: var(--stage-lift-2);
+  --stage-edge: hsl(35 30% 60% / 0.5);
+}
+[data-stage='classic'] .stage-texture {
+  background:
+    repeating-linear-gradient(92deg, transparent 0 3px, hsl(30 30% 40% / 0.035) 3px 4px),
+    repeating-linear-gradient(2deg, transparent 0 5px, hsl(30 30% 40% / 0.025) 5px 6px);
+}
+.dark [data-stage='classic'] {
+  --stage-ground: hsl(32 16% 12%);
+  --stage-ground-2: hsl(34 14% 16%);
+}
+
+/* 3 · Spread — accent colour-field with the title set huge behind the sheet. */
+[data-stage='editorial'] {
+  --stage-ground: color-mix(in oklab, var(--stage-accent) 22%, hsl(var(--background)));
+  --stage-ground-2: color-mix(in oklab, var(--stage-accent) 7%, hsl(var(--background)));
+  --stage-radius: 0;
+  --stage-lift: var(--stage-lift-3);
+  --stage-sheet-max: 780px;
+  --stage-air: clamp(2.25rem, 9cqi, 5rem);
+}
+[data-stage='editorial'] .stage-texture {
+  background: linear-gradient(
+    100deg,
+    transparent 0 45%,
+    color-mix(in oklab, var(--stage-accent) 12%, transparent) 45% 100%
+  );
+}
+[data-stage='editorial'] .stage-mark {
+  color: color-mix(in oklab, var(--stage-accent) 28%, transparent);
+}
+
+/* 4 · Spec bench — cool slate, isometric grid, registration ticks. */
+[data-stage='technical'] {
+  --stage-ground: hsl(215 22% 88%);
+  --stage-ground-2: hsl(212 26% 94%);
+  --stage-radius: 0.125rem;
+  --stage-lift: var(--stage-lift-1);
+  --stage-edge: hsl(215 20% 55% / 0.5);
+  --stage-tick: hsl(215 25% 40% / 0.55);
+}
+[data-stage='technical'] .stage-texture {
+  background:
+    repeating-linear-gradient(30deg, transparent 0 15px, hsl(215 30% 45% / 0.07) 15px 16px),
+    repeating-linear-gradient(150deg, transparent 0 15px, hsl(215 30% 45% / 0.07) 15px 16px);
+}
+.dark [data-stage='technical'] {
+  --stage-ground: hsl(215 28% 11%);
+  --stage-ground-2: hsl(215 24% 15%);
+  --stage-tick: hsl(215 30% 70% / 0.6);
+}
+
+/* 5 · Contact sheet — tight, dense, minimal air. */
+[data-stage='compact'] {
+  --stage-ground: hsl(220 12% 84%);
+  --stage-ground-2: hsl(220 14% 90%);
+  --stage-radius: 0.2rem;
+  --stage-lift: var(--stage-lift-1);
+  --stage-air: clamp(0.5rem, 2cqi, 1.1rem);
+  --stage-gutter: clamp(0.4rem, 2.5cqi, 1.25rem);
+  --stage-pad-block: clamp(0.9rem, 4cqi, 2.25rem);
+  --stage-sheet-max: 760px;
+}
+[data-stage='compact'] .stage-texture {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 7px, hsl(220 15% 40% / 0.05) 7px 8px),
+    repeating-linear-gradient(90deg, transparent 0 7px, hsl(220 15% 40% / 0.05) 7px 8px);
+}
+.dark [data-stage='compact'] {
+  --stage-ground: hsl(220 18% 10%);
+  --stage-ground-2: hsl(220 16% 14%);
+}
+
+/* 6 · Typewriter desk — warm paper-bag ground with fibre texture. */
+[data-stage='manuscript'] {
+  --stage-ground: hsl(34 30% 80%);
+  --stage-ground-2: hsl(36 38% 88%);
+  --stage-radius: 0.15rem;
+  --stage-lift: var(--stage-lift-2);
+  --stage-edge: hsl(30 25% 58% / 0.55);
+}
+[data-stage='manuscript'] .stage-texture {
+  background:
+    repeating-linear-gradient(75deg, transparent 0 2px, hsl(28 35% 35% / 0.05) 2px 3px),
+    repeating-linear-gradient(165deg, transparent 0 3px, hsl(28 35% 35% / 0.04) 3px 4px);
+}
+.dark [data-stage='manuscript'] {
+  --stage-ground: hsl(30 14% 11%);
+  --stage-ground-2: hsl(32 12% 15%);
+}
+
+/* 7 · Drafting table — deep cyan blueprint grid with a title block. */
+[data-stage='blueprint'] {
+  --stage-ground: hsl(211 68% 22%);
+  --stage-ground-2: hsl(211 62% 30%);
+  --stage-radius: 0.1rem;
+  --stage-lift: var(--stage-lift-3);
+  --stage-edge: hsl(200 60% 80% / 0.5);
+}
+[data-stage='blueprint'] .stage-texture {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 23px, hsl(200 80% 85% / 0.16) 23px 24px),
+    repeating-linear-gradient(90deg, transparent 0 23px, hsl(200 80% 85% / 0.16) 23px 24px),
+    repeating-linear-gradient(0deg, transparent 0 119px, hsl(200 80% 88% / 0.3) 119px 120px),
+    repeating-linear-gradient(90deg, transparent 0 119px, hsl(200 80% 88% / 0.3) 119px 120px);
+}
+[data-stage='blueprint'] .stage-light {
+  background: radial-gradient(120% 90% at 50% 0%, hsl(200 90% 70% / 0.18), transparent 65%);
+}
+
+/* 8 · Boardroom — clean cool ground with an accent band. */
+[data-stage='corporate'] {
+  --stage-ground: hsl(213 25% 90%);
+  --stage-ground-2: hsl(210 30% 96%);
+  --stage-radius: 0.35rem;
+  --stage-lift: var(--stage-lift-2);
+}
+[data-stage='corporate'] .stage-light {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--stage-accent) 16%, transparent) 0 3.5rem,
+    transparent 3.5rem
+  );
+}
+.dark [data-stage='corporate'] {
+  --stage-ground: hsl(215 30% 10%);
+  --stage-ground-2: hsl(214 26% 14%);
+}
+
+/* 9 · Concrete — flat raw ground, hard zero-blur shadow, thick border. */
+[data-stage='brutalist'] {
+  --stage-ground: hsl(48 12% 82%);
+  --stage-ground-2: hsl(48 12% 82%);
+  --stage-radius: 0;
+  --stage-edge: hsl(0 0% 0%);
+  --stage-lift: 10px 10px 0 0 hsl(0 0% 0% / 0.9);
+}
+[data-stage='brutalist'] .stage-paper::after {
+  border-width: 3px;
+}
+[data-stage='brutalist'] .stage-texture {
+  background: repeating-linear-gradient(45deg, transparent 0 6px, hsl(0 0% 0% / 0.028) 6px 7px);
+}
+.dark [data-stage='brutalist'] {
+  --stage-ground: hsl(48 6% 14%);
+  --stage-ground-2: hsl(48 6% 14%);
+  --stage-edge: hsl(0 0% 100% / 0.9);
+  --stage-lift: 10px 10px 0 0 hsl(0 0% 100% / 0.28);
+}
+
+/* 10 · Desk — ruled lines behind the sheet, spiral edge, red margin rule. */
+[data-stage='notebook'] {
+  --stage-ground: hsl(35 32% 86%);
+  --stage-ground-2: hsl(38 42% 92%);
+  --stage-radius: 0.35rem;
+  --stage-lift: var(--stage-lift-2);
+}
+[data-stage='notebook'] .stage-texture {
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0 25px,
+    hsl(210 60% 45% / 0.14) 25px 26px
+  );
+}
+.dark [data-stage='notebook'] {
+  --stage-ground: hsl(32 14% 11%);
+  --stage-ground-2: hsl(34 12% 15%);
+}
+
+/* 11 · Folder — very clean neutral, generous air, manila tab. */
+[data-stage='resume'] {
+  --stage-ground: hsl(210 16% 93%);
+  --stage-ground-2: hsl(210 20% 98%);
+  --stage-radius: 0.3rem;
+  --stage-lift: var(--stage-lift-2);
+  --stage-air: clamp(2rem, 8cqi, 5rem);
+  --stage-sheet-max: 760px;
+}
+.dark [data-stage='resume'] {
+  --stage-ground: hsl(215 22% 10%);
+  --stage-ground-2: hsl(215 20% 14%);
+}
+
+/* 12 · Grid wall — a visible modular grid with interval markers. */
+[data-stage='swiss'] {
+  --stage-ground: hsl(0 0% 91%);
+  --stage-ground-2: hsl(0 0% 96%);
+  --stage-radius: 0;
+  --stage-lift: var(--stage-lift-1);
+  --stage-edge: hsl(0 0% 0% / 0.85);
+}
+[data-stage='swiss'] .stage-texture {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 63px, hsl(0 0% 0% / 0.1) 63px 64px),
+    repeating-linear-gradient(180deg, transparent 0 63px, hsl(0 0% 0% / 0.06) 63px 64px);
+}
+[data-stage='swiss'] .stage-light {
+  background: repeating-linear-gradient(90deg, hsl(0 78% 50% / 0.7) 0 2px, transparent 2px 64px);
+  height: 3px;
+  inset-block: auto 0;
+  top: auto;
+}
+.dark [data-stage='swiss'] {
+  --stage-ground: hsl(0 0% 9%);
+  --stage-ground-2: hsl(0 0% 13%);
+  --stage-edge: hsl(0 0% 100% / 0.8);
+}
+
+/* 13 · CRT — near-black, phosphor vignette, scanlines. */
+[data-stage='terminal'] {
+  --stage-ground: hsl(150 20% 3%);
+  --stage-ground-2: hsl(150 18% 6%);
+  --stage-radius: 0.4rem;
+  --stage-accent: hsl(140 80% 55%);
+  --stage-edge: hsl(140 70% 50% / 0.35);
+  --stage-lift: var(--stage-lift-3);
+}
+[data-stage='terminal'] .stage-texture {
+  background: repeating-linear-gradient(180deg, hsl(140 60% 60% / 0.05) 0 1px, transparent 1px 3px);
+}
+[data-stage='terminal'] .stage-light {
+  background: radial-gradient(100% 70% at 50% 45%, hsl(140 70% 45% / 0.14), transparent 70%);
+}
+
+/* 14 · Press — warm grey halftone dots, CMYK registration marks. */
+[data-stage='newsprint'] {
+  --stage-ground: hsl(40 8% 80%);
+  --stage-ground-2: hsl(40 10% 86%);
+  --stage-radius: 0;
+  --stage-lift: var(--stage-lift-1);
+  --stage-edge: hsl(40 8% 55% / 0.5);
+}
+[data-stage='newsprint'] .stage-texture {
+  background:
+    radial-gradient(circle at 2px 2px, hsl(0 0% 25% / 0.16) 1px, transparent 1.2px) 0 0 / 6px 6px,
+    radial-gradient(circle at 2px 2px, hsl(0 0% 25% / 0.1) 1px, transparent 1.2px) 3px 3px / 6px 6px;
+}
+.dark [data-stage='newsprint'] {
+  --stage-ground: hsl(40 6% 12%);
+  --stage-ground-2: hsl(40 6% 16%);
+}
+
+/* 15 · Gallery — deep ink ground with a soft centred spotlight. */
+[data-stage='elegant'] {
+  --stage-ground: hsl(230 26% 8%);
+  --stage-ground-2: hsl(230 22% 12%);
+  --stage-radius: 0;
+  --stage-lift: var(--stage-lift-3);
+  --stage-edge: color-mix(in oklab, var(--doc-accent, hsl(var(--primary))) 55%, transparent);
+  --stage-air: clamp(1.75rem, 7cqi, 4.5rem);
+}
+[data-stage='elegant'] .stage-light {
+  background: radial-gradient(70% 55% at 50% 32%, hsl(45 60% 88% / 0.14), transparent 70%);
+}
+[data-stage='elegant'] .stage-paper::after {
+  inset: 0.6rem;
+  border-radius: 0;
+}
+
+/* 16 · Sticker board — bright pastel blobs, chunky coloured shadow. */
+[data-stage='playful'] {
+  --stage-ground: hsl(210 60% 94%);
+  --stage-ground-2: hsl(48 90% 95%);
+  --stage-radius: 1.25rem;
+  --stage-edge: transparent;
+  --stage-lift:
+    0 10px 0 -2px color-mix(in oklab, var(--stage-accent) 45%, transparent),
+    0 18px 34px -12px rgb(2 6 23 / 0.28);
+}
+[data-stage='playful'] .stage-texture {
+  background:
+    radial-gradient(closest-side, hsl(340 90% 78% / 0.5), transparent) -6% 12% / 40% 34% no-repeat,
+    radial-gradient(closest-side, hsl(190 90% 72% / 0.5), transparent) 104% 30% / 44% 38% no-repeat,
+    radial-gradient(closest-side, hsl(50 95% 70% / 0.5), transparent) 20% 108% / 46% 36% no-repeat;
+}
+.dark [data-stage='playful'] {
+  --stage-ground: hsl(220 30% 12%);
+  --stage-ground-2: hsl(260 30% 15%);
+}
+
+/* 17 · Night desk — true dark with an ambient accent glow. */
+[data-stage='dark'] {
+  --stage-ground: hsl(225 30% 5%);
+  --stage-ground-2: hsl(225 26% 9%);
+  --stage-radius: 0.6rem;
+  --stage-lift: var(--stage-lift-3);
+  --stage-edge: transparent;
+}
+[data-stage='dark'] .stage-light {
+  background:
+    radial-gradient(
+      55% 40% at 50% 25%,
+      color-mix(in oklab, var(--stage-accent) 26%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(80% 50% at 50% 110%, hsl(260 70% 50% / 0.16), transparent 70%);
+}
+
+/* 18 · Accounting desk — muted ledger green with ruled gutter columns. */
+[data-stage='ledger'] {
+  --stage-ground: hsl(150 16% 82%);
+  --stage-ground-2: hsl(150 20% 89%);
+  --stage-radius: 0.15rem;
+  --stage-lift: var(--stage-lift-1);
+  --stage-edge: hsl(155 25% 45% / 0.5);
+}
+[data-stage='ledger'] .stage-texture {
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0 21px,
+    hsl(155 30% 35% / 0.1) 21px 22px
+  );
+}
+.dark [data-stage='ledger'] {
+  --stage-ground: hsl(155 14% 9%);
+  --stage-ground-2: hsl(155 12% 13%);
+}
+
+/* 19 · Void — almost nothing. */
+[data-stage='zen'] {
+  --stage-ground: hsl(var(--background));
+  --stage-ground-2: hsl(var(--background));
+  --stage-radius: 0;
+  --stage-edge: transparent;
+  --stage-lift: none;
+  --stage-air: clamp(2rem, 10cqi, 7rem);
+  --stage-sheet-max: 680px;
+}
+[data-stage='zen'] .stage-light {
+  background: radial-gradient(60% 45% at 50% 30%, hsl(var(--foreground) / 0.035), transparent 70%);
+}
+
+/* 20 · Interoffice — flat institutional ground with a ghost INTERNAL mark. */
+[data-stage='memo'] {
+  --stage-ground: hsl(205 14% 87%);
+  --stage-ground-2: hsl(205 16% 92%);
+  --stage-radius: 0;
+  --stage-lift: var(--stage-lift-1);
+  --stage-edge: hsl(205 14% 55% / 0.6);
+  --stage-air: clamp(2.25rem, 9cqi, 5rem);
+}
+[data-stage='memo'] .stage-mark {
+  transform: rotate(-3deg);
+  letter-spacing: 0.34em;
+  font-weight: 700;
+  color: hsl(0 62% 42% / 0.16);
+}
+.dark [data-stage='memo'] {
+  --stage-ground: hsl(205 16% 11%);
+  --stage-ground-2: hsl(205 14% 15%);
+}
+.dark [data-stage='memo'] .stage-mark {
+  color: hsl(0 70% 62% / 0.2);
+}
+
+/* 21 · Gallery wall — dramatic ground with a spotlight cone. */
+[data-stage='poster'] {
+  --stage-ground: hsl(260 22% 8%);
+  --stage-ground-2: hsl(258 20% 14%);
+  --stage-radius: 0;
+  --stage-lift: var(--stage-lift-3);
+  --stage-edge: hsl(0 0% 100% / 0.14);
+  --stage-air: clamp(1.75rem, 8cqi, 5rem);
+  --stage-sheet-max: 860px;
+}
+[data-stage='poster'] .stage-light {
+  background: conic-gradient(
+    from 200deg at 50% -20%,
+    transparent 0deg,
+    hsl(45 70% 85% / 0.16) 22deg,
+    hsl(45 70% 85% / 0.05) 40deg,
+    transparent 62deg
+  );
+}
+[data-stage='poster'] .stage-texture {
+  background: radial-gradient(140% 100% at 50% 120%, hsl(0 0% 0% / 0.5), transparent 60%);
+}
+
+/* ----------------------------------------------------------- page ruler -- */
+
+.stage-ruler {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.stage-ruler__break {
+  position: absolute;
+  inset-inline: calc(var(--stage-gutter) * -1);
+  height: 0;
+  border-top: 1px dashed hsl(var(--foreground) / 0.28);
+}
+
+.stage-ruler__no {
+  position: absolute;
+  inset-inline-end: 100%;
+  margin-inline-end: 0.5rem;
+  top: -0.7rem;
+  white-space: nowrap;
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--muted-foreground));
+}
+
+@media (max-width: 640px) {
+  .stage-ruler__no {
+    inset-inline-end: auto;
+    inset-inline-start: 0;
+    margin-inline: 0;
+    top: -1rem;
+  }
+}
+
+/* ---------------------------------------------------------- focus overlay -- */
+
+.stage-focus {
+  position: absolute;
+  z-index: 3;
+  border-radius: 0.35rem;
+  box-shadow: 0 0 0 9999px hsl(var(--background) / 0.72);
+  opacity: 0;
+  transition: opacity var(--m-base) var(--e-out);
+  pointer-events: none;
+}
+
+.stage-focus[data-active='true'] {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-focus {
+    transition: none;
+  }
+}
+
+/* ------------------------------------------------------------ stage label -- */
+
+.stage-label {
+  position: absolute;
+  z-index: 5;
+  bottom: 1rem;
+  inset-inline-start: 50%;
+  translate: -50% 0;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface) / 0.9);
+  padding: 0.3rem 0.85rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------- body -- */
+
+.stage-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  isolation: isolate;
+}
+
+.stage-paper--flush {
+  padding: 0;
+}
+
+/* ----------------------------------------------------------- skin palette -- */
+
+/* Toolbar labels and the zoom stepper respond to the preview pane, not the
+   window: the pane is often a third of the screen. */
+.stage-toolbar__label,
+.stage-toolbar__zoom {
+  display: none;
+}
+
+@container stage (min-width: 430px) {
+  .stage-toolbar__zoom {
+    display: flex;
+  }
+}
+
+@container stage (min-width: 540px) {
+  .stage-toolbar__label {
+    display: inline;
+  }
+}
+
+.skin-palette {
+  position: absolute;
+  inset-block: 3.25rem 1rem;
+  inset-inline-end: 0.75rem;
+  z-index: 30;
+  display: flex;
+  width: min(23rem, calc(100% - 1.5rem));
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 0.9rem;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface) / 0.97);
+  box-shadow: var(--shadow-xl);
+  backdrop-filter: blur(12px);
+  animation: skin-palette-in var(--m-base) var(--e-out);
+}
+
+@keyframes skin-palette-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.985);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skin-palette {
+    animation: none;
+  }
+}
+
+.skin-palette__head {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 0.6rem 0.6rem 0.6rem 0.75rem;
+}
+
+.skin-palette__search {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--input));
+  background: hsl(var(--background));
+  padding: 0.3rem 0.6rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.skin-palette__search:focus-within {
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.35);
+}
+
+.skin-palette__search input {
+  width: 100%;
+  border: 0;
+  background: none;
+  font-size: 0.8125rem;
+  color: hsl(var(--foreground));
+  outline: none;
+}
+
+.skin-palette__head > button {
+  display: flex;
+  height: 1.75rem;
+  width: 1.75rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.skin-palette__head > button:hover {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+.skin-palette__body {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 0.75rem 0.75rem;
+}
+
+.skin-palette__empty {
+  padding: 2rem 0;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.skin-palette__group + .skin-palette__group {
+  margin-top: 0.9rem;
+}
+
+.skin-palette__group h4 {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0 0 0.4rem;
+  background: hsl(var(--surface) / 0.97);
+  padding: 0.35rem 0 0.25rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+.skin-palette__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.skin-palette__hint {
+  flex-shrink: 0;
+  border-top: 1px solid hsl(var(--border));
+  padding: 0.45rem 0.75rem;
+  font-size: 0.6875rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* --- one card ------------------------------------------------------------ */
+
+.skin-card {
+  position: relative;
+  cursor: pointer;
+  border-radius: 0.6rem;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+  padding: 0.3rem;
+  transition:
+    border-color var(--m-quick) var(--e-out),
+    box-shadow var(--m-quick) var(--e-out),
+    transform var(--m-quick) var(--e-out);
+}
+
+.skin-card:hover,
+.skin-card:focus-visible {
+  outline: none;
+  transform: translateY(-1px);
+  border-color: hsl(var(--primary) / 0.6);
+  box-shadow: var(--shadow-md);
+}
+
+.skin-card--selected {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 1px hsl(var(--primary));
+}
+
+/* Hand affinity, shown only while the document is handwritten. Sits over the
+   miniature's corner so it never reflows the grid. */
+.skin-card__affinity {
+  position: absolute;
+  inset-block-start: 6px;
+  inset-inline-end: 6px;
+  z-index: 2;
+  max-width: calc(100% - 12px);
+  overflow: hidden;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+
+.skin-card__affinity--native {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.skin-card__affinity--adapts {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+.skin-card__affinity--discouraged {
+  background: hsl(var(--destructive) / 0.15);
+  color: hsl(var(--destructive));
+}
+
+.skin-card__paper {
+  position: relative;
+  display: block;
+  height: 74px;
+  overflow: hidden;
+  border-radius: 0.35rem;
+  background: hsl(var(--surface));
+  box-shadow: inset 0 0 0 1px hsl(var(--border) / 0.8);
+  /* Fade the last line so the crop reads as a crop, not a cut-off word. */
+  mask-image: linear-gradient(180deg, #000 62%, transparent 96%);
+}
+
+/* A real `.scripto-doc`, laid out at full size then scaled — so the card shows
+   the skin's actual heading, body and rule treatment. */
+.skin-card__doc {
+  position: absolute;
+  inset: 0;
+  width: 420px;
+  transform: scale(0.36);
+  transform-origin: top left;
+  padding: 14px 16px;
+  --doc-size: 30px;
+  --doc-leading: 1.45;
+  pointer-events: none;
+}
+
+.skin-card__doc h2 {
+  margin: 0 0 0.35em;
+}
+
+.skin-card__doc p {
+  margin: 0;
+}
+
+.skin-card__meta {
+  display: block;
+  padding: 0.35rem 0.15rem 0.1rem;
+}
+
+.skin-card__meta strong {
+  display: block;
+  overflow: hidden;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: hsl(var(--foreground));
+}
+
+.skin-card__meta em {
+  display: block;
+  font-size: 0.625rem;
+  font-style: normal;
+  color: hsl(var(--muted-foreground));
+}
+
+.skin-card--selected .skin-card__meta strong {
+  color: hsl(var(--primary));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skin-card {
+    transition: none;
+  }
+  .skin-card:hover,
+  .skin-card:focus-visible {
+    transform: none;
+  }
+}
+
+/* --- Business, academic, engineering and teaching stages ----------------- */
+
+/* 22 · Billing desk */
+[data-stage='invoice'] {
+  --stage-ground: hsl(210 18% 88%);
+  --stage-ground-2: hsl(210 22% 94%);
+  --stage-radius: 0.15rem;
+  --stage-lift: var(--stage-lift-1);
+  --stage-edge: hsl(210 18% 58% / 0.55);
+}
+[data-stage='invoice'] .stage-texture {
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0 23px,
+    hsl(210 30% 40% / 0.08) 23px 24px
+  );
+}
+.dark [data-stage='invoice'] {
+  --stage-ground: hsl(210 20% 10%);
+  --stage-ground-2: hsl(210 18% 14%);
+}
+
+/* 23 · Chambers */
+[data-stage='contract'] {
+  --stage-ground: hsl(30 10% 82%);
+  --stage-ground-2: hsl(30 12% 89%);
+  --stage-radius: 0;
+  --stage-lift: var(--stage-lift-2);
+  --stage-edge: hsl(30 12% 55% / 0.6);
+}
+[data-stage='contract'] .stage-texture {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 79px,
+    hsl(30 20% 35% / 0.05) 79px 80px
+  );
+}
+.dark [data-stage='contract'] {
+  --stage-ground: hsl(30 10% 10%);
+  --stage-ground-2: hsl(30 8% 14%);
+}
+
+/* 24 · Writing desk */
+[data-stage='letter'] {
+  --stage-ground: hsl(36 24% 87%);
+  --stage-ground-2: hsl(38 30% 93%);
+  --stage-radius: 0.1rem;
+  --stage-lift: var(--stage-lift-2);
+  --stage-air: clamp(1.75rem, 7cqi, 4rem);
+}
+.dark [data-stage='letter'] {
+  --stage-ground: hsl(34 12% 11%);
+  --stage-ground-2: hsl(36 10% 15%);
+}
+
+/* 25 · Reading room */
+[data-stage='journal'] {
+  --stage-ground: hsl(45 14% 87%);
+  --stage-ground-2: hsl(45 18% 93%);
+  --stage-radius: 0;
+  --stage-lift: var(--stage-lift-1);
+  --stage-sheet-max: 760px;
+}
+[data-stage='journal'] .stage-light {
+  background: radial-gradient(90% 60% at 50% 0%, hsl(45 40% 96% / 0.7), transparent 65%);
+}
+.dark [data-stage='journal'] {
+  --stage-ground: hsl(45 8% 10%);
+  --stage-ground-2: hsl(45 8% 14%);
+}
+
+/* 26 · Study */
+[data-stage='thesis'] {
+  --stage-ground: hsl(220 14% 82%);
+  --stage-ground-2: hsl(220 18% 90%);
+  --stage-radius: 0;
+  --stage-lift: var(--stage-lift-2);
+  --stage-air: clamp(2rem, 8cqi, 4.5rem);
+  --stage-sheet-max: 740px;
+}
+[data-stage='thesis'] .stage-light {
+  background: radial-gradient(60% 45% at 50% 12%, hsl(42 70% 88% / 0.4), transparent 72%);
+}
+.dark [data-stage='thesis'] {
+  --stage-ground: hsl(220 22% 9%);
+  --stage-ground-2: hsl(220 18% 13%);
+}
+
+/* 27 · Release board */
+[data-stage='changelog'] {
+  --stage-ground: hsl(232 24% 10%);
+  --stage-ground-2: hsl(232 20% 15%);
+  --stage-radius: 0.45rem;
+  --stage-lift: var(--stage-lift-3);
+  --stage-edge: hsl(232 20% 40% / 0.5);
+}
+[data-stage='changelog'] .stage-texture {
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0 47px,
+    hsl(232 40% 70% / 0.07) 47px 48px
+  );
+}
+
+/* 28 · Review table */
+[data-stage='rfc'] {
+  --stage-ground: hsl(200 16% 87%);
+  --stage-ground-2: hsl(200 20% 93%);
+  --stage-radius: 0;
+  --stage-lift: var(--stage-lift-1);
+  --stage-tick: hsl(200 25% 40% / 0.55);
+  --stage-edge: hsl(200 18% 55% / 0.55);
+}
+[data-stage='rfc'] .stage-texture {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 31px, hsl(200 25% 45% / 0.06) 31px 32px),
+    repeating-linear-gradient(90deg, transparent 0 31px, hsl(200 25% 45% / 0.06) 31px 32px);
+}
+.dark [data-stage='rfc'] {
+  --stage-ground: hsl(200 22% 10%);
+  --stage-ground-2: hsl(200 18% 14%);
+  --stage-tick: hsl(200 30% 70% / 0.6);
+}
+
+/* 29 · Lecture hall */
+[data-stage='handout'] {
+  --stage-ground: hsl(160 14% 88%);
+  --stage-ground-2: hsl(160 18% 94%);
+  --stage-radius: 0.5rem;
+  --stage-lift: var(--stage-lift-2);
+  --stage-sheet-max: 860px;
+}
+.dark [data-stage='handout'] {
+  --stage-ground: hsl(160 16% 9%);
+  --stage-ground-2: hsl(160 14% 13%);
+}
+
+/* --- Handwriting stages --------------------------------------------------- */
+
+/* 30 · Desk */
+[data-stage='handwritten'] {
+  --stage-ground: hsl(28 30% 62%);
+  --stage-ground-2: hsl(30 34% 72%);
+  --stage-radius: 0.2rem;
+  --stage-lift: var(--stage-lift-2);
+}
+[data-stage='handwritten'] .stage-texture {
+  background: repeating-linear-gradient(88deg, transparent 0 7px, hsl(25 40% 30% / 0.07) 7px 9px);
+}
+[data-stage='handwritten'] .stage-light {
+  background: radial-gradient(70% 55% at 50% 15%, hsl(45 80% 90% / 0.35), transparent 70%);
+}
+
+/* 31 · Nightstand */
+[data-stage='journal-hand'] {
+  --stage-ground: hsl(28 22% 12%);
+  --stage-ground-2: hsl(28 20% 18%);
+  --stage-radius: 0;
+  --stage-lift: var(--stage-lift-3);
+  --stage-air: clamp(1.75rem, 7cqi, 4rem);
+}
+[data-stage='journal-hand'] .stage-light {
+  background: radial-gradient(55% 45% at 50% 20%, hsl(38 80% 70% / 0.28), transparent 72%);
+}
+
+/* 32 · Field */
+[data-stage='field-notes'] {
+  --stage-ground: hsl(80 12% 58%);
+  --stage-ground-2: hsl(80 14% 66%);
+  --stage-radius: 0.15rem;
+  --stage-lift: var(--stage-lift-2);
+  --stage-sheet-max: 620px;
+  --stage-tick: hsl(80 20% 25% / 0.5);
+}
+[data-stage='field-notes'] .stage-texture {
+  background:
+    repeating-linear-gradient(45deg, transparent 0 3px, hsl(80 20% 25% / 0.06) 3px 4px),
+    repeating-linear-gradient(-45deg, transparent 0 3px, hsl(80 20% 25% / 0.05) 3px 4px);
+}
+
+/* 33 · Classroom */
+[data-stage='chalkboard'] {
+  --stage-ground: hsl(150 12% 14%);
+  --stage-ground-2: hsl(150 10% 20%);
+  --stage-radius: 0.2rem;
+  --stage-lift: var(--stage-lift-3);
+  --stage-edge: hsl(35 40% 60% / 0.5);
+}
+[data-stage='chalkboard'] .stage-texture {
+  background:
+    radial-gradient(closest-side, hsl(0 0% 100% / 0.05), transparent) 30% 70% / 40% 30% no-repeat,
+    radial-gradient(closest-side, hsl(0 0% 100% / 0.04), transparent) 75% 30% / 35% 28% no-repeat;
+}
+
+/* 34 · Correspondence desk */
+[data-stage='letter-hand'] {
+  --stage-ground: hsl(38 20% 84%);
+  --stage-ground-2: hsl(38 26% 91%);
+  --stage-radius: 0;
+  --stage-lift: var(--stage-lift-2);
+  --stage-air: clamp(1.75rem, 7cqi, 4.5rem);
+}
+[data-stage='letter-hand'] .stage-texture {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 2px, hsl(35 25% 40% / 0.05) 2px 3px),
+    repeating-linear-gradient(180deg, transparent 0 2px, hsl(35 25% 40% / 0.04) 2px 3px);
+}
+
+/* 35 · Schoolroom */
+[data-stage='worksheet'] {
+  --stage-ground: hsl(190 20% 88%);
+  --stage-ground-2: hsl(190 26% 94%);
+  --stage-radius: 0.1rem;
+  --stage-lift: var(--stage-lift-1);
+}
+.dark [data-stage='worksheet'] {
+  --stage-ground: hsl(190 18% 11%);
+  --stage-ground-2: hsl(190 16% 15%);
+}

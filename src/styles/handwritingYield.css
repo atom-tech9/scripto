@@ -1,0 +1,103 @@
+/*
+ * handwritingYield.css — where a skin's furniture must give way to a hand.
+ *
+ * Every skin decorates with machine-made parts: filled heading bars, boxed
+ * sidebars, hairline rules struck to the pixel. Those read as printing, and
+ * beside handwriting they read as a mistake rather than as contrast. Each rule
+ * here fires only when `data-hand` is present, so a typeset document keeps its
+ * skin exactly as designed.
+ *
+ * Written per §8.2 of the handwriting brief, after auditing all 35 skins. Most
+ * needed nothing: a skin that decorates with type and spacing alone already
+ * sits happily under a hand.
+ */
+
+/* --- Filled and heavy heading furniture ------------------------------------
+   A solid accent bar under a handwritten heading looks like the heading was
+   printed and the text written on top. A thinner rule in the ink reads as
+   something the writer drew. */
+
+.scripto-doc[data-skin='corporate'][data-hand] h1,
+.scripto-doc[data-skin='memo'][data-hand] h1,
+.scripto-doc[data-skin='letter'][data-hand] h1,
+.scripto-doc[data-skin='poster'][data-hand] h1 {
+  border-bottom-width: 1.5px;
+  border-bottom-color: var(--hw-ink-soft, var(--doc-accent));
+}
+
+/* A filled block behind the title inverts the text, which no pen can do. */
+.scripto-doc[data-skin='brutalist'][data-hand] h1 {
+  padding: 0;
+  background: none;
+  color: var(--hw-ink);
+}
+
+.scripto-doc[data-skin='corporate'][data-hand] h2::after {
+  background: var(--hw-ink-soft, currentColor);
+  height: 1.5px;
+  opacity: 0.7;
+}
+
+/* The kicker rule above a newsprint headline is a press artefact. */
+.scripto-doc[data-skin='newsprint'][data-hand] h1::before {
+  background: var(--hw-ink-soft, currentColor);
+  height: 1.5px;
+  opacity: 0.65;
+}
+
+/* Machine-struck section rules soften rather than disappear: the skin's rhythm
+   is the point, the hairline precision is not. */
+.scripto-doc[data-skin='swiss'][data-hand] hr,
+.scripto-doc[data-skin='brutalist'][data-hand] hr {
+  border-top-width: 1.5px;
+  border-top-color: var(--hw-ink-soft, currentColor);
+  opacity: 0.7;
+}
+
+/* Boxed sidebars and heavy leading rules on technical headings. */
+.scripto-doc[data-skin='technical'][data-hand] :is(h1, h2, h3) {
+  border-inline-start-width: 2px;
+  border-inline-start-color: var(--hw-ink-soft, var(--doc-accent));
+}
+
+.scripto-doc[data-skin='technical'][data-hand] blockquote,
+.scripto-doc[data-skin='technical'][data-hand] .callout {
+  border-radius: 3px;
+  border-color: var(--hw-ink-soft, var(--doc-rule));
+}
+
+/* --- Light-on-dark skins ---------------------------------------------------
+   A dark sheet with dark ink is simply unreadable. These skins force a light
+   ink whatever the picker says, because the alternative is a blank-looking
+   page -- and the sheet colour has to survive the print dialog's background
+   toggle or the same thing happens on paper. */
+
+.scripto-doc[data-skin='terminal'][data-hand],
+.scripto-doc[data-skin='dark'][data-hand],
+.scripto-doc[data-skin='chalkboard'][data-hand] {
+  --hw-ink: #eef2f6;
+  --hw-ink-soft: #b9c3ce;
+  color: var(--hw-ink);
+  --doc-fg: var(--hw-ink);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+/* --- Figures that must stay machine-set ------------------------------------
+   Handwritten numerals in a totals column are unreadable: the digits stop
+   lining up and a reader can no longer scan the column. The words around them
+   can be handwritten; the figures cannot. */
+
+.scripto-doc[data-skin='ledger'][data-hand] :is(td, th),
+.scripto-doc[data-skin='invoice'][data-hand] :is(td, th),
+.scripto-doc[data-skin='contract'][data-hand] :is(td, th) {
+  font-family: var(--doc-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The jitter has to go too, or the column edge frays even in a monospace face. */
+.scripto-doc[data-skin='ledger'][data-hand] :is(td, th) .hw,
+.scripto-doc[data-skin='invoice'][data-hand] :is(td, th) .hw,
+.scripto-doc[data-skin='contract'][data-hand] :is(td, th) .hw {
+  transform: none;
+}

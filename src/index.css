@@ -181,6 +181,15 @@
 }
 
 @layer utilities {
+  /* A scrolling strip that should not show a bar — the mobile toolbar, where a
+     visible scrollbar would eat a third of the row's height. */
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--border)) transparent;

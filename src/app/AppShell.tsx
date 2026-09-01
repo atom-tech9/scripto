@@ -3,6 +3,10 @@ import { Analytics } from '@vercel/analytics/react'
 import { MotionConfig } from 'motion/react'
 import '../styles/document.css'
 import '../styles/print.css'
+import '../styles/handwriting.css'
+import '../styles/stationery.css'
+import '../styles/handwritingDrawn.css'
+import '../styles/handwritingYield.css'
 import { AppRoot } from '../AppRoot'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { ConfirmProvider } from '../components/ui/Confirm'
@@ -24,7 +28,7 @@ export default function AppShell() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <ErrorBoundary fallbackTitle="Scripto hit an unexpected error.">
+      <ErrorBoundary>
         <LanguageProvider>
           <ModeProvider>
             <ConfirmProvider>

@@ -26,7 +26,6 @@ import {
   Pencil,
   Printer,
   Search,
-  Shield,
   ShieldCheck,
   Sparkles,
   Sun,
@@ -203,7 +202,7 @@ export function Header(props: HeaderProps) {
           value={props.viewMode === 'split' && !canSplit ? 'preview' : props.viewMode}
           onChange={props.onViewMode}
           size="sm"
-          className="shrink-0"
+          className="hidden shrink-0 lg:flex"
           options={viewOptions}
         />
 
@@ -254,20 +253,52 @@ export function Header(props: HeaderProps) {
           >
             {(close) => (
               <>
-                <MenuItem icon={<Download size={16} />} hint="⌘S" onClick={() => { close(); props.onExportPdf() }}>
+                <MenuItem
+                  icon={<Download size={16} />}
+                  hint="⌘S"
+                  onClick={() => {
+                    close()
+                    props.onExportPdf()
+                  }}
+                >
                   {t('action.exportPdf')}
                 </MenuItem>
-                <MenuItem icon={<Printer size={16} />} hint="⌘P" onClick={() => { close(); props.onPrintPreview() }}>
+                <MenuItem
+                  icon={<Printer size={16} />}
+                  hint="⌘P"
+                  onClick={() => {
+                    close()
+                    props.onPrintPreview()
+                  }}
+                >
                   {t('action.printPreview')}
                 </MenuItem>
                 <div className="my-1 h-px bg-border" />
-                <MenuItem icon={<FileType2 size={16} />} onClick={() => { close(); props.onExportWord() }}>
+                <MenuItem
+                  icon={<FileType2 size={16} />}
+                  onClick={() => {
+                    close()
+                    props.onExportWord()
+                  }}
+                >
                   {t('action.exportWord')}
                 </MenuItem>
-                <MenuItem icon={<FileCode2 size={16} />} onClick={() => { close(); props.onExportHtml() }}>
+                <MenuItem
+                  icon={<FileCode2 size={16} />}
+                  onClick={() => {
+                    close()
+                    props.onExportHtml()
+                  }}
+                >
                   {t('action.exportHtml')}
                 </MenuItem>
-                <MenuItem icon={<FileText size={16} />} onClick={() => { close(); props.onExportMarkdown() }}>
+                <MenuItem
+                  icon={<FileText size={16} />}
+                  onClick={() => {
+                    close()
+                    props.onExportMarkdown()
+                  }}
+                >
                   {t('action.exportMarkdown')}
                 </MenuItem>
               </>
@@ -305,67 +336,142 @@ export function Header(props: HeaderProps) {
                     {t('action.search')}
                   </MenuItem>
                   <div className="my-1 h-px bg-border" />
-                  <MenuItem icon={<Pencil size={16} />} onClick={() => { close(); setRenameOpen(true) }}>
+                  <MenuItem
+                    icon={<Pencil size={16} />}
+                    onClick={() => {
+                      close()
+                      setRenameOpen(true)
+                    }}
+                  >
                     {t('action.rename')}
                   </MenuItem>
-                  <MenuItem icon={<ListTree size={16} />} onClick={() => { close(); props.onToggleOutline() }}>
+                  <MenuItem
+                    icon={<ListTree size={16} />}
+                    onClick={() => {
+                      close()
+                      props.onToggleOutline()
+                    }}
+                  >
                     {t('action.outline')}
                   </MenuItem>
                   <div className="sm:hidden">
-                    <MenuItem icon={<TIcon size={16} />} onClick={() => { close(); props.onCycleTheme() }}>
+                    <MenuItem
+                      icon={<TIcon size={16} />}
+                      onClick={() => {
+                        close()
+                        props.onCycleTheme()
+                      }}
+                    >
                       {t('command.cycleTheme')}
                     </MenuItem>
                   </div>
                   <div className="sm:hidden">
-                    <MenuItem icon={<FolderOpen size={16} />} onClick={() => { close(); props.onOpenDocuments() }}>
+                    <MenuItem
+                      icon={<FolderOpen size={16} />}
+                      onClick={() => {
+                        close()
+                        props.onOpenDocuments()
+                      }}
+                    >
                       {t('action.documents')}
                     </MenuItem>
                   </div>
                   <div className="sm:hidden">
-                    <MenuItem icon={<FileText size={16} />} onClick={() => { close(); props.onOpenTemplates() }}>
+                    <MenuItem
+                      icon={<FileText size={16} />}
+                      onClick={() => {
+                        close()
+                        props.onOpenTemplates()
+                      }}
+                    >
                       {t('action.templates')}
                     </MenuItem>
                   </div>
                   <div className="sm:hidden">
-                    <MenuItem icon={<ShieldCheck size={16} />} onClick={() => { close(); props.onOpenSecurity() }}>
+                    <MenuItem
+                      icon={<ShieldCheck size={16} />}
+                      onClick={() => {
+                        close()
+                        props.onOpenSecurity()
+                      }}
+                    >
                       {t('action.security')}
                     </MenuItem>
                   </div>
                   <div className="md:hidden">
-                    <MenuItem icon={<Palette size={16} />} onClick={() => { close(); props.onOpenThemes() }}>
+                    <MenuItem
+                      icon={<Palette size={16} />}
+                      onClick={() => {
+                        close()
+                        props.onOpenThemes()
+                      }}
+                    >
                       {t('action.themes')}
                     </MenuItem>
                   </div>
                   <div className="md:hidden">
-                    <MenuItem icon={<Import size={16} />} onClick={() => { close(); props.onImport() }}>
+                    <MenuItem
+                      icon={<Import size={16} />}
+                      onClick={() => {
+                        close()
+                        props.onImport()
+                      }}
+                    >
                       {t('action.import')}
                     </MenuItem>
                   </div>
                   <div className="md:hidden">
-                    <MenuItem icon={<Maximize2 size={16} />} onClick={() => { close(); props.onToggleZen() }}>
+                    <MenuItem
+                      icon={<Maximize2 size={16} />}
+                      onClick={() => {
+                        close()
+                        props.onToggleZen()
+                      }}
+                    >
                       {t('action.focusMode')}
                     </MenuItem>
                   </div>
                   <div className="md:hidden">
                     <MenuItem
                       icon={<GraduationCap size={16} />}
-                      onClick={() => { close(); toggleMode() }}
+                      onClick={() => {
+                        close()
+                        toggleMode()
+                      }}
                     >
                       {isSimple ? t('mode.toStandard') : t('mode.toSimple')}
                     </MenuItem>
                   </div>
                   <div className="lg:hidden">
-                    <MenuItem icon={<Github size={16} />} onClick={() => { close(); props.onImportGithub() }}>
+                    <MenuItem
+                      icon={<Github size={16} />}
+                      onClick={() => {
+                        close()
+                        props.onImportGithub()
+                      }}
+                    >
                       {t('action.importGithub')}
                     </MenuItem>
                   </div>
                   <div className="lg:hidden">
-                    <MenuItem icon={<BookOpen size={16} />} onClick={() => { close(); props.onOpenFormattingHelp() }}>
+                    <MenuItem
+                      icon={<BookOpen size={16} />}
+                      onClick={() => {
+                        close()
+                        props.onOpenFormattingHelp()
+                      }}
+                    >
                       {t('action.formattingHelp')}
                     </MenuItem>
                   </div>
                   <div className="lg:hidden">
-                    <MenuItem icon={<Keyboard size={16} />} onClick={() => { close(); props.onShortcuts() }}>
+                    <MenuItem
+                      icon={<Keyboard size={16} />}
+                      onClick={() => {
+                        close()
+                        props.onShortcuts()
+                      }}
+                    >
                       {t('action.shortcuts')}
                     </MenuItem>
                   </div>
@@ -381,40 +487,6 @@ export function Header(props: HeaderProps) {
               )}
             </span>
           </IconAction>
-          <span className="hidden sm:inline-flex">
-            <IconAction label={t('action.security')} onClick={props.onOpenSecurity}>
-              {props.secured ? (
-                <ShieldCheck size={16} className="text-emerald-500" />
-              ) : (
-                <Shield size={16} />
-              )}
-            </IconAction>
-          </span>
-          <span className="hidden md:inline-flex">
-            <IconAction label={t('action.focusMode')} onClick={props.onToggleZen}>
-              <Maximize2 size={16} />
-            </IconAction>
-          </span>
-          <span className="hidden md:inline-flex">
-            <IconAction
-              label={isSimple ? t('mode.toStandard') : t('mode.toSimple')}
-              onClick={toggleMode}
-              active={isSimple}
-              pressed={isSimple}
-            >
-              <GraduationCap size={16} />
-            </IconAction>
-          </span>
-          <span className="hidden lg:inline-flex">
-            <IconAction label={t('action.formattingHelp')} onClick={props.onOpenFormattingHelp}>
-              <BookOpen size={16} />
-            </IconAction>
-          </span>
-          <span className="hidden lg:inline-flex">
-            <IconAction label={`${t('action.shortcuts')}  (⌘/)`} onClick={props.onShortcuts}>
-              <Keyboard size={16} />
-            </IconAction>
-          </span>
           <IconAction
             label={props.uiLang === 'ar' ? t('lang.toEnglish') : t('lang.toArabic')}
             onClick={props.onToggleLang}
@@ -431,6 +503,7 @@ export function Header(props: HeaderProps) {
               <TIcon size={16} />
             </IconAction>
           </span>
+          <span aria-hidden className="mx-0.5 h-5 w-px shrink-0 bg-border" />
           <IconAction
             label={t('action.settings')}
             onClick={props.onToggleConfig}
