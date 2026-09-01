@@ -3,6 +3,10 @@ import { logger } from '@/lib/logger'
 import { MARGIN_PRESETS } from '@/lib/constants'
 import { SKIN_VALUES } from '@/data/skins'
 import type {
+  HandConfig,
+  HandStyle,
+  InkStyle,
+  Stationery,
   CoverStyle,
   DocumentFont,
   DocumentSkin,
@@ -27,7 +31,7 @@ export interface ParsedDocument {
 const FRONTMATTER_RE = /^﻿?---\r?\n([\s\S]*?)\r?\n---\r?\n?/
 
 /** Lines consumed by the matched front-matter block (its newline count). */
-const countLines = (block: string): number => (block.match(/\r?\n/g)?.length ?? 0)
+const countLines = (block: string): number => block.match(/\r?\n/g)?.length ?? 0
 
 /**
  * Split a YAML front-matter block (`--- … ---`) from the Markdown body.
@@ -70,6 +74,61 @@ const FONT_VALUES: DocumentFont[] = ['serif', 'sans', 'lora', 'system', 'arabic'
 const DIRECTION_VALUES: TextDirection[] = ['auto', 'ltr', 'rtl']
 const COVER_STYLE_VALUES: CoverStyle[] = ['minimal', 'banner', 'centered']
 const MARGIN_VALUES: Array<Exclude<MarginPreset, 'custom'>> = ['narrow', 'normal', 'wide']
+const HAND_VALUES: HandStyle[] = [
+  'none',
+  'casual',
+  'neat-print',
+  'architect',
+  'marker',
+  'scratchy',
+  'rushed',
+  'script',
+  'copperplate',
+  'monoline',
+  'cursive',
+  'chalk',
+  'ruqaa',
+  'naskh-hand',
+  'diwani',
+  'custom',
+]
+const INK_VALUES: InkStyle[] = [
+  'ballpoint-blue',
+  'ballpoint-black',
+  'fountain-blue',
+  'fountain-black',
+  'pencil',
+  'marker',
+  'red-pen',
+  'gel',
+  'chalk-white',
+  'sepia',
+]
+const STATIONERY_VALUES: Stationery[] = [
+  'blank',
+  'ruled-college',
+  'ruled-wide',
+  'ruled-narrow',
+  'graph',
+  'dot-grid',
+  'isometric',
+  'legal-pad',
+  'engineering',
+  'cornell',
+  'index-card',
+  'steno',
+  'practice-lines',
+  'music-staff',
+  'parchment',
+  'kraft',
+  'graph-blue',
+]
+
+/** Clamp an untrusted 0..1 slider value, or fall back. */
+function asUnit(value: unknown, fallback: number): number {
+  const n = typeof value === 'number' ? value : Number(asString(value))
+  return Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : fallback
+}
 
 const HEX_COLOR_RE = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i
 
@@ -129,10 +188,34 @@ export function applyFrontmatter(config: PdfConfig, data: Record<string, unknown
     font && FONT_VALUES.includes(font as DocumentFont) ? (font as DocumentFont) : undefined
   const resolvedFont = validFont ?? (isArabic ? 'arabic' : config.font)
 
+  // Handwriting. `stationery` and `paper` collide, so the paper size wins and a
+  // stationery must be named explicitly.
+  const handName = asString(data.hand)?.toLowerCase()
+  const inkName = asString(data.ink)?.toLowerCase()
+  const stationeryName = asString(data.stationery ?? data.notepaper)?.toLowerCase()
+  const hand: HandConfig = {
+    ...config.hand,
+    hand:
+      handName && HAND_VALUES.includes(handName as HandStyle)
+        ? (handName as HandStyle)
+        : config.hand.hand,
+    ink:
+      inkName && INK_VALUES.includes(inkName as InkStyle) ? (inkName as InkStyle) : config.hand.ink,
+    stationery:
+      stationeryName && STATIONERY_VALUES.includes(stationeryName as Stationery)
+        ? (stationeryName as Stationery)
+        : config.hand.stationery,
+    neatness: asUnit(data.neatness, config.hand.neatness),
+    aging: asUnit(data.aging, config.hand.aging),
+    drawnElements: asBool(data.drawn ?? data.drawnElements) ?? config.hand.drawnElements,
+  }
+
   return {
     ...config,
     meta,
-    paperSize: paper && PAPER_VALUES.includes(paper as PaperSize) ? (paper as PaperSize) : config.paperSize,
+    hand,
+    paperSize:
+      paper && PAPER_VALUES.includes(paper as PaperSize) ? (paper as PaperSize) : config.paperSize,
     font: resolvedFont,
     direction,
     skin: skin && SKIN_VALUES.includes(skin as DocumentSkin) ? (skin as DocumentSkin) : config.skin,

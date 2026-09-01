@@ -54,7 +54,87 @@ export type DocumentSkin =
   | 'rfc'
   | 'handout'
 
-export type MarginPreset = 'narrow' | 'normal' | 'wide' | 'custom'
+/**
+ * The handwriting axis. Deliberately not a skin: handwriting is
+ * hand x ink x stationery x neatness x slant x variation x aging, which would
+ * need dozens of skin entries. As its own axis it composes with all of them.
+ */
+export type HandStyle =
+  | 'none'
+  // Latin — everyday
+  | 'casual'
+  | 'neat-print'
+  | 'architect'
+  | 'marker'
+  | 'scratchy'
+  | 'rushed'
+  // Latin — expressive
+  | 'script'
+  | 'copperplate'
+  | 'monoline'
+  | 'cursive'
+  | 'chalk'
+  // Arabic
+  | 'ruqaa'
+  | 'naskh-hand'
+  | 'diwani'
+  // User-supplied (see the handwriting brief §7)
+  | 'custom'
+
+export type InkStyle =
+  | 'ballpoint-blue'
+  | 'ballpoint-black'
+  | 'fountain-blue'
+  | 'fountain-black'
+  | 'pencil'
+  | 'marker'
+  | 'red-pen'
+  | 'gel'
+  | 'chalk-white'
+  | 'sepia'
+
+export type Stationery =
+  | 'blank'
+  | 'ruled-college'
+  | 'ruled-wide'
+  | 'ruled-narrow'
+  | 'graph'
+  | 'dot-grid'
+  | 'isometric'
+  | 'legal-pad'
+  | 'engineering'
+  | 'cornell'
+  | 'index-card'
+  | 'steno'
+  | 'practice-lines'
+  | 'music-staff'
+  | 'parchment'
+  | 'kraft'
+  | 'graph-blue'
+
+/** How far the variation engine goes. Higher tiers cost DOM weight. */
+export type HandVariation = 'none' | 'word' | 'expressive'
+
+export interface HandConfig {
+  readonly hand: HandStyle
+  /** A second hand for headings — real notes title more carefully than they write. */
+  readonly headingHand: HandStyle | 'same'
+  readonly ink: InkStyle
+  readonly stationery: Stationery
+  /** 0 = careful and even, 1 = rushed and messy. Scales every jitter amplitude. */
+  readonly neatness: number
+  /** -1 = left-handed back-slant, 0 = upright, 1 = strong right lean. */
+  readonly slant: number
+  readonly variation: HandVariation
+  /** 0 = fresh, 1 = yellowed paper, faded ink, fold creases. */
+  readonly aging: number
+  /** Hand-drawn rules, bullets, checkboxes, underlines and table borders. */
+  readonly drawnElements: boolean
+  /** A stable seed, so the jitter never changes under the same document. */
+  readonly seed: number
+}
+
+export type MarginPreset = 'narrow' | 'normal' | 'wide' | 'custom' 
 
 /** Physical page dimensions expressed in millimetres. */
 export interface PageDimensions {
@@ -126,6 +206,9 @@ export interface PdfConfig {
   readonly direction: TextDirection
   readonly accentColor: string
   readonly customCss: string
+
+  /** The handwriting axis. `hand: 'none'` must stay a total no-op. */
+  readonly hand: HandConfig
 
   readonly meta: DocumentMeta
 }

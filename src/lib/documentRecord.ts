@@ -50,6 +50,7 @@ export function normaliseConfig(raw: unknown): PdfConfig {
       version: asText(meta.version, DEFAULT_CONFIG.meta.version),
       docType: asText(meta.docType, DEFAULT_CONFIG.meta.docType),
     },
+    hand: { ...DEFAULT_CONFIG.hand, ...(partial.hand && typeof partial.hand === 'object' ? partial.hand : {}) },
     margins: { ...DEFAULT_CONFIG.margins, ...(partial.margins ?? {}) },
     customSize: { ...DEFAULT_CONFIG.customSize, ...(partial.customSize ?? {}) },
   }

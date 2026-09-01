@@ -1031,33 +1031,10 @@
   padding: 0;
 }
 
-/* -------------------------------------------------------------- skin rail -- */
+/* ----------------------------------------------------------- skin palette -- */
 
-.stage-rail {
-  position: relative;
-  z-index: 2;
-  display: none;
-  flex-shrink: 0;
-  transition: width var(--m-base) var(--e-out);
-}
-
-.stage-rail--open {
-  width: 92px;
-}
-
-.stage-rail--closed {
-  width: 30px;
-}
-
-/* The rail only earns its width once the pane itself is wide enough. */
-@container stage (min-width: 600px) {
-  .stage-rail {
-    display: flex;
-  }
-}
-
-/* Toolbar labels and the zoom stepper collapse on a narrow pane, for the
-   same reason: these respond to the preview pane, not the window. */
+/* Toolbar labels and the zoom stepper respond to the preview pane, not the
+   window: the pane is often a third of the screen. */
 .stage-toolbar__label,
 .stage-toolbar__zoom {
   display: none;
@@ -1075,175 +1052,227 @@
   }
 }
 
-.stage-rail__inner {
+.skin-palette {
+  position: absolute;
+  inset-block: 3.25rem 1rem;
+  inset-inline-end: 0.75rem;
+  z-index: 30;
   display: flex;
-  width: 100%;
-  min-height: 0;
+  width: min(23rem, calc(100% - 1.5rem));
   flex-direction: column;
-  border-inline-start: 1px solid hsl(var(--border) / 0.7);
-  background: hsl(var(--surface) / 0.72);
-  backdrop-filter: blur(8px);
+  overflow: hidden;
+  border-radius: 0.9rem;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface) / 0.97);
+  box-shadow: var(--shadow-xl);
+  backdrop-filter: blur(12px);
+  animation: skin-palette-in var(--m-base) var(--e-out);
 }
 
-.stage-rail__toggle {
+@keyframes skin-palette-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.985);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skin-palette {
+    animation: none;
+  }
+}
+
+.skin-palette__head {
   display: flex;
-  height: 2rem;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 0.6rem 0.6rem 0.6rem 0.75rem;
+}
+
+.skin-palette__search {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--input));
+  background: hsl(var(--background));
+  padding: 0.3rem 0.6rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.skin-palette__search:focus-within {
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.35);
+}
+
+.skin-palette__search input {
+  width: 100%;
+  border: 0;
+  background: none;
+  font-size: 0.8125rem;
+  color: hsl(var(--foreground));
+  outline: none;
+}
+
+.skin-palette__head > button {
+  display: flex;
+  height: 1.75rem;
+  width: 1.75rem;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid hsl(var(--border) / 0.7);
+  border-radius: 0.5rem;
   color: hsl(var(--muted-foreground));
-  transition: color var(--m-quick) var(--e-out);
 }
 
-.stage-rail__toggle:hover {
+.skin-palette__head > button:hover {
   background: hsl(var(--muted));
   color: hsl(var(--foreground));
 }
 
-.stage-rail__list {
-  display: flex;
+.skin-palette__body {
   min-height: 0;
   flex: 1;
-  flex-direction: column;
-  gap: 0.75rem;
   overflow-y: auto;
-  padding: 0.5rem 0.4rem 1rem;
-  /* Fade the ends so a long list reads as scrollable. */
-  mask-image: linear-gradient(180deg, transparent, #000 12px, #000 calc(100% - 16px), transparent);
+  padding: 0.5rem 0.75rem 0.75rem;
 }
 
-.stage-rail__group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.stage-rail__groupLabel {
-  padding-inline-start: 0.15rem;
-  font-size: 0.5625rem;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: hsl(var(--muted-foreground) / 0.85);
-}
-
-/* --- one thumbnail ------------------------------------------------------- */
-
-.skin-thumb {
-  position: relative;
-  cursor: pointer;
-  border-radius: 0.4rem;
-  padding: 2px;
-  transition:
-    transform var(--m-quick) var(--e-out),
-    box-shadow var(--m-quick) var(--e-out);
-}
-
-.skin-thumb:hover,
-.skin-thumb:focus-visible {
-  outline: none;
-  transform: translateY(-1px);
-  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.45);
-}
-
-.skin-thumb--selected {
-  box-shadow: 0 0 0 2px hsl(var(--primary));
-}
-
-/* The sheet the miniature sits on. */
-.skin-thumb__paper {
-  position: relative;
-  display: block;
-  height: 52px;
-  overflow: hidden;
-  border-radius: 0.25rem;
-  border: 1px solid hsl(var(--border));
-  background: hsl(var(--surface));
-}
-
-/* A real `.scripto-doc`, scaled down — so the thumbnail is the skin itself,
-   not a drawing of it. Laid out at full size then shrunk, because scaling type
-   keeps the proportions the skin actually specifies. */
-.skin-thumb__doc {
-  position: absolute;
-  inset: 0;
-  width: 340px;
-  transform: scale(0.24);
-  transform-origin: top left;
-  padding: 14px 16px;
-  --doc-size: 34px;
-  --doc-leading: 1.5;
-  pointer-events: none;
-}
-
-.skin-thumb__doc h2 {
-  margin: 0 0 0.3em;
-}
-
-.skin-thumb__doc p {
-  margin: 0;
-}
-
-.skin-thumb__name {
-  display: block;
-  overflow: hidden;
-  padding-top: 0.2rem;
-  font-size: 0.5625rem;
-  font-weight: 500;
-  line-height: 1.2;
+.skin-palette__empty {
+  padding: 2rem 0;
   text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 0.8125rem;
   color: hsl(var(--muted-foreground));
 }
 
-.skin-thumb--selected .skin-thumb__name {
-  font-weight: 700;
-  color: hsl(var(--primary));
+.skin-palette__group + .skin-palette__group {
+  margin-top: 0.9rem;
 }
 
-/* Full name and stage, floated clear of the rail on hover. */
-.skin-thumb__flyout {
-  position: absolute;
-  inset-inline-end: calc(100% + 0.5rem);
+.skin-palette__group h4 {
+  position: sticky;
   top: 0;
-  z-index: 3;
-  display: none;
-  flex-direction: column;
-  border-radius: 0.5rem;
+  z-index: 1;
+  margin: 0 0 0.4rem;
+  background: hsl(var(--surface) / 0.97);
+  padding: 0.35rem 0 0.25rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+.skin-palette__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.skin-palette__hint {
+  flex-shrink: 0;
+  border-top: 1px solid hsl(var(--border));
+  padding: 0.45rem 0.75rem;
+  font-size: 0.6875rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* --- one card ------------------------------------------------------------ */
+
+.skin-card {
+  cursor: pointer;
+  border-radius: 0.6rem;
   border: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+  padding: 0.3rem;
+  transition:
+    border-color var(--m-quick) var(--e-out),
+    box-shadow var(--m-quick) var(--e-out),
+    transform var(--m-quick) var(--e-out);
+}
+
+.skin-card:hover,
+.skin-card:focus-visible {
+  outline: none;
+  transform: translateY(-1px);
+  border-color: hsl(var(--primary) / 0.6);
+  box-shadow: var(--shadow-md);
+}
+
+.skin-card--selected {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 1px hsl(var(--primary));
+}
+
+.skin-card__paper {
+  position: relative;
+  display: block;
+  height: 74px;
+  overflow: hidden;
+  border-radius: 0.35rem;
   background: hsl(var(--surface));
-  padding: 0.35rem 0.6rem;
-  box-shadow: var(--shadow-lg);
-  white-space: nowrap;
+  box-shadow: inset 0 0 0 1px hsl(var(--border) / 0.8);
+  /* Fade the last line so the crop reads as a crop, not a cut-off word. */
+  mask-image: linear-gradient(180deg, #000 62%, transparent 96%);
+}
+
+/* A real `.scripto-doc`, laid out at full size then scaled — so the card shows
+   the skin's actual heading, body and rule treatment. */
+.skin-card__doc {
+  position: absolute;
+  inset: 0;
+  width: 420px;
+  transform: scale(0.36);
+  transform-origin: top left;
+  padding: 14px 16px;
+  --doc-size: 30px;
+  --doc-leading: 1.45;
   pointer-events: none;
 }
 
-.skin-thumb__flyout strong {
+.skin-card__doc h2 {
+  margin: 0 0 0.35em;
+}
+
+.skin-card__doc p {
+  margin: 0;
+}
+
+.skin-card__meta {
+  display: block;
+  padding: 0.35rem 0.15rem 0.1rem;
+}
+
+.skin-card__meta strong {
+  display: block;
+  overflow: hidden;
   font-size: 0.75rem;
   font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: hsl(var(--foreground));
 }
 
-.skin-thumb__flyout em {
+.skin-card__meta em {
+  display: block;
   font-size: 0.625rem;
   font-style: normal;
   color: hsl(var(--muted-foreground));
 }
 
-.skin-thumb:hover .skin-thumb__flyout,
-.skin-thumb:focus-visible .skin-thumb__flyout {
-  display: flex;
+.skin-card--selected .skin-card__meta strong {
+  color: hsl(var(--primary));
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stage-rail,
-  .skin-thumb {
+  .skin-card {
     transition: none;
   }
-  .skin-thumb:hover,
-  .skin-thumb:focus-visible {
+  .skin-card:hover,
+  .skin-card:focus-visible {
     transform: none;
   }
 }

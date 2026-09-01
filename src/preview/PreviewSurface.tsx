@@ -22,10 +22,11 @@ import { transitionQuick } from '@/lib/motion'
 import { StageBackdrop } from './stage/StageBackdrop'
 import { PaperFrame } from './stage/PaperFrame'
 import { stageFor } from './stage/stages'
+import { SKIN_OPTIONS } from '@/data/skins'
 import { isPreviewMode, isStageLevel, type PreviewMode, type StageLevel } from './stage/types'
 import { useStageTransition } from './motion/useStageTransition'
 import { PreviewToolbar } from './chrome/PreviewToolbar'
-import { SkinRail } from './chrome/SkinRail'
+import { SkinPalette } from './chrome/SkinPalette'
 import { PageRuler } from './chrome/PageRuler'
 import { FocusOverlay } from './chrome/FocusOverlay'
 import { PreviewEmpty } from './chrome/PreviewEmpty'
@@ -129,8 +130,11 @@ export const PreviewSurface = forwardRef<PreviewHandle, PreviewSurfaceProps>(
     const level: StageLevel =
       stored === 'full' && (forceMinimal || mode === 'focus') ? 'minimal' : stored
 
-    // Hovering the rail previews a skin without ever writing to `config`.
+    // Hovering a card previews a skin without ever writing to `config`.
     const [hoverSkin, setHoverSkin] = useState<DocumentSkin | null>(null)
+    const [skinsOpen, setSkinsOpen] = useState(false)
+    const closeSkins = useCallback(() => setSkinsOpen(false), [])
+    const toggleSkins = useCallback(() => setSkinsOpen((value) => !value), [])
     const activeSkin = hoverSkin ?? config.skin
     const viewConfig = useMemo<PdfConfig>(
       () => (hoverSkin ? { ...config, skin: hoverSkin } : config),
@@ -264,6 +268,13 @@ export const PreviewSurface = forwardRef<PreviewHandle, PreviewSurfaceProps>(
           onResetZoom={() => setZoom(1)}
           stageLevel={stored}
           onStageLevel={setStoredLevel}
+          skinsOpen={skinsOpen}
+          onToggleSkins={onSkinChange ? toggleSkins : undefined}
+          skinName={
+            t(
+              SKIN_OPTIONS.find((o) => o.value === activeSkin)?.labelKey ?? 'skin.modern.label',
+            ).split(' — ')[0]
+          }
           hasFrontMatter={hasFrontMatter}
           showFrontMatter={showFrontMatter}
           onToggleFrontMatter={() => setShowFrontMatter((value) => !value)}
@@ -383,16 +394,18 @@ export const PreviewSurface = forwardRef<PreviewHandle, PreviewSurfaceProps>(
               </PaperFrame>
             </div>
           </div>
-
-          {onSkinChange && (
-            <SkinRail
-              skin={config.skin}
-              accentColor={viewConfig.accentColor}
-              onPreview={previewSkin}
-              onCommit={commitSkin}
-            />
-          )}
         </div>
+
+        {onSkinChange && (
+          <SkinPalette
+            open={skinsOpen}
+            onClose={closeSkins}
+            skin={config.skin}
+            accentColor={viewConfig.accentColor}
+            onPreview={previewSkin}
+            onCommit={commitSkin}
+          />
+        )}
 
         <AnimatePresence>
           {transition.labelVisible && (

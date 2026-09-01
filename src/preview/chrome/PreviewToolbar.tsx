@@ -10,6 +10,7 @@ import {
   Link2,
   Link2Off,
   Minus,
+  Palette,
   Plus,
 } from 'lucide-react'
 import { Menu, MenuItem } from '@/components/ui/Menu'
@@ -26,6 +27,10 @@ interface PreviewToolbarProps {
   onResetZoom: () => void
   stageLevel: StageLevel
   onStageLevel: (level: StageLevel) => void
+  /** Skin palette. Omit `onToggleSkins` to hide the entry point entirely. */
+  skinsOpen: boolean
+  onToggleSkins?: () => void
+  skinName: string
   /** Rendered only when the document actually has a cover or contents page. */
   hasFrontMatter: boolean
   showFrontMatter: boolean
@@ -62,6 +67,9 @@ export const PreviewToolbar = memo(function PreviewToolbar({
   onResetZoom,
   stageLevel,
   onStageLevel,
+  skinsOpen,
+  onToggleSkins,
+  skinName,
   hasFrontMatter,
   showFrontMatter,
   onToggleFrontMatter,
@@ -102,6 +110,24 @@ export const PreviewToolbar = memo(function PreviewToolbar({
       </div>
 
       <div className="ms-auto flex items-center gap-1 sm:gap-1.5">
+        {onToggleSkins && (
+          <Tooltip label={t('preview.rail.title')} side="bottom">
+            <button
+              type="button"
+              onClick={onToggleSkins}
+              aria-expanded={skinsOpen}
+              className={cn(
+                'flex h-8 max-w-[9rem] items-center gap-1.5 rounded-lg border px-2 text-xs font-medium transition-colors',
+                skinsOpen
+                  ? 'border-primary/30 bg-primary/10 text-primary'
+                  : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground',
+              )}
+            >
+              <Palette size={14} className="shrink-0" />
+              <span className="stage-toolbar__label truncate">{skinName}</span>
+            </button>
+          </Tooltip>
+        )}
         <div className="stage-toolbar__zoom items-center gap-0.5 rounded-lg border border-border bg-background p-0.5">
           <button
             type="button"

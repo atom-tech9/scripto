@@ -1,4 +1,5 @@
 import type {
+  HandConfig,
   Margins,
   MarginPreset,
   PageDimensions,
@@ -39,6 +40,25 @@ export const STORAGE_KEYS = {
   editorTheme: 'scripto:editor-theme',
 } as const
 
+/**
+ * Handwriting off. Every field still has a value so the UI has something to
+ * show the moment it is switched on, but `hand: 'none'` short-circuits the
+ * plugin, the stylesheet and the font loader — a user who never touches
+ * handwriting downloads nothing for it.
+ */
+export const DEFAULT_HAND: HandConfig = {
+  hand: 'none',
+  headingHand: 'same',
+  ink: 'ballpoint-blue',
+  stationery: 'blank',
+  neatness: 0.5,
+  slant: 0,
+  variation: 'word',
+  aging: 0,
+  drawnElements: false,
+  seed: 1,
+}
+
 export const DEFAULT_CONFIG: PdfConfig = {
   paperSize: 'a4',
   orientation: 'portrait',
@@ -72,6 +92,8 @@ export const DEFAULT_CONFIG: PdfConfig = {
   direction: 'auto',
   accentColor: '#6366f1',
   customCss: '',
+
+  hand: DEFAULT_HAND,
 
   meta: {
     title: 'Untitled Document',
