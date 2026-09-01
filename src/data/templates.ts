@@ -2332,43 +2332,49 @@ Awarded by **{Issuing Organization}**
     descKey: 'template.menu.desc',
     emoji: '🍽️',
     content: `---
-title: "{Restaurant Name} — Menu"
-author: "{Restaurant Name}"
+title: Fern & Ash — Menu
+author: Fern & Ash
 subject: Food & drink menu
 skin: editorial
 accent: '#9333ea'
 ---
 
-# {Restaurant Name}
+# Fern & Ash
 
-*{One elegant line on the cuisine, sourcing, or philosophy.}*
+*Vegetables first, cooked over fire. Everything from within sixty miles, or not at all.*
 
 ## Starters
 
-- **{Burrata & heirloom tomato}** — {basil oil, sourdough crisp} · **{\\$14}**
-- **{Charred octopus}** — {smoked paprika, salsa verde} · **{\\$16}**
-- **{Soup of the day}** — {ask your server} · **{\\$9}**
-- **{Garden salad}** — {seasonal leaves, sherry vinaigrette} · **{\\$11}**
+- **Burrata & heirloom tomato** — basil oil, sourdough crisp · **£14**
+- **Charred hispi cabbage** — smoked paprika, salsa verde, hazelnut · **£12**
+- **Soup of the day** — ask your server · **£9**
+- **Garden salad** — seasonal leaves, sherry vinaigrette · **£11**
 
 ## Mains
 
-- **{Pan-seared sea bass}** — {fennel, citrus beurre blanc} · **{\\$28}**
-- **{Wild mushroom risotto}** — {parmesan, truffle oil} *(v)* · **{\\$22}**
-- **{Dry-aged ribeye}** — {confit potato, bordelaise} · **{\\$38}**
-- **{Handmade tagliatelle}** — {slow-braised ragù} · **{\\$24}**
+- **Pan-seared sea bass** — fennel, citrus beurre blanc · **£28**
+- **Wild mushroom risotto** — aged parmesan, truffle oil *(v)* · **£22**
+- **Dry-aged ribeye, 300g** — confit potato, bordelaise · **£38**
+- **Handmade tagliatelle** — slow-braised beef ragù · **£24**
+
+## Puddings
+
+- **Burnt basque cheesecake** — poached rhubarb · **£9**
+- **Dark chocolate delice** — sea salt, olive oil *(vg)* · **£10**
 
 ## Drinks
 
-| Drink                | Price |
-| :------------------- | ----: |
-| {House red / white}  | {\\$11} |
-| {Craft beer}         | {\\$8}  |
-| {Espresso martini}   | {\\$15} |
-| {Fresh lemonade}     | {\\$6}  |
-| {Espresso / Cortado} | {\\$4}  |
+| Drink | Price |
+| :---- | ----: |
+| House red / white, 175ml | £11 |
+| Craft beer, 330ml | £8 |
+| Espresso martini | £15 |
+| Fresh lemonade | £6 |
+| Espresso / cortado | £4 |
 
-*{(v) vegetarian. Please inform us of any allergies. A {12%} service charge applies to
-parties of {6} or more.}*
+*(v) vegetarian · (vg) vegan. Please tell us about any allergies — our kitchen
+handles nuts, gluten and dairy. A 12.5% service charge applies to parties of six
+or more, and goes in full to the team.*
 `,
   },
   {
@@ -2479,6 +2485,292 @@ or {Phone}. Please indicate any dietary requirements.
 | {9:15 PM} | {Dancing & dessert}           |
 
 *{We look forward to celebrating with you.}*
+`,
+  },
+  {
+    id: 'handwritten-letter',
+    name: 'Handwritten Letter',
+    description: 'A personal letter in your own hand.',
+    nameKey: 'template.handwritten-letter.name',
+    descKey: 'template.handwritten-letter.desc',
+    emoji: '✍️',
+    content: `---
+title: A letter home
+skin: letter-hand
+hand: casual
+ink: fountain-blue
+stationery: ruled-college
+neatness: 0.45
+---
+
+# Dear Mum,
+
+I meant to write weeks ago and then the weeks did what they always do.
+
+The flat is finally warm. I found a second-hand desk at the market on Sunday —
+oak, a bit scarred, far too heavy for one person, which I discovered halfway up
+the stairs. It sits under the window now and I have written more in four days at
+it than in the month before.
+
+Work is steadier than it was. I stopped saying yes to everything, which turns
+out to be the whole trick.
+
+> I keep meaning to ask about Grandad's letters. Are they still in the blue tin?
+
+I will ring on Sunday. Give the dog an undeserved biscuit from me.
+
+Love,
+Sam
+`,
+  },
+  {
+    id: 'journal-entry',
+    name: 'Journal Entry',
+    description: 'A dated diary page on aged paper.',
+    nameKey: 'template.journal-entry.name',
+    descKey: 'template.journal-entry.desc',
+    emoji: '📔',
+    content: `---
+title: Journal
+skin: journal-hand
+hand: cursive
+ink: sepia
+stationery: parchment
+aging: 0.3
+neatness: 0.35
+---
+
+# Tuesday, 14 March
+
+Woke before the alarm for the first time in months and did not immediately
+reach for the phone. Small thing. Felt enormous.
+
+Walked to the far end of the harbour where the boats are still hauled out for
+winter. Two men were scraping a hull and arguing cheerfully about football. The
+light came in low and hard off the water.
+
+I have been treating rest as something to be earned. I am fairly sure that is
+backwards.
+
+> "Do not ask what the world needs. Ask what makes you come alive."
+
+Tomorrow: finish the third chapter, ring the dentist, buy bread.
+`,
+  },
+  {
+    id: 'lecture-notes',
+    name: 'Lecture Notes (Cornell)',
+    description: 'Cue column, notes, and a summary band.',
+    nameKey: 'template.lecture-notes.name',
+    descKey: 'template.lecture-notes.desc',
+    emoji: '📓',
+    content: `---
+title: Lecture notes
+skin: handwritten
+hand: neat-print
+ink: ballpoint-blue
+stationery: cornell
+neatness: 0.55
+---
+
+# Photosynthesis — Lecture 4
+
+## Cues
+
+- Two stages?
+- Where does O₂ come from?
+- Why is the Calvin cycle "light-independent"?
+
+## Notes
+
+Photosynthesis converts light energy into chemical energy. It runs in two
+stages, and only the first needs light directly.
+
+1. **Light-dependent** — in the thylakoid membrane. Water is split, oxygen is
+   released, ATP and NADPH are produced.
+2. **Calvin cycle** — in the stroma. Uses that ATP and NADPH to fix CO₂ into a
+   three-carbon sugar. Called light-independent, but it stops in the dark once
+   the ATP runs out.
+
+| Stage | Location | Products |
+| :---- | :------- | :------- |
+| Light-dependent | Thylakoid | ATP, NADPH, O₂ |
+| Calvin cycle | Stroma | G3P (sugar) |
+
+:::note
+The oxygen comes from **water**, not carbon dioxide. This is on every past paper.
+:::
+
+## Summary
+
+Light splits water and charges the cell's batteries; the Calvin cycle spends
+them building sugar. "Light-independent" means indirectly powered, not unpowered.
+`,
+  },
+  {
+    id: 'recipe-card',
+    name: 'Recipe Card',
+    description: 'An index card in a kitchen hand.',
+    nameKey: 'template.recipe-card.name',
+    descKey: 'template.recipe-card.desc',
+    emoji: '🍳',
+    content: `---
+title: Lemon & thyme roast chicken
+skin: handwritten
+hand: marker
+ink: ballpoint-black
+stationery: index-card
+neatness: 0.5
+---
+
+# Lemon & Thyme Roast Chicken
+
+*Serves 4 · 15 min prep · 1 hr 20 in the oven*
+
+## You need
+
+- 1 chicken, about 1.6 kg
+- 1 lemon, halved
+- A small bunch of thyme
+- 4 tbsp butter, softened
+- 1 kg small potatoes, halved
+- Salt, pepper, olive oil
+
+## Method
+
+1. Heat the oven to 200°C. Sit the chicken out for 30 minutes first — cold
+   chicken cooks unevenly.
+2. Rub the butter under the skin with half the thyme. Salt it well.
+3. Put the lemon halves and the rest of the thyme in the cavity.
+4. Toss the potatoes in oil and salt, spread them around the bird.
+5. Roast 1 hr 20, basting twice. Done when the juices run clear.
+6. **Rest 15 minutes before carving.** Not optional.
+
+:::tip
+Save the carcass. Stock the next morning takes ten minutes of actual work.
+:::
+`,
+  },
+  {
+    id: 'handwriting-worksheet',
+    name: 'Handwriting Worksheet',
+    description: 'Practice lines for teaching handwriting.',
+    nameKey: 'template.handwriting-worksheet.name',
+    descKey: 'template.handwriting-worksheet.desc',
+    emoji: '🖊️',
+    content: `---
+title: Handwriting practice
+skin: worksheet
+hand: neat-print
+ink: pencil
+stationery: practice-lines
+neatness: 0.2
+---
+
+# Handwriting Practice
+
+**Name:** ______________________  **Date:** ______________
+
+## Letter of the week: a
+
+a a a a a a a a a a a a
+
+## Words
+
+apple  after  around  again
+
+## Sentence
+
+The cat sat on the mat.
+
+## Your turn
+
+Write the sentence three times below, keeping each letter between the lines.
+`,
+  },
+  {
+    id: 'handwriting-capture',
+    name: 'Handwriting Capture Sheet',
+    description: 'Print, write, scan — turn your hand into a font.',
+    nameKey: 'template.handwriting-capture.name',
+    descKey: 'template.handwriting-capture.desc',
+    emoji: '🔤',
+    content: `---
+title: Handwriting capture sheet
+skin: worksheet
+stationery: practice-lines
+pageNumbers: false
+---
+
+# Handwriting Capture Sheet
+
+Print this page, write one character in each box in your natural hand, then scan
+it back in. A free tool such as Calligraphr turns the scan into a font file you
+can load back into Scripto under **Handwriting → My handwriting**.
+
+:::tip
+Write at your normal speed. A carefully drawn alphabet makes a font that does
+not look like you.
+:::
+
+## Uppercase
+
+A    B    C    D    E    F    G    H    I    J    K    L    M
+
+N    O    P    Q    R    S    T    U    V    W    X    Y    Z
+
+## Lowercase
+
+a    b    c    d    e    f    g    h    i    j    k    l    m
+
+n    o    p    q    r    s    t    u    v    w    x    y    z
+
+## Numbers
+
+0    1    2    3    4    5    6    7    8    9
+
+## Punctuation
+
+.    ,    ;    :    '    "    !    ?    -    (    )
+
+## A line of normal writing
+
+The quick brown fox jumps over the lazy dog.
+`,
+  },
+  {
+    id: 'arabic-letter-hand',
+    name: 'Arabic Handwritten Letter',
+    description: 'A personal letter in Ruqʿah.',
+    nameKey: 'template.arabic-letter-hand.name',
+    descKey: 'template.arabic-letter-hand.desc',
+    emoji: '🖋️',
+    content: `---
+title: رسالة بخط اليد
+lang: ar
+skin: letter-hand
+hand: ruqaa
+ink: fountain-black
+stationery: ruled-college
+neatness: 0.4
+---
+
+# إلى صديقي العزيز
+
+السلام عليكم ورحمة الله وبركاته،
+
+أكتب إليك بخط اليد كما كنا نفعل قديمًا، لا برسالة سريعة تُقرأ وتُنسى في اللحظة
+نفسها. مضى وقت طويل منذ آخر لقاء، وأرجو أن تكون بخير أنت ومن تحب.
+
+الأمور هنا هادئة. عدت إلى القراءة كل مساء، وبدأت أتعلم الخط من جديد بعد انقطاع
+سنوات. أكتشف كل يوم أن اليد تحتاج صبرًا أكثر مما تحتاجه العين.
+
+> بعض الأشياء لا تُتقن بالسرعة، بل بالتكرار الهادئ.
+
+سأزور المدينة في الشهر القادم إن شاء الله، فاحجز لنا مساءً نتحدث فيه على مهل.
+
+مع خالص المودة،
+عبدالله
 `,
   },
 ]
