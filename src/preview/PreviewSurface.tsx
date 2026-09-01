@@ -385,7 +385,12 @@ export const PreviewSurface = forwardRef<PreviewHandle, PreviewSurfaceProps>(
           </div>
 
           {onSkinChange && (
-            <SkinRail skin={config.skin} onPreview={previewSkin} onCommit={commitSkin} />
+            <SkinRail
+              skin={config.skin}
+              accentColor={viewConfig.accentColor}
+              onPreview={previewSkin}
+              onCommit={commitSkin}
+            />
           )}
         </div>
 
