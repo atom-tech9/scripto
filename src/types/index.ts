@@ -151,6 +151,11 @@ export type HandVariation = 'none' | 'word' | 'expressive'
 
 export interface HandConfig {
   readonly hand: HandStyle
+  /**
+   * Which imported or drawn hand `hand: 'custom'` refers to. Ignored for every
+   * built-in hand, so a document that never used one carries nothing extra.
+   */
+  readonly customHand?: string
   /** A second hand for headings — real notes title more carefully than they write. */
   readonly headingHand: HandStyle | 'same'
   readonly ink: InkStyle

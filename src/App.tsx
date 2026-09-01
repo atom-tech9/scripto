@@ -63,6 +63,7 @@ import { DEFAULT_AI_CONFIG, isAiConfigured, type AiConfig } from '@/lib/ai'
 import { ACCEPTED_IMPORT, importFile } from '@/io/importers'
 import { trackEvent } from '@/lib/analytics'
 import { exportHtml, exportMarkdown, exportWord } from '@/io/exporters'
+import { registerCustomHands } from '@/lib/handwriting/customHands'
 import type { AppLockApi } from '@/hooks/useAppLock'
 import type { DocumentSkin, ExportPreset, PdfConfig, ViewMode } from '@/types'
 
@@ -132,6 +133,12 @@ export default function App({ lock }: AppProps) {
       setOnboarding((prev) => (prev[step] ? prev : { ...prev, [step]: true })),
     [setOnboarding],
   )
+  // A document can name a custom hand in its front-matter, so every stored hand
+  // has to be registered with the font system before anything renders.
+  useEffect(() => {
+    void registerCustomHands()
+  }, [])
+
   // Track the completing transition only — never on load for returning users.
   const onboardingBaselineRef = useRef<boolean | null>(null)
   useEffect(() => {

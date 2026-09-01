@@ -243,9 +243,13 @@ export function handDescriptor(hand: HandStyle): HandDescriptor | null {
 }
 
 /** The `font-family` stack for a hand, ready for `--doc-hand-font`. */
-export function handFontStack(hand: HandStyle): string | null {
+export function handFontStack(hand: HandStyle, customHandId?: string): string | null {
   const descriptor = handDescriptor(hand)
-  return descriptor ? `'${descriptor.family}', ${descriptor.fallback}` : null
+  if (!descriptor) return null
+  // Each imported or drawn hand is registered under its own family, so the
+  // stack has to name the selected one rather than the generic slot.
+  const family = hand === 'custom' && customHandId ? `Scripto Hand ${customHandId}` : descriptor.family
+  return `'${family}', ${descriptor.fallback}`
 }
 
 /** Hands that can actually render the given script. */

@@ -27,12 +27,12 @@ export function documentStyleVars(config: PdfConfig, scale = 1): CSSProperties {
   const { hand } = config
   if (hand.hand !== 'none') {
     const descriptor = handDescriptor(hand.hand)
-    const stack = handFontStack(hand.hand)
+    const stack = handFontStack(hand.hand, hand.customHand)
     if (stack) vars['--doc-hand-font'] = stack
     if (descriptor) vars['--doc-size'] = `${sizePx * descriptor.sizeAdjust}px`
 
     const headingHand = hand.headingHand === 'same' ? hand.hand : hand.headingHand
-    const headingStack = handFontStack(headingHand)
+    const headingStack = handFontStack(headingHand, hand.customHand)
     if (headingStack) vars['--doc-heading-hand-font'] = headingStack
 
     vars['--hw-neatness'] = hand.neatness

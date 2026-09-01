@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, PenLine } from 'lucide-react'
 import { Field, Slider, Switch } from '@/components/ui/Field'
 import { HANDS, handsForScript, type HandScript } from '@/lib/handwriting/hands'
 import { loadHand } from '@/lib/handwriting/fonts'
 import { isRuled } from '@/lib/handwriting/rules'
 import { useLanguage } from '@/i18n'
+import { CustomHandsDialog } from './CustomHandsDialog'
+import { DrawAlphabetDialog } from './DrawAlphabetDialog'
+import { listCustomHands } from '@/lib/handwriting/customHands'
 import { cn } from '@/lib/utils'
 import type { HandConfig, HandStyle, InkStyle, PdfConfig, Stationery } from '@/types'
 
@@ -60,6 +63,23 @@ export function HandwritingSection({ config, onChange, onFontError }: Handwritin
   const hand = config.hand
   const enabled = hand.hand !== 'none'
   const [pending, setPending] = useState<HandStyle | null>(null)
+  const [customOpen, setCustomOpen] = useState(false)
+  const [drawOpen, setDrawOpen] = useState(false)
+  const [customCount, setCustomCount] = useState(0)
+
+  useEffect(() => {
+    void listCustomHands().then((all) => setCustomCount(all.length))
+  }, [customOpen, drawOpen])
+
+  // Selecting a stored hand switches to the `custom` slot and names which one.
+  const chooseCustom = useCallback(
+    (id: string) => {
+      onChange({ hand: { ...hand, hand: 'custom', customHand: id } })
+      setCustomOpen(false)
+      setDrawOpen(false)
+    },
+    [hand, onChange],
+  )
 
   const script: HandScript =
     config.direction === 'rtl' || (config.direction === 'auto' && dir === 'rtl')
@@ -156,7 +176,43 @@ export function HandwritingSection({ config, onChange, onFontError }: Handwritin
                 )
               })}
             </div>
+            <button
+              type="button"
+              onClick={() => setCustomOpen(true)}
+              className={cn(
+                'mt-1.5 flex w-full items-center justify-between gap-2 rounded-lg border px-2.5 py-2 text-start transition-colors',
+                hand.hand === 'custom'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-dashed border-border hover:border-primary/50',
+              )}
+            >
+              <span className="min-w-0">
+                <span className="block truncate text-[13px] font-medium text-foreground">
+                  {t('hand.custom.title')}
+                </span>
+                <span className="block truncate text-[10px] text-muted-foreground">
+                  {customCount > 0 ? t('hand.custom.use') : t('hand.custom.draw')}
+                </span>
+              </span>
+              <PenLine size={15} className="shrink-0 text-muted-foreground" />
+            </button>
           </Field>
+
+          <CustomHandsDialog
+            open={customOpen}
+            onClose={() => setCustomOpen(false)}
+            selected={hand.customHand}
+            onSelect={chooseCustom}
+            onDraw={() => {
+              setCustomOpen(false)
+              setDrawOpen(true)
+            }}
+          />
+          <DrawAlphabetDialog
+            open={drawOpen}
+            onClose={() => setDrawOpen(false)}
+            onCreated={chooseCustom}
+          />
 
           <Field label={t('hand.ink')}>
             <div className="flex flex-wrap gap-1.5">
