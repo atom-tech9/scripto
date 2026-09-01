@@ -2,6 +2,7 @@ import { FONT_STACKS, resolvePageDimensions } from '@/lib/constants'
 import { escapeHtml } from '@/lib/utils'
 import type { PdfConfig } from '@/types'
 import { resolveMargins } from '@/lib/handwriting/rules'
+import { handFontStack } from '@/lib/handwriting/hands'
 
 /** Resolve a concrete direction for the generated cover/TOC pages. */
 export function resolveDocDirection(config: PdfConfig): 'ltr' | 'rtl' {
@@ -50,8 +51,15 @@ export function buildPageCss(config: PdfConfig): string {
     )
   }
   if (config.attribution) {
+    // Signed in the document's own hand when it has one. A handwritten page
+    // with a typeset line of sans-serif under it reads as a watermark someone
+    // stamped on; in the same hand it reads as the writer signing their work.
+    const attributionFont =
+      config.hand.hand === 'none'
+        ? ''
+        : `font-family: ${handFontStack(config.hand.hand, config.hand.customHand) ?? 'inherit'};`
     marginBoxes.push(
-      `@bottom-center { content: "Made with Scripto \\00b7 md.atom.sa"; ${marginBoxStyle()} font-size: 7pt; opacity: 0.85; }`,
+      `@bottom-center { content: "Made with Scripto \\00b7 md.atom.sa"; ${marginBoxStyle()} ${attributionFont} font-size: 7pt; opacity: 0.85; }`,
     )
   }
 
