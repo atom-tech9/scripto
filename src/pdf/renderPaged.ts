@@ -107,11 +107,19 @@ export async function renderPagedPreview({
   strings,
 }: RenderOptions): Promise<RenderResult> {
   try {
-    onProgress?.({ stage: 'preparing', message: 'Preparing document…', percent: 12 })
+    onProgress?.({
+      stage: 'preparing',
+      message: strings?.preparing ?? 'Preparing document…',
+      percent: 12,
+    })
     const { content, toc } = buildExportContent(liveDoc, config, strings)
     const pageCss = buildPageCss(config)
 
-    onProgress?.({ stage: 'rendering', message: 'Loading images…', percent: 28 })
+    onProgress?.({
+      stage: 'rendering',
+      message: strings?.loadingImages ?? 'Loading images…',
+      percent: 28,
+    })
     await preloadImages(content)
 
     container.innerHTML = ''
@@ -120,14 +128,19 @@ export async function renderPagedPreview({
     // document keeps its own direction via `.scripto-doc[dir]`, so RTL text is
     // unaffected — only the page mechanics are forced LTR.
     container.setAttribute('dir', 'ltr')
-    onProgress?.({ stage: 'paginating', message: 'Laying out pages…', percent: 45 })
+    onProgress?.({
+      stage: 'paginating',
+      message: strings?.paginating ?? 'Laying out pages…',
+      percent: 45,
+    })
 
     const previewer = new Previewer()
     const flow = await withResizeObserverDisabled(() =>
       withTimeout(
         previewer.preview(content, [{ pageStyle: pageCss }], container),
         RENDER_TIMEOUT_MS,
-        'PDF layout took too long. Try removing broken images or simplifying the document, then retry.',
+        strings?.timedOut ??
+          'PDF layout took too long. Try removing broken images or simplifying the document, then retry.',
       ),
     )
 
@@ -136,7 +149,13 @@ export async function renderPagedPreview({
     const fit = fitToPage(container)
 
     const pageCount = flow?.total ?? container.querySelectorAll('.pagedjs_page').length
-    onProgress?.({ stage: 'done', message: `${pageCount} page${pageCount === 1 ? '' : 's'} ready`, percent: 100 })
+    onProgress?.({
+      stage: 'done',
+      message: strings?.pagesReady
+        ? `${pageCount} ${strings.pagesReady}`
+        : `${pageCount} page${pageCount === 1 ? '' : 's'} ready`,
+      percent: 100,
+    })
     return { pageCount, toc, fit }
   } catch (error) {
     logger.error('Paged.js rendering failed', error)

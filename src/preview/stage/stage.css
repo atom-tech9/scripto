@@ -130,7 +130,7 @@
   letter-spacing: -0.04em;
   line-height: 1;
   font-size: clamp(1.35rem, 7cqi, 5rem);
-  color: hsl(var(--foreground) / 0.05);
+  color: hsl(var(--foreground) / 0.045);
   user-select: none;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -905,14 +905,14 @@
   transform: rotate(-3deg);
   letter-spacing: 0.34em;
   font-weight: 700;
-  color: hsl(0 62% 42% / 0.28);
+  color: hsl(0 62% 42% / 0.16);
 }
 .dark [data-stage='memo'] {
   --stage-ground: hsl(205 16% 11%);
   --stage-ground-2: hsl(205 14% 15%);
 }
 .dark [data-stage='memo'] .stage-mark {
-  color: hsl(0 70% 62% / 0.34);
+  color: hsl(0 70% 62% / 0.2);
 }
 
 /* 21 · Gallery wall — dramatic ground with a spotlight cone. */
@@ -1025,6 +1025,7 @@
   display: flex;
   min-height: 0;
   flex: 1;
+  isolation: isolate;
 }
 
 .stage-paper--flush {
@@ -1412,4 +1413,87 @@
 .dark [data-stage='handout'] {
   --stage-ground: hsl(160 16% 9%);
   --stage-ground-2: hsl(160 14% 13%);
+}
+
+/* --- Handwriting stages --------------------------------------------------- */
+
+/* 30 · Desk */
+[data-stage='handwritten'] {
+  --stage-ground: hsl(28 30% 62%);
+  --stage-ground-2: hsl(30 34% 72%);
+  --stage-radius: 0.2rem;
+  --stage-lift: var(--stage-lift-2);
+}
+[data-stage='handwritten'] .stage-texture {
+  background: repeating-linear-gradient(88deg, transparent 0 7px, hsl(25 40% 30% / 0.07) 7px 9px);
+}
+[data-stage='handwritten'] .stage-light {
+  background: radial-gradient(70% 55% at 50% 15%, hsl(45 80% 90% / 0.35), transparent 70%);
+}
+
+/* 31 · Nightstand */
+[data-stage='journal-hand'] {
+  --stage-ground: hsl(28 22% 12%);
+  --stage-ground-2: hsl(28 20% 18%);
+  --stage-radius: 0;
+  --stage-lift: var(--stage-lift-3);
+  --stage-air: clamp(1.75rem, 7cqi, 4rem);
+}
+[data-stage='journal-hand'] .stage-light {
+  background: radial-gradient(55% 45% at 50% 20%, hsl(38 80% 70% / 0.28), transparent 72%);
+}
+
+/* 32 · Field */
+[data-stage='field-notes'] {
+  --stage-ground: hsl(80 12% 58%);
+  --stage-ground-2: hsl(80 14% 66%);
+  --stage-radius: 0.15rem;
+  --stage-lift: var(--stage-lift-2);
+  --stage-sheet-max: 620px;
+  --stage-tick: hsl(80 20% 25% / 0.5);
+}
+[data-stage='field-notes'] .stage-texture {
+  background:
+    repeating-linear-gradient(45deg, transparent 0 3px, hsl(80 20% 25% / 0.06) 3px 4px),
+    repeating-linear-gradient(-45deg, transparent 0 3px, hsl(80 20% 25% / 0.05) 3px 4px);
+}
+
+/* 33 · Classroom */
+[data-stage='chalkboard'] {
+  --stage-ground: hsl(150 12% 14%);
+  --stage-ground-2: hsl(150 10% 20%);
+  --stage-radius: 0.2rem;
+  --stage-lift: var(--stage-lift-3);
+  --stage-edge: hsl(35 40% 60% / 0.5);
+}
+[data-stage='chalkboard'] .stage-texture {
+  background:
+    radial-gradient(closest-side, hsl(0 0% 100% / 0.05), transparent) 30% 70% / 40% 30% no-repeat,
+    radial-gradient(closest-side, hsl(0 0% 100% / 0.04), transparent) 75% 30% / 35% 28% no-repeat;
+}
+
+/* 34 · Correspondence desk */
+[data-stage='letter-hand'] {
+  --stage-ground: hsl(38 20% 84%);
+  --stage-ground-2: hsl(38 26% 91%);
+  --stage-radius: 0;
+  --stage-lift: var(--stage-lift-2);
+  --stage-air: clamp(1.75rem, 7cqi, 4.5rem);
+}
+[data-stage='letter-hand'] .stage-texture {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 2px, hsl(35 25% 40% / 0.05) 2px 3px),
+    repeating-linear-gradient(180deg, transparent 0 2px, hsl(35 25% 40% / 0.04) 2px 3px);
+}
+
+/* 35 · Schoolroom */
+[data-stage='worksheet'] {
+  --stage-ground: hsl(190 20% 88%);
+  --stage-ground-2: hsl(190 26% 94%);
+  --stage-radius: 0.1rem;
+  --stage-lift: var(--stage-lift-1);
+}
+.dark [data-stage='worksheet'] {
+  --stage-ground: hsl(190 18% 11%);
+  --stage-ground-2: hsl(190 16% 15%);
 }

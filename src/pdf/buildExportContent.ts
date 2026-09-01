@@ -8,6 +8,13 @@ import type { PdfConfig, TocEntry } from '@/types'
 export interface ExportStrings {
   contents?: string
   locale?: string
+  /** Progress messages, so the paginator speaks the UI's language. */
+  preparing?: string
+  loadingImages?: string
+  paginating?: string
+  /** Rendered as `<count> <pagesReady>`. */
+  pagesReady?: string
+  timedOut?: string
 }
 
 const ID_PREFIX = 'pdf-'
@@ -71,7 +78,12 @@ function namespaceIds(root: HTMLElement): void {
  * fragments — so a heading after a page break would restart at `0.1`. Literal
  * text is immune to that, so the export numbers itself instead.
  */
-function bakeHeadingNumbers(root: HTMLElement): void {
+/** Western digits to Arabic-Indic, for documents that number that way. */
+function toArabicIndic(value: string): string {
+  return value.replace(/[0-9]/g, (digit) => '٠١٢٣٤٥٦٧٨٩'[Number(digit)])
+}
+
+function bakeHeadingNumbers(root: HTMLElement, arabic: boolean): void {
   const counters = [0, 0, 0, 0]
   root.querySelectorAll<HTMLElement>('h1, h2, h3, h4').forEach((h) => {
     if (h.closest('.footnotes')) return
@@ -81,9 +93,13 @@ function bakeHeadingNumbers(root: HTMLElement): void {
     counters[level - 1] += 1
     for (let i = level; i < counters.length; i++) counters[i] = 0
     const parts = counters.slice(0, level)
-    const label = level === 1 ? `${parts[0]}.` : parts.join('.')
+    const plain = level === 1 ? `${parts[0]}.` : parts.join('.')
+    const label = arabic ? toArabicIndic(plain) : plain
     const span = h.ownerDocument.createElement('span')
     span.className = 'heading-number'
+    // Isolated, or bidi reorders the trailing separator and "1." comes out
+    // as ".1" in an RTL paragraph.
+    span.setAttribute('dir', 'ltr')
     span.textContent = `${label}\u00a0\u00a0`
     h.insertBefore(span, h.firstChild)
   })
@@ -108,7 +124,7 @@ export function buildExportContent(
   // Number headings as literal text and turn off the CSS counters (data-numbered)
   // so they don't double up — Paged.js can't reset baked-in text across pages.
   if (config.numberedHeadings) {
-    bakeHeadingNumbers(clone)
+    bakeHeadingNumbers(clone, resolveDocDirection(config) === 'rtl' || config.font === 'arabic')
     clone.removeAttribute('data-numbered')
   }
 

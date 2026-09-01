@@ -56,6 +56,7 @@ export const DEFAULT_HAND: HandConfig = {
   variation: 'word',
   aging: 0,
   drawnElements: false,
+  maskRules: false,
   seed: 1,
 }
 
@@ -110,10 +111,7 @@ export const DEFAULT_CONFIG: PdfConfig = {
 
 /** Resolve the effective page dimensions for a config, honouring orientation. */
 export function resolvePageDimensions(config: PdfConfig): PageDimensions {
-  const base =
-    config.paperSize === 'custom'
-      ? config.customSize
-      : PAPER_SIZES[config.paperSize]
+  const base = config.paperSize === 'custom' ? config.customSize : PAPER_SIZES[config.paperSize]
 
   if (config.orientation === 'landscape') {
     return { width: base.height, height: base.width }
@@ -127,4 +125,20 @@ export const FONT_STACKS: Record<PdfConfig['font'], string> = {
   sans: 'Inter, ui-sans-serif, system-ui, sans-serif',
   system: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
   arabic: '"Cairo", "Noto Naskh Arabic", "Amiri", "Segoe UI", sans-serif',
+  merriweather: "'Merriweather', Georgia, serif",
+  garamond: "'EB Garamond', Garamond, Georgia, serif",
+  playfair: "'Playfair Display', Georgia, serif",
+  crimson: "'Crimson Pro', Georgia, serif",
+  roboto: "'Roboto', Helvetica, Arial, sans-serif",
+  'open-sans': "'Open Sans', Helvetica, Arial, sans-serif",
+  nunito: "'Nunito Sans', Helvetica, Arial, sans-serif",
+  'plex-serif': "'IBM Plex Serif', Georgia, serif",
+  'plex-sans': "'IBM Plex Sans', Helvetica, Arial, sans-serif",
+  mono: "'JetBrains Mono', ui-monospace, monospace",
+  tajawal: "'Tajawal', 'Noto Naskh Arabic', sans-serif",
+  almarai: "'Almarai', 'Noto Naskh Arabic', sans-serif",
+  'amiri-doc': "'Amiri', 'Noto Naskh Arabic', serif",
+  'noto-kufi': "'Noto Kufi Arabic', 'Noto Naskh Arabic', sans-serif",
+  readex: "'Readex Pro', 'Noto Naskh Arabic', sans-serif",
+  'plex-arabic': "'IBM Plex Sans Arabic', 'Noto Naskh Arabic', sans-serif",
 }

@@ -26,7 +26,6 @@ import {
   Pencil,
   Printer,
   Search,
-  Shield,
   ShieldCheck,
   Sparkles,
   Sun,
@@ -381,40 +380,6 @@ export function Header(props: HeaderProps) {
               )}
             </span>
           </IconAction>
-          <span className="hidden sm:inline-flex">
-            <IconAction label={t('action.security')} onClick={props.onOpenSecurity}>
-              {props.secured ? (
-                <ShieldCheck size={16} className="text-emerald-500" />
-              ) : (
-                <Shield size={16} />
-              )}
-            </IconAction>
-          </span>
-          <span className="hidden md:inline-flex">
-            <IconAction label={t('action.focusMode')} onClick={props.onToggleZen}>
-              <Maximize2 size={16} />
-            </IconAction>
-          </span>
-          <span className="hidden md:inline-flex">
-            <IconAction
-              label={isSimple ? t('mode.toStandard') : t('mode.toSimple')}
-              onClick={toggleMode}
-              active={isSimple}
-              pressed={isSimple}
-            >
-              <GraduationCap size={16} />
-            </IconAction>
-          </span>
-          <span className="hidden lg:inline-flex">
-            <IconAction label={t('action.formattingHelp')} onClick={props.onOpenFormattingHelp}>
-              <BookOpen size={16} />
-            </IconAction>
-          </span>
-          <span className="hidden lg:inline-flex">
-            <IconAction label={`${t('action.shortcuts')}  (⌘/)`} onClick={props.onShortcuts}>
-              <Keyboard size={16} />
-            </IconAction>
-          </span>
           <IconAction
             label={props.uiLang === 'ar' ? t('lang.toEnglish') : t('lang.toArabic')}
             onClick={props.onToggleLang}
@@ -431,6 +396,7 @@ export function Header(props: HeaderProps) {
               <TIcon size={16} />
             </IconAction>
           </span>
+          <span aria-hidden className="mx-0.5 h-5 w-px shrink-0 bg-border" />
           <IconAction
             label={t('action.settings')}
             onClick={props.onToggleConfig}

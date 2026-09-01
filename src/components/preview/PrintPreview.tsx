@@ -5,6 +5,7 @@ import {
   BookOpen,
   Download,
   FileWarning,
+  Info,
   Loader2,
   Minus,
   Plus,
@@ -19,6 +20,7 @@ import {
 import { Button } from '@/components/ui/Button'
 import { renderPagedPreview } from '@/pdf/renderPaged'
 import { buildPrintPageRule } from '@/pdf/pageStyles'
+import { PAPER_LABELS } from '@/lib/constants'
 import { loadHand } from '@/lib/handwriting/fonts'
 import {
   insertPageBreak,
@@ -115,7 +117,15 @@ export function PrintPreview({
         config: exportConfig,
         container,
         onProgress: setProgress,
-        strings: { contents: t('pdf.contents'), locale: lang },
+        strings: {
+          contents: t('pdf.contents'),
+          locale: lang,
+          preparing: t('print.preparing'),
+          loadingImages: t('print.progress.images'),
+          paginating: t('print.progress.paginating'),
+          pagesReady: t('print.progress.ready'),
+          timedOut: t('print.progress.timedOut'),
+        },
       })
       setPageCount(count)
       setFit(fitResult)
@@ -399,6 +409,17 @@ export function PrintPreview({
                 initial={{ width: 0 }}
                 animate={{ width: `${progress.percent}%` }}
               />
+            </div>
+          )}
+
+          {!isRendering && !isError && (
+            <div className="print-chrome flex flex-wrap items-center gap-x-1.5 gap-y-1 border-b border-border bg-muted/60 px-3 py-1.5 text-[11px] text-muted-foreground sm:px-4">
+              <Info size={12} className="shrink-0" />
+              <span>{t('print.settingsHint')}</span>
+              <strong className="font-semibold text-foreground">
+                {PAPER_LABELS[exportConfig.paperSize]} · {t('print.settingsHint.margins')} ·{' '}
+                {t('print.settingsHint.scale')}
+              </strong>
             </div>
           )}
 

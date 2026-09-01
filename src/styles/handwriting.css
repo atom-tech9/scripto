@@ -492,3 +492,22 @@
 .scripto-doc[data-hand] .footnotes li::marker {
   font-family: var(--doc-heading-hand-font, var(--doc-hand-font, var(--doc-font)));
 }
+
+/*
+ * Optional: hide the rules behind heading text.
+ *
+ * Off by default. A rule passing behind a heading is what ruled paper actually
+ * looks like, and masking only some of the heading — the words but not the
+ * auto-numbering, and not the run of rule beside it — reads worse than not
+ * masking at all. Enabled, it covers the number and the trailing rule too.
+ */
+.scripto-doc[data-ruled][data-mask-rules] :is(h1, h2, h3) {
+  background: var(--hw-paper-solid, #fff);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+.scripto-doc[data-ruled][data-mask-rules] :is(h1, h2, h3) :is(.hw, .heading-number),
+.scripto-doc[data-ruled][data-mask-rules] :is(h1, h2, h3)::before {
+  background: var(--hw-paper-solid, #fff);
+}

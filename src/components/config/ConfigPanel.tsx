@@ -13,6 +13,8 @@ import { MARGIN_PRESETS } from '@/lib/constants'
 import { DOCUMENT_PRESETS } from '@/data/presets'
 import { SKIN_OPTIONS } from '@/data/skins'
 import { HandwritingSection } from './HandwritingSection'
+import { DOC_FONTS, fontsForScript } from '@/lib/documentFonts'
+import { loadFontFamily } from '@/lib/handwriting/fonts'
 import { useLanguage } from '@/i18n'
 import { useMode } from '@/mode'
 import type { TranslationKey } from '@/lib/i18n'
@@ -72,18 +74,7 @@ function Section({
 }
 
 const PAPER_OPTIONS: PaperSize[] = ['a4', 'letter', 'legal', 'a3', 'a5', 'custom']
-const FONT_OPTIONS: Array<{ value: DocumentFont; labelKey: TranslationKey }> = [
-  { value: 'serif', labelKey: 'config.font.serif' },
-  { value: 'lora', labelKey: 'config.font.lora' },
-  { value: 'sans', labelKey: 'config.font.sans' },
-  { value: 'system', labelKey: 'config.font.system' },
-  { value: 'arabic', labelKey: 'config.font.arabic' },
-]
-const COVER_STYLE_OPTIONS: Array<{ value: CoverStyle; labelKey: TranslationKey }> = [
-  { value: 'minimal', labelKey: 'config.coverStyle.minimal' },
-  { value: 'banner', labelKey: 'config.coverStyle.banner' },
-  { value: 'centered', labelKey: 'config.coverStyle.centered' },
-]
+
 const CODE_OPTIONS: Array<{ value: CodeTheme; labelKey: TranslationKey }> = [
   { value: 'github-dark', labelKey: 'config.code.githubDark' },
   { value: 'github-light', labelKey: 'config.code.githubLight' },
@@ -104,6 +95,12 @@ const MARGIN_SIDE_KEYS: Record<'top' | 'right' | 'bottom' | 'left', TranslationK
   bottom: 'config.margin.bottom',
   left: 'config.margin.left',
 }
+
+const COVER_STYLE_OPTIONS: Array<{ value: CoverStyle; labelKey: TranslationKey }> = [
+  { value: 'minimal', labelKey: 'config.coverStyle.minimal' },
+  { value: 'banner', labelKey: 'config.coverStyle.banner' },
+  { value: 'centered', labelKey: 'config.coverStyle.centered' },
+]
 
 const ACCENT_SWATCHES = [
   '#6366f1',
@@ -259,13 +256,30 @@ export function ConfigPanel({
           <Select
             id="font"
             value={config.font}
-            onChange={(e) => onChange({ font: e.target.value as DocumentFont })}
+            onChange={(event) => {
+              const next = event.target.value as DocumentFont
+              // Fetch before applying, so the document never renders a frame in
+              // the fallback and then jump when the real metrics arrive.
+              const descriptor = DOC_FONTS[next]
+              void loadFontFamily(descriptor.family, descriptor.googleParam).then(() =>
+                onChange({ font: next }),
+              )
+            }}
           >
-            {FONT_OPTIONS.map((f) => (
-              <option key={f.value} value={f.value}>
-                {t(f.labelKey)}
-              </option>
-            ))}
+            <optgroup label={t('font.group.latin')}>
+              {fontsForScript('latin').map((font) => (
+                <option key={font} value={font}>
+                  {DOC_FONTS[font].family}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label={t('font.group.arabic')}>
+              {fontsForScript('arabic').map((font) => (
+                <option key={font} value={font}>
+                  {DOC_FONTS[font].family}
+                </option>
+              ))}
+            </optgroup>
           </Select>
         </Field>
         <Field label={t('config.field.fontSize')} hint={`${config.fontSize}pt`}>

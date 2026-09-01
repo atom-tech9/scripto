@@ -20,6 +20,9 @@
   --hw-rule-soft: #cfe0ee;
   --hw-margin-rule: #e59b9b;
   --hw-paper: transparent;
+  /* The opaque colour of the sheet, for masking rules behind large type.
+     `--hw-paper` can be transparent; this one never is. */
+  --hw-paper-solid: #fff;
   background-color: var(--hw-paper);
   background-repeat: repeat;
 }
@@ -53,12 +56,25 @@
 
 /* A legal pad: yellow stock, two red margin rules. */
 .scripto-doc[data-stationery='legal-pad'] {
+  --hw-paper-solid: #fdf6c8;
   --hw-pitch: 8.7mm;
   --hw-paper: #fdf6c8;
   --hw-rule: #9fb8d4;
   background-image:
-    linear-gradient(90deg, transparent 14mm, var(--hw-margin-rule) 14mm, var(--hw-margin-rule) calc(14mm + 1px), transparent calc(14mm + 1px)),
-    linear-gradient(90deg, transparent 15.5mm, var(--hw-margin-rule) 15.5mm, var(--hw-margin-rule) calc(15.5mm + 1px), transparent calc(15.5mm + 1px)),
+    linear-gradient(
+      90deg,
+      transparent 14mm,
+      var(--hw-margin-rule) 14mm,
+      var(--hw-margin-rule) calc(14mm + 1px),
+      transparent calc(14mm + 1px)
+    ),
+    linear-gradient(
+      90deg,
+      transparent 15.5mm,
+      var(--hw-margin-rule) 15.5mm,
+      var(--hw-margin-rule) calc(15.5mm + 1px),
+      transparent calc(15.5mm + 1px)
+    ),
     repeating-linear-gradient(
       180deg,
       transparent 0,
@@ -71,7 +87,13 @@
 /* Cornell: a cue column on the inline-start, a summary band at the foot. */
 .scripto-doc[data-stationery='cornell'] {
   background-image:
-    linear-gradient(90deg, transparent 32mm, var(--hw-margin-rule) 32mm, var(--hw-margin-rule) calc(32mm + 1px), transparent calc(32mm + 1px)),
+    linear-gradient(
+      90deg,
+      transparent 32mm,
+      var(--hw-margin-rule) 32mm,
+      var(--hw-margin-rule) calc(32mm + 1px),
+      transparent calc(32mm + 1px)
+    ),
     repeating-linear-gradient(
       180deg,
       transparent 0,
@@ -84,7 +106,13 @@
 /* Steno: a centre rule splitting the page into two writing columns. */
 .scripto-doc[data-stationery='steno'] {
   background-image:
-    linear-gradient(90deg, transparent 50%, var(--hw-margin-rule) 50%, var(--hw-margin-rule) calc(50% + 1px), transparent calc(50% + 1px)),
+    linear-gradient(
+      90deg,
+      transparent 50%,
+      var(--hw-margin-rule) 50%,
+      var(--hw-margin-rule) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    ),
     repeating-linear-gradient(
       180deg,
       transparent 0,
@@ -152,6 +180,7 @@
 
 .scripto-doc[data-stationery='graph'],
 .scripto-doc[data-stationery='graph-blue'] {
+  --hw-paper-solid: #f4f9fd;
   --hw-pitch: 5mm;
   background-image:
     repeating-linear-gradient(90deg, var(--hw-rule-soft) 0 1px, transparent 1px var(--hw-pitch)),
@@ -165,12 +194,21 @@
 
 /* Engineering paper: a fine grid with a heavier rule every fifth line. */
 .scripto-doc[data-stationery='engineering'] {
+  --hw-paper-solid: #f2f7ee;
   --hw-pitch: 5mm;
   --hw-paper: #f2f7ee;
   --hw-rule-soft: #bcd6b4;
   background-image:
-    repeating-linear-gradient(90deg, var(--hw-rule) 0 1px, transparent 1px calc(var(--hw-pitch) * 5)),
-    repeating-linear-gradient(180deg, var(--hw-rule) 0 1px, transparent 1px calc(var(--hw-pitch) * 5)),
+    repeating-linear-gradient(
+      90deg,
+      var(--hw-rule) 0 1px,
+      transparent 1px calc(var(--hw-pitch) * 5)
+    ),
+    repeating-linear-gradient(
+      180deg,
+      var(--hw-rule) 0 1px,
+      transparent 1px calc(var(--hw-pitch) * 5)
+    ),
     repeating-linear-gradient(90deg, var(--hw-rule-soft) 0 1px, transparent 1px var(--hw-pitch)),
     repeating-linear-gradient(180deg, var(--hw-rule-soft) 0 1px, transparent 1px var(--hw-pitch));
 }
@@ -192,6 +230,7 @@
 /* --- stocks --------------------------------------------------------------- */
 
 .scripto-doc[data-stationery='index-card'] {
+  --hw-paper-solid: #fffdf7;
   --hw-pitch: 7.1mm;
   --hw-paper: #fffdf7;
   background-image:
@@ -206,6 +245,7 @@
 }
 
 .scripto-doc[data-stationery='parchment'] {
+  --hw-paper-solid: #f6ecd6;
   --hw-paper: #f6ecd6;
   background-image:
     radial-gradient(120% 90% at 50% 0%, rgb(255 255 255 / 0.6), transparent 60%),
@@ -213,13 +253,11 @@
 }
 
 .scripto-doc[data-stationery='kraft'] {
+  --hw-paper-solid: #cbab84;
   --hw-paper: #cbab84;
   --hw-ink: #2c2318;
-  background-image: repeating-linear-gradient(
-      77deg,
-      transparent 0 2px,
-      rgb(70 50 25 / 0.05) 2px 3px
-    ),
+  background-image:
+    repeating-linear-gradient(77deg, transparent 0 2px, rgb(70 50 25 / 0.05) 2px 3px),
     repeating-linear-gradient(167deg, transparent 0 3px, rgb(70 50 25 / 0.04) 3px 4px);
 }
 

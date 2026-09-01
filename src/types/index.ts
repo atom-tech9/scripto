@@ -13,7 +13,28 @@ export type PaperSize = 'a4' | 'letter' | 'legal' | 'a3' | 'a5' | 'custom'
 
 export type Orientation = 'portrait' | 'landscape'
 
-export type DocumentFont = 'serif' | 'sans' | 'lora' | 'system' | 'arabic'
+export type DocumentFont =
+  | 'serif'
+  | 'sans'
+  | 'lora'
+  | 'system'
+  | 'arabic'
+  | 'merriweather'
+  | 'garamond'
+  | 'playfair'
+  | 'crimson'
+  | 'roboto'
+  | 'open-sans'
+  | 'nunito'
+  | 'plex-serif'
+  | 'plex-sans'
+  | 'mono'
+  | 'tajawal'
+  | 'almarai'
+  | 'amiri-doc'
+  | 'noto-kufi'
+  | 'readex'
+  | 'plex-arabic'
 
 export type TextDirection = 'auto' | 'ltr' | 'rtl'
 
@@ -53,6 +74,12 @@ export type DocumentSkin =
   | 'changelog'
   | 'rfc'
   | 'handout'
+  | 'handwritten'
+  | 'journal-hand'
+  | 'field-notes'
+  | 'chalkboard'
+  | 'letter-hand'
+  | 'worksheet'
 
 /**
  * The handwriting axis. Deliberately not a skin: handwriting is
@@ -78,6 +105,13 @@ export type HandStyle =
   | 'ruqaa'
   | 'naskh-hand'
   | 'diwani'
+  | 'amiri'
+  | 'scheherazade'
+  | 'katibeh'
+  | 'nastaliq'
+  | 'gulzar'
+  | 'harmattan'
+  | 'rakkas'
   // User-supplied (see the handwriting brief §7)
   | 'custom'
 
@@ -130,11 +164,17 @@ export interface HandConfig {
   readonly aging: number
   /** Hand-drawn rules, bullets, checkboxes, underlines and table borders. */
   readonly drawnElements: boolean
+  /**
+   * Hide the paper's rules behind heading text. Off by default: rules running
+   * behind a heading is what ruled paper actually looks like, and masking them
+   * only reads well on some papers.
+   */
+  readonly maskRules: boolean
   /** A stable seed, so the jitter never changes under the same document. */
   readonly seed: number
 }
 
-export type MarginPreset = 'narrow' | 'normal' | 'wide' | 'custom' 
+export type MarginPreset = 'narrow' | 'normal' | 'wide' | 'custom'
 
 /** Physical page dimensions expressed in millimetres. */
 export interface PageDimensions {

@@ -157,6 +157,76 @@ export const HANDS: Record<Exclude<HandStyle, 'none'>, HandDescriptor> = {
     sample: 'الخط العربي جميل',
     sizeAdjust: 1.25,
   },
+  // Classical naskh, the most bookish of the Arabic hands.
+  amiri: {
+    family: 'Amiri',
+    googleParam: 'Amiri:ital,wght@0,400;0,700;1,400',
+    variable: false,
+    scripts: ['arabic'],
+    fallback: ARABIC_FALLBACK,
+    sample: 'الخط العربي جميل',
+    sizeAdjust: 1.2,
+  },
+  // Naskh with generous counters — the easiest to read at length.
+  scheherazade: {
+    family: 'Scheherazade New',
+    googleParam: 'Scheherazade+New:wght@400;700',
+    variable: false,
+    scripts: ['arabic'],
+    fallback: ARABIC_FALLBACK,
+    sample: 'الخط العربي جميل',
+    sizeAdjust: 1.3,
+  },
+  // A calligraphic display hand, closer to thuluth.
+  katibeh: {
+    family: 'Katibeh',
+    googleParam: 'Katibeh',
+    variable: false,
+    scripts: ['arabic'],
+    fallback: ARABIC_FALLBACK,
+    sample: 'الخط العربي جميل',
+    sizeAdjust: 1.45,
+  },
+  // Nastaliq: the sloping hand of Persian and Urdu calligraphy.
+  nastaliq: {
+    family: 'Noto Nastaliq Urdu',
+    googleParam: 'Noto+Nastaliq+Urdu:wght@400;700',
+    variable: false,
+    scripts: ['arabic'],
+    fallback: ARABIC_FALLBACK,
+    sample: 'الخط العربي جميل',
+    sizeAdjust: 1.0,
+  },
+  // A softer nastaliq, lighter on the page.
+  gulzar: {
+    family: 'Gulzar',
+    googleParam: 'Gulzar',
+    variable: false,
+    scripts: ['arabic'],
+    fallback: ARABIC_FALLBACK,
+    sample: 'الخط العربي جميل',
+    sizeAdjust: 1.15,
+  },
+  // An everyday informal hand — the Arabic equivalent of neat print.
+  harmattan: {
+    family: 'Harmattan',
+    googleParam: 'Harmattan:wght@400;700',
+    variable: false,
+    scripts: ['arabic'],
+    fallback: ARABIC_FALLBACK,
+    sample: 'الخط العربي جميل',
+    sizeAdjust: 1.3,
+  },
+  // A bold decorative hand for titles and short pieces.
+  rakkas: {
+    family: 'Rakkas',
+    googleParam: 'Rakkas',
+    variable: false,
+    scripts: ['arabic'],
+    fallback: ARABIC_FALLBACK,
+    sample: 'الخط العربي جميل',
+    sizeAdjust: 1.25,
+  },
   custom: {
     family: 'Scripto Custom Hand',
     googleParam: null,

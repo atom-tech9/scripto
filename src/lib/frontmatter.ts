@@ -208,6 +208,7 @@ export function applyFrontmatter(config: PdfConfig, data: Record<string, unknown
     neatness: asUnit(data.neatness, config.hand.neatness),
     aging: asUnit(data.aging, config.hand.aging),
     drawnElements: asBool(data.drawn ?? data.drawnElements) ?? config.hand.drawnElements,
+    maskRules: asBool(data.maskRules ?? data.maskrules) ?? config.hand.maskRules,
   }
 
   return {

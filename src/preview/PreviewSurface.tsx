@@ -271,13 +271,6 @@ export const PreviewSurface = forwardRef<PreviewHandle, PreviewSurfaceProps>(
         data-stage-level={level}
         style={{ ['--stage-accent' as string]: viewConfig.accentColor }}
       >
-        <StageBackdrop
-          stage={stage}
-          accentColor={viewConfig.accentColor}
-          title={viewConfig.meta.title}
-          level={level}
-        />
-
         <PreviewToolbar
           mode={mode}
           onMode={setStoredMode}
@@ -317,6 +310,12 @@ export const PreviewSurface = forwardRef<PreviewHandle, PreviewSurfaceProps>(
         )}
 
         <div className="stage-body">
+          <StageBackdrop
+            stage={stage}
+            accentColor={viewConfig.accentColor}
+            title={viewConfig.meta.title}
+            level={level}
+          />
           <div
             ref={scrollRef}
             className="stage-scroll scrollbar-thin"

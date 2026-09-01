@@ -78,6 +78,28 @@ export function isHandReady(hand: HandStyle): boolean {
   return available
 }
 
+/**
+ * Load any Google-hosted family on demand, by its CSS API parameter.
+ *
+ * Used for the document body faces beyond the five that ship in the global
+ * stylesheet: that URL is preloaded on every visit including the marketing
+ * site, so families most documents never use must not be in it.
+ */
+export async function loadFontFamily(family: string, googleParam: string | null): Promise<boolean> {
+  if (!googleParam) return true
+  if (ready.has(family)) return true
+  injectStylesheet(family, `${GOOGLE_CSS}?family=${googleParam}&display=swap`)
+  try {
+    await document.fonts.load(`1em '${family}'`)
+    if (!document.fonts.check(`1em '${family}'`)) return false
+    ready.add(family)
+    return true
+  } catch (error) {
+    logger.warn(`Font "${family}" failed to load: ${getErrorMessage(error)}`)
+    return false
+  }
+}
+
 /** Reset the module caches. Test-only. */
 export function resetHandCache(): void {
   requested.clear()

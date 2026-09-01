@@ -251,6 +251,60 @@ export const STAGES: Record<DocumentSkin, StageDescriptor> = {
     tone: 'light',
     frame: ['header-band'],
   },
+
+  // 30 · Desk — warm wood under a soft lamp, a pen shadow at the edge.
+  handwritten: {
+    skin: 'handwritten',
+    nameKey: 'stage.desk2',
+    motion: 'type',
+    tone: 'light',
+    frame: [],
+  },
+
+  // 31 · Nightstand — dim room, one warm pool of lamplight.
+  'journal-hand': {
+    skin: 'journal-hand',
+    nameKey: 'stage.nightstand',
+    motion: 'bloom',
+    tone: 'dark',
+    frame: [],
+  },
+
+  // 32 · Field — canvas texture and the elastic band of a pocket notebook.
+  'field-notes': {
+    skin: 'field-notes',
+    nameKey: 'stage.field',
+    motion: 'snap',
+    tone: 'light',
+    frame: ['ticks'],
+  },
+
+  // 33 · Classroom — dark slate with chalk dust caught in the light.
+  chalkboard: {
+    skin: 'chalkboard',
+    nameKey: 'stage.classroom',
+    motion: 'draw',
+    tone: 'dark',
+    frame: ['edge-glow'],
+  },
+
+  // 34 · Correspondence desk — linen ground, an envelope shadow behind the sheet.
+  'letter-hand': {
+    skin: 'letter-hand',
+    nameKey: 'stage.correspondence',
+    motion: 'wipe',
+    tone: 'light',
+    frame: ['accent-band'],
+  },
+
+  // 35 · Schoolroom — pale ground with a pencil-tray edge.
+  worksheet: {
+    skin: 'worksheet',
+    nameKey: 'stage.schoolroom',
+    motion: 'cascade',
+    tone: 'light',
+    frame: ['header-band'],
+  },
 }
 
 /** The stage for a skin. Falls back to the default stage for unknown values. */

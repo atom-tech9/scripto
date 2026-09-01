@@ -77,6 +77,7 @@ export function documentDataAttrs(config: PdfConfig): Record<string, string> {
     if (isRuled(hand.stationery)) attrs['data-ruled'] = 'true'
     if (hand.headingHand !== 'same') attrs['data-heading-hand'] = hand.headingHand
     if (hand.drawnElements) attrs['data-drawn'] = 'true'
+    if (hand.maskRules) attrs['data-mask-rules'] = 'true'
     if (hand.aging > 0) attrs['data-aged'] = 'true'
     if (handDescriptor(hand.hand)?.variable) attrs['data-hand-variable'] = 'true'
   }

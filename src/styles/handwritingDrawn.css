@@ -1,0 +1,176 @@
+/*
+ * handwritingDrawn.css — the hand-drawn furniture.
+ *
+ * Active only with `drawnElements` on. Rules, bullets, boxes, checkboxes and
+ * highlights are inline SVG strokes rather than straight CSS borders, because
+ * nothing drawn by hand is straight.
+ *
+ * Three variants per element type, chosen by an `nth-child` rotation: the
+ * variation is deterministic without a line of JavaScript, so it survives the
+ * export clone and prints as vector — selectable, scalable, correct at any DPI.
+ */
+
+/* --- headings: a drawn underline instead of a ruled border --------------- */
+
+.scripto-doc[data-hand][data-drawn] :is(h1, h2, h3) {
+  border-bottom: none;
+  padding-bottom: 0.3em;
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  background-size: 100% 0.4em;
+}
+
+[dir='rtl'] .scripto-doc[data-hand][data-drawn] :is(h1, h2, h3) {
+  background-position: right bottom;
+}
+.scripto-doc[data-hand][data-drawn] :is(h1, h2, h3):nth-of-type(3n + 1) {
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20300%2012%27%20preserveAspectRatio%3D%27none%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23222%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M2%207%20C%2040%203%2C%2090%2010%2C%20140%205%20S%20240%209%2C%20298%206%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
+}
+.scripto-doc[data-hand][data-drawn] :is(h1, h2, h3):nth-of-type(3n + 2) {
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20300%2012%27%20preserveAspectRatio%3D%27none%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23222%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M2%206%20C%2055%2010%2C%20105%202%2C%20160%208%20S%20250%204%2C%20298%208%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
+}
+.scripto-doc[data-hand][data-drawn] :is(h1, h2, h3):nth-of-type(3n + 3) {
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20300%2012%27%20preserveAspectRatio%3D%27none%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23222%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M3%208%20C%2060%204%2C%20120%2011%2C%20180%205%20S%20260%2010%2C%20297%205%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
+}
+
+/* --- horizontal rule: a squiggle, never a straight line ------------------ */
+
+.scripto-doc[data-hand][data-drawn] hr {
+  height: 0.7em;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+.scripto-doc[data-hand][data-drawn] hr:nth-of-type(3n + 1) {
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20300%2016%27%20preserveAspectRatio%3D%27none%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23222%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M2%208%20C%2030%202%2C%2050%2014%2C%2080%208%20S%20130%202%2C%20160%208%20S%20210%2014%2C%20240%208%20S%20285%203%2C%20298%208%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
+}
+.scripto-doc[data-hand][data-drawn] hr:nth-of-type(3n + 2) {
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20300%2016%27%20preserveAspectRatio%3D%27none%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23222%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M2%208%20C%2035%2013%2C%2055%203%2C%2085%208%20S%20135%2014%2C%20165%208%20S%20215%202%2C%20245%208%20S%20285%2012%2C%20298%208%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
+}
+.scripto-doc[data-hand][data-drawn] hr:nth-of-type(3n + 3) {
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20300%2016%27%20preserveAspectRatio%3D%27none%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23222%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M2%209%20C%2028%204%2C%2052%2013%2C%2078%207%20S%20128%203%2C%20158%209%20S%20208%2013%2C%20238%207%20S%20284%204%2C%20298%209%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
+}
+
+/* --- tables: hand-ruled, not machine-ruled ------------------------------ */
+
+.scripto-doc[data-hand][data-drawn] .table-wrap {
+  padding: 0.5em;
+  border: 6px solid transparent;
+  border-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Cpath%20fill%3D%27none%27%20stroke%3D%27%23222%27%20stroke-width%3D%272.5%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20d%3D%27M6%208%20C%2032%205%2C%2070%206%2C%2094%208%20C%2096%2032%2C%2095%2066%2C%2094%2092%20C%2068%2095%2C%2030%2094%2C%206%2092%20C%204%2066%2C%205%2032%2C%206%208%20Z%27%2F%3E%3C%2Fsvg%3E')
+    14 stretch;
+}
+
+.scripto-doc[data-hand][data-drawn] :is(th, td) {
+  border-bottom: none;
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  background-size: 100% 0.32em;
+}
+.scripto-doc[data-hand][data-drawn] tr:nth-child(3n + 1) :is(th, td) {
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20300%2012%27%20preserveAspectRatio%3D%27none%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23222%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M2%207%20C%2040%203%2C%2090%2010%2C%20140%205%20S%20240%209%2C%20298%206%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
+}
+.scripto-doc[data-hand][data-drawn] tr:nth-child(3n + 2) :is(th, td) {
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20300%2012%27%20preserveAspectRatio%3D%27none%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23222%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M2%206%20C%2055%2010%2C%20105%202%2C%20160%208%20S%20250%204%2C%20298%208%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
+}
+.scripto-doc[data-hand][data-drawn] tr:nth-child(3n + 3) :is(th, td) {
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20300%2012%27%20preserveAspectRatio%3D%27none%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23222%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M3%208%20C%2060%204%2C%20120%2011%2C%20180%205%20S%20260%2010%2C%20297%205%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
+}
+
+/* --- callouts: a drawn box ---------------------------------------------- */
+
+.scripto-doc[data-hand][data-drawn] .callout {
+  box-shadow: none;
+  border: 6px solid transparent;
+  border-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Cpath%20fill%3D%27none%27%20stroke%3D%27%23222%27%20stroke-width%3D%272.5%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20d%3D%27M6%208%20C%2032%205%2C%2070%206%2C%2094%208%20C%2096%2032%2C%2095%2066%2C%2094%2092%20C%2068%2095%2C%2030%2094%2C%206%2092%20C%204%2066%2C%205%2032%2C%206%208%20Z%27%2F%3E%3C%2Fsvg%3E')
+    14 stretch;
+}
+
+/* --- blockquote: a drawn bracket down the inline-start edge ------------- */
+
+.scripto-doc[data-hand][data-drawn] blockquote {
+  border-inline-start: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 0.7em 100%;
+  padding-inline-start: 1.3em;
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2052%27%20preserveAspectRatio%3D%27none%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23222%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M12%203%20C%205%204%2C%204%2010%2C%204%2024%20C%204%2040%2C%203%2046%2C%2011%2049%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
+}
+
+[dir='rtl'] .scripto-doc[data-hand][data-drawn] blockquote {
+  background-position: right center;
+}
+
+/* --- list bullets: drawn dots, dashes and crosses ----------------------- */
+
+.scripto-doc[data-hand][data-drawn] ul > li {
+  position: relative;
+  list-style: none;
+}
+
+.scripto-doc[data-hand][data-drawn] ul > li::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: -1.15em;
+  top: 0.42em;
+  width: 0.75em;
+  height: 0.75em;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+.scripto-doc[data-hand][data-drawn] ul > li:nth-child(3n + 1)::before {
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2018%2018%27%20preserveAspectRatio%3D%27none%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23222%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M4%208%20C%206%204%2C%2012%204%2C%2014%208%20C%2015%2012%2C%2010%2015%2C%207%2013%20C%204%2012%2C%203%2010%2C%204%208%20Z%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
+}
+.scripto-doc[data-hand][data-drawn] ul > li:nth-child(3n + 2)::before {
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2018%2018%27%20preserveAspectRatio%3D%27none%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23222%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M3%209%20C%207%206%2C%2013%207%2C%2015%2010%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
+}
+.scripto-doc[data-hand][data-drawn] ul > li:nth-child(3n + 3)::before {
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2018%2018%27%3E%3Cpath%20fill%3D%27none%27%20stroke%3D%27%23222%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20d%3D%27M3%209%20C%207%207%2C%2012%2011%2C%2015%208%27%2F%3E%3C%2Fsvg%3E');
+}
+
+/* A task item already has a drawn checkbox, so it gets no bullet as well. */
+.scripto-doc[data-hand][data-drawn] ul > li.task-list-item::before {
+  content: none;
+}
+
+/* --- task checkboxes: a drawn box, and a tick that overshoots it -------- */
+
+.scripto-doc[data-hand][data-drawn] .task-list-item input[type='checkbox'] {
+  appearance: none;
+  position: relative;
+  border: none;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%20preserveAspectRatio%3D%27none%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23222%27%20stroke-width%3D%277%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M4%203%20C%2035%205%2C%2065%202%2C%2096%204%20C%2097%2035%2C%2098%2065%2C%2096%2097%20C%2065%2095%2C%2035%2098%2C%204%2096%20C%203%2065%2C%202%2035%2C%204%203%20Z%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
+}
+
+.scripto-doc[data-hand][data-drawn] .task-list-item input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  inset: -25%;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%20preserveAspectRatio%3D%27none%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23222%27%20stroke-width%3D%2712%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M14%2052%20C%2028%2066%2C%2036%2078%2C%2044%2084%20C%2058%2058%2C%2076%2026%2C%2096%206%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
+}
+
+/* --- highlighter and hand-underlined links ------------------------------ */
+
+.scripto-doc[data-hand][data-drawn] mark {
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 1.05em;
+  padding: 0 0.2em;
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20300%2022%27%20preserveAspectRatio%3D%27none%27%3E%3Cpath%20fill%3D%27none%27%20stroke%3D%27%23ffe066%27%20stroke-width%3D%2715%27%20stroke-linecap%3D%27round%27%20d%3D%27M8%2012%20C%2060%207%2C%20140%2016%2C%20220%209%20S%20288%2014%2C%20292%2011%27%2F%3E%3C%2Fsvg%3E');
+}
+
+.scripto-doc[data-hand][data-drawn] a {
+  text-decoration: none;
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  background-size: 100% 0.32em;
+  padding-bottom: 0.08em;
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20300%2012%27%20preserveAspectRatio%3D%27none%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23222%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M2%206%20C%2055%2010%2C%20105%202%2C%20160%208%20S%20250%204%2C%20298%208%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
+}

@@ -243,6 +243,16 @@ export function HandwritingSection({ config, onChange, onFontError }: Handwritin
             />
           </Field>
 
+          {ruled && (
+            <Field label={t('hand.maskRules')} hint={t('hand.hint.maskRules')}>
+              <Switch
+                checked={hand.maskRules}
+                onChange={(on) => patchHand({ maskRules: on })}
+                aria-label={t('hand.maskRules')}
+              />
+            </Field>
+          )}
+
           <Field label={t('hand.drawn')} hint={t('hand.hint.drawn')}>
             <Switch
               checked={hand.drawnElements}

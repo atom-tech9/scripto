@@ -239,6 +239,48 @@ export const SKIN_OPTIONS: SkinOption[] = [
     group: 'academic',
     handAffinity: 'good',
   },
+  {
+    value: 'handwritten',
+    label: 'Handwritten — casual hand, college ruled',
+    labelKey: 'skin.handwritten.label',
+    group: 'expressive',
+    handAffinity: 'native',
+  },
+  {
+    value: 'journal-hand',
+    label: 'Journal — diary hand, aged paper',
+    labelKey: 'skin.journal-hand.label',
+    group: 'expressive',
+    handAffinity: 'native',
+  },
+  {
+    value: 'field-notes',
+    label: 'Field notes — pocket book, graph paper',
+    labelKey: 'skin.field-notes.label',
+    group: 'expressive',
+    handAffinity: 'native',
+  },
+  {
+    value: 'chalkboard',
+    label: 'Chalkboard — chalk on slate',
+    labelKey: 'skin.chalkboard.label',
+    group: 'expressive',
+    handAffinity: 'native',
+  },
+  {
+    value: 'letter-hand',
+    label: 'Letter — personal correspondence, fountain ink',
+    labelKey: 'skin.letter-hand.label',
+    group: 'expressive',
+    handAffinity: 'native',
+  },
+  {
+    value: 'worksheet',
+    label: 'Worksheet — practice lines for teaching',
+    labelKey: 'skin.worksheet.label',
+    group: 'academic',
+    handAffinity: 'native',
+  },
 ]
 
 /** Runtime list of valid skin identifiers (for front-matter validation, etc.). */

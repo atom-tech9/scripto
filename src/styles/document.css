@@ -2501,3 +2501,156 @@
   color: var(--doc-accent);
   font-size: 1.15em;
 }
+
+/* ==========================================================================
+   Handwriting-native skins
+
+   These six ship with a hand rather than merely tolerating one, so they set
+   their own paper colour, ink and rhythm. Each is still a normal skin: a
+   document using one without a hand simply renders in the configured typeface.
+   ========================================================================== */
+
+.scripto-doc[data-skin='handwritten'] {
+  --doc-radius: 3px;
+  --doc-radius-sm: 2px;
+  --doc-fill: 8%;
+  --doc-accent-line: 3px;
+  --doc-shadow: none;
+  --doc-label-transform: none;
+  --doc-label-spacing: 0.02em;
+}
+.scripto-doc[data-skin='handwritten'] :is(h1, h2, h3) {
+  border: none;
+  font-weight: 600;
+}
+
+.scripto-doc[data-skin='journal-hand'] {
+  --doc-radius: 0;
+  --doc-fill: 0%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  --doc-fg: #4a3a28;
+  --doc-muted: #7c6a55;
+  --doc-rule: #d8c7ad;
+  --doc-surface: #f6ecd8;
+  --doc-label-transform: none;
+}
+.scripto-doc[data-skin='journal-hand'] :is(h1, h2, h3) {
+  border: none;
+  font-weight: 600;
+}
+.scripto-doc[data-skin='journal-hand'] blockquote {
+  font-style: italic;
+}
+
+.scripto-doc[data-skin='field-notes'] {
+  --doc-radius: 2px;
+  --doc-fill: 6%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  --doc-label-spacing: 0.08em;
+  font-size: calc(var(--doc-size) * 0.94);
+}
+.scripto-doc[data-skin='field-notes'] :is(h1, h2, h3) {
+  border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 1.05em;
+}
+
+.scripto-doc[data-skin='chalkboard'] {
+  --doc-radius: 0;
+  --doc-fill: 10%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  --doc-fg: #eef2ea;
+  --doc-muted: #b9c4b5;
+  --doc-rule: #4a5a4e;
+  --doc-surface: #26302a;
+  --doc-accent: #ffe58a;
+  --doc-quote: #ffe58a;
+  background: #26302a;
+  /* Backgrounds are off by default when printing, so say explicitly that this
+     one carries meaning — without the slate the light chalk ink is invisible. */
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+  padding: 1.5em;
+}
+.scripto-doc[data-skin='chalkboard'] :is(h1, h2, h3) {
+  border: none;
+  color: #ffe58a;
+}
+
+.scripto-doc[data-skin='letter-hand'] {
+  --doc-radius: 0;
+  --doc-fill: 0%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  --doc-label-transform: none;
+}
+.scripto-doc[data-skin='letter-hand'] h1 {
+  border: none;
+  font-size: 1.3em;
+  font-weight: 600;
+}
+.scripto-doc[data-skin='letter-hand'] p {
+  margin-bottom: 1.1em;
+}
+
+.scripto-doc[data-skin='worksheet'] {
+  --doc-radius: 0;
+  --doc-fill: 0%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  --doc-label-spacing: 0.08em;
+}
+.scripto-doc[data-skin='worksheet'] :is(h1, h2, h3) {
+  border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+/* A worksheet is mostly blank space to write in, so the gaps do the work. */
+.scripto-doc[data-skin='worksheet'] li {
+  margin-block: 0.9em;
+}
+
+/* ---------- Numbering in right-to-left documents ----------
+   Two things go wrong otherwise. A counter reads "1." in source order, but the
+   full stop is a neutral character, so bidi places it on the left and the
+   reader sees ".1" — isolating the number fixes that. And an Arabic document
+   should count in Arabic-Indic digits, not Western ones. */
+.scripto-doc .heading-number,
+.scripto-doc[data-numbered] :is(h1, h2, h3, h4)::before {
+  unicode-bidi: isolate;
+}
+
+.scripto-doc[lang='ar'][data-numbered] h1::before {
+  content: counter(h1, arabic-indic) '.\00a0\00a0';
+}
+
+.scripto-doc[lang='ar'][data-numbered] h2::before {
+  content: counter(h1, arabic-indic) '.' counter(h2, arabic-indic) '\00a0\00a0';
+}
+
+.scripto-doc[lang='ar'][data-numbered] h3::before {
+  content: counter(h1, arabic-indic) '.' counter(h2, arabic-indic) '.' counter(h3, arabic-indic)
+    '\00a0\00a0';
+}
+
+.scripto-doc[lang='ar'][data-numbered] h4::before {
+  content: counter(h1, arabic-indic) '.' counter(h2, arabic-indic) '.' counter(h3, arabic-indic) '.'
+    counter(h4, arabic-indic) '\00a0\00a0';
+}
+
+/* Ordered lists and footnotes count the same way. */
+.scripto-doc[lang='ar'] ol {
+  list-style: arabic-indic outside;
+}
+
+.scripto-doc[lang='ar'] ol ol {
+  list-style: arabic-indic outside;
+}
+
+.scripto-doc[lang='ar'] .footnotes ol {
+  list-style: arabic-indic outside;
+}
