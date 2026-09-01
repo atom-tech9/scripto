@@ -131,6 +131,10 @@ author: Strategy Team
 subject: Q3 performance and outlook
 cover: true
 toc: true
+skin: corporate
+accent: #1d4ed8
+margins: normal
+numbered: true
 ---
 
 # Executive Summary
@@ -166,6 +170,10 @@ title: A Study of Something Important
 author: A. Researcher
 cover: true
 toc: true
+skin: journal
+accent: #334155
+margins: wide
+numbered: true
 ---
 
 # Abstract
@@ -205,6 +213,9 @@ Our measurements agree with theory to within 2%.
 title: Letter
 author: Your Name
 pageNumbers: false
+skin: letter
+accent: #0f766e
+margins: wide
 ---
 
 **Your Name**
@@ -231,23 +242,50 @@ Kind regards,
     nameKey: 'template.meeting.name',
     descKey: 'template.meeting.desc',
     emoji: '📝',
-    content: `# Meeting Notes — {Topic}
+    content: `---
+skin: memo
+accent: #475569
+title: Weekly product sync
+date: 2026-06-30
+---
 
-**Date:** 2026-01-01 · **Attendees:** Alice, Bob, Carol
+# Weekly Product Sync
+
+**Date:** 30 June 2026, 10:00–10:45 · **Chair:** Dana Whitfield
+**Present:** Dana Whitfield, Omar Haddad, Priya Raman, Tom Brennan
+**Apologies:** Lena Fischer (annual leave)
 
 ## Agenda
-1. Review last week
-2. Discuss roadmap
-3. Open issues
+1. Q2 launch review — 10 min
+2. Billing migration go / no-go — 20 min
+3. Hiring update — 10 min
+
+## Discussion
+
+### Q2 launch review
+Activation landed at 38% against a 35% target. The onboarding checklist drove
+almost all of the lift; the in-app tour moved nothing measurable and costs us a
+release-blocking flag every cycle.
+
+### Billing migration go / no-go
+Staging has run clean for nine days. Omar flagged that refunds issued before the
+cutover still need manual reconciliation — roughly 40 accounts, about half a day
+of work. The group agreed that is cheaper than another two-week delay.
 
 ## Decisions
-- [x] Ship v1 next Friday
-- [x] Adopt the new design system
+- [x] **Go** for the billing migration on 8 July, 02:00–04:00 UTC.
+- [x] Retire the in-app tour in the 1.9 release.
+- [x] Reconcile pre-cutover refunds by hand rather than slipping the date.
 
-## Action Items
-- [ ] **Alice** — draft the migration plan
-- [ ] **Bob** — set up CI
-- [ ] **Carol** — write the announcement
+## Action items
+| Owner | Action | Due |
+| :---- | :----- | :-- |
+| Omar | Reconcile the 40 flagged refund accounts | 7 Jul |
+| Priya | Draft and send the customer comms for the migration window | 4 Jul |
+| Tom | Remove the tour flag and delete the dead code path | 10 Jul |
+
+## Next meeting
+7 July, 10:00 — Dana to chair.
 `,
   },
   {
@@ -261,6 +299,9 @@ Kind regards,
 title: Jane Doe — Résumé
 author: Jane Doe
 pageNumbers: false
+skin: resume
+accent: #0f172a
+margins: narrow
 ---
 
 # Jane Doe
@@ -303,6 +344,9 @@ TypeScript · React · Node.js · PostgreSQL · AWS · System Design
 title: How We Cut Page Load Time in Half
 author: Your Name
 subject: A performance case study
+skin: editorial
+accent: #db2777
+margins: wide
 ---
 
 # How We Cut Page Load Time in Half
@@ -343,7 +387,13 @@ const Editor = lazy(() => import('./Editor'))
     nameKey: 'template.changelog.name',
     descKey: 'template.changelog.desc',
     emoji: '🗒️',
-    content: `# Changelog
+    content: `---
+skin: changelog
+accent: #6d28d9
+title: Changelog
+---
+
+# Changelog
 
 All notable changes to this project are documented here.
 
@@ -379,6 +429,8 @@ title: Product Requirements — Feature X
 author: Product Team
 toc: true
 numbered: true
+skin: technical
+accent: #6366f1
 ---
 
 # Overview
@@ -420,31 +472,46 @@ Status: Draft · Owner: PM Name · Target: Q3
     descKey: 'template.invoice.desc',
     emoji: '🧾',
     content: `---
-title: Invoice #00123
-author: Your Company
+title: Invoice INV-2026-0142
+author: Northwind Studio Ltd
+skin: invoice
+accent: #0f172a
 pageNumbers: false
 ---
 
 # Invoice
 
-**Your Company** · 123 Main St · billing@company.com
+**Northwind Studio Ltd** · 14 Bridgewater Road, Manchester M1 4AB
+VAT GB 412 8837 21 · billing@northwind.studio · +44 161 555 0134
 
-| Bill to | Details |
-| :------ | :------ |
-| Client Name | Invoice #00123 |
-| Client Address | Date: 2026-06-30 |
-|  | Due: 2026-07-15 |
+| Bill to | | Invoice details | |
+| :------ | :-- | :-------------- | :-- |
+| Calder & Finch LLP | | Invoice no. | INV-2026-0142 |
+| 8 Cathedral Square | | Issued | 30 June 2026 |
+| Leeds LS1 2AB | | Due | 14 July 2026 |
+| PO 4471 | | Terms | Net 14 |
 
-## Items
+## Services
 
 | Description | Qty | Rate | Amount |
 | :---------- | --: | ---: | -----: |
-| Design work | 10 | $120 | $1,200 |
-| Development | 20 | $140 | $2,800 |
-| **Total** |  |  | **$4,000** |
+| Brand identity — discovery workshop | 1 day | £950.00 | £950.00 |
+| Logo design and variants | 12 hrs | £110.00 | £1,320.00 |
+| Brand guidelines document | 18 hrs | £110.00 | £1,980.00 |
+| Stationery and email signature templates | 6 hrs | £95.00 | £570.00 |
+| Subtotal | | | £4,820.00 |
+| VAT @ 20% | | | £964.00 |
+| **Total due** | | | **£5,784.00** |
 
-## Payment terms
-Net 15. Please transfer to the account on file. Thank you for your business!
+## Payment
+
+Bank transfer to **Northwind Studio Ltd**, sort code 04-00-75, account 71829304.
+Please quote **INV-2026-0142** as the reference.
+
+Late payment is subject to statutory interest at 8% above the Bank of England
+base rate under the Late Payment of Commercial Debts (Interest) Act 1998.
+
+Thank you for your business.
 `,
   },
   {
@@ -458,6 +525,9 @@ Net 15. Please transfer to the account on file. Thank you for your business!
 title: Cover Letter
 author: Your Name
 pageNumbers: false
+skin: letter
+accent: #1e40af
+margins: wide
 ---
 
 **Your Name** · your@email.com · +1 555 0100
@@ -495,6 +565,8 @@ title: Project Proposal
 author: Your Name
 cover: true
 toc: true
+skin: corporate
+accent: #7c3aed
 ---
 
 # Overview
@@ -544,6 +616,8 @@ Sign-off by {date} to hit the timeline above.
 title: SOP — {Process Name}
 numbered: true
 toc: true
+skin: technical
+accent: #0891b2
 ---
 
 # Purpose
@@ -583,37 +657,63 @@ Never skip the verification step — it prevents the most common failure.
     nameKey: 'template.bug-report.name',
     descKey: 'template.bug-report.desc',
     emoji: '🐞',
-    content: `# Bug: {Short, specific title}
+    content: `---
+skin: technical
+accent: #dc2626
+title: 'BUG-2291: CSV export truncates at 10,000 rows'
+---
 
-**Severity:** High · **Status:** Open · **Reporter:** You
+# BUG-2291 — CSV export truncates at 10,000 rows
+
+| | |
+| :-- | :-- |
+| **Severity** | P2 — data loss, workaround exists |
+| **Reported by** | Support (3 customer tickets) |
+| **Affects** | 1.8.2 and later · web only |
+| **Assigned** | Omar Haddad |
 
 ## Summary
-One sentence describing the problem.
 
-## Steps to Reproduce
-1. Go to '…'
-2. Click '…'
-3. See error
+Exporting a report with more than 10,000 rows produces a CSV containing exactly
+10,000 data rows. No warning is shown and the file downloads normally, so users
+believe the export is complete.
+
+## Steps to reproduce
+
+1. Sign in to an account with at least 12,000 events in the last 30 days.
+2. Open **Reports → Events**, set the range to *Last 30 days*.
+3. Click **Export → CSV**.
+4. Open the downloaded file and count the rows.
 
 ## Expected
-What should happen.
+
+All matching rows are exported, or the user is told the export was capped.
 
 ## Actual
-What actually happens.
 
-\`\`\`
-Paste the error / stack trace here
-\`\`\`
-
-## Environment
-| Field | Value |
-| :---- | :---- |
-| OS | macOS 15 |
-| Browser | Chrome 138 |
-| Version | 1.2.0 |
+The file contains a header plus exactly 10,000 rows. The UI reports success.
 
 ## Notes
-Screenshots, frequency, and any workaround.
+
+The reporting query still carries the default \`LIMIT 10000\` from the paginated
+endpoint it was copied from. It was never lifted for the export path.
+
+\\\`\\\`\\\`ts
+// src/server/reports/export.ts
+const rows = await db.events.findMany({
+  where: range,
+  take: 10_000, // <- paginated default, wrong for a full export
+})
+\\\`\\\`\\\`
+
+## Workaround
+
+Export in two narrower date ranges and concatenate the files.
+
+## Fix
+
+Stream the export with a cursor instead of a single bounded query, and add a
+regression test that exports 25,000 rows and asserts the count.
 `,
   },
   {
@@ -626,6 +726,8 @@ Screenshots, frequency, and any workaround.
     content: `---
 title: API Reference
 toc: true
+skin: technical
+accent: #0ea5e9
 ---
 
 # Authentication
@@ -673,30 +775,43 @@ Create a user.
     nameKey: 'template.status-update.name',
     descKey: 'template.status-update.desc',
     emoji: '📅',
-    content: `# Weekly Update — Week of 2026-06-30
+    content: `---
+skin: memo
+accent: #0d9488
+title: Weekly update — Platform
+date: 2026-06-30
+---
 
-**Team:** {Team} · **Author:** You
+# Weekly Update — Platform
 
-## 🎯 Highlights
-- Shipped {thing}
-- Closed {N} tickets
+**Week of 30 June 2026** · **Team:** Platform (5 engineers) · **Author:** Priya Raman
 
-## ✅ Done this week
-- [x] Task A
-- [x] Task B
+## Highlights
+- Billing migration cleared its final staging soak — nine days, zero data drift.
+- p95 API latency down from 410 ms to 240 ms after the connection-pool change.
+- Two long-standing flaky tests fixed; CI is green on \`main\` for the first time in six weeks.
 
-## 🔜 Next week
-- [ ] Task C
-- [ ] Task D
+## Shipped
+- [x] Connection pooling for the reporting service (#4182)
+- [x] Retry-with-backoff on webhook delivery (#4190)
+- [x] Removed the legacy \`/v1/usage\` endpoint — no callers for 90 days
 
-## 🚧 Blockers
-- {Blocker} — needs {owner} by {date}
+## In flight
+- [ ] Billing migration cutover — scheduled 8 July, 02:00 UTC
+- [ ] Per-tenant rate limiting — design review Thursday
+- [ ] Audit-log retention policy — blocked, see below
 
-## 📊 Metrics
-| Metric | This week | Last week |
-| :----- | --------: | --------: |
-| Signups | 320 | 290 |
-| Uptime | 99.98% | 99.95% |
+## Blockers
+- **Audit-log retention** needs a decision from Legal on the minimum period.
+  Chased twice; escalating to Dana if there is no answer by 3 July.
+
+## Metrics
+| Metric | This week | Last week | Target |
+| :----- | --------: | --------: | -----: |
+| p95 API latency | 240 ms | 410 ms | < 300 ms |
+| Error rate | 0.04% | 0.11% | < 0.10% |
+| Uptime | 99.98% | 99.91% | 99.95% |
+| Open P1s | 0 | 2 | 0 |
 `,
   },
   {
@@ -708,18 +823,31 @@ Create a user.
     emoji: '🎯',
     content: `---
 title: OKRs — Q3 2026
+skin: swiss
+accent: #dc2626
+subtitle: Platform team
 ---
 
-# Objective 1 — {Ambitious, qualitative goal}
-- **KR 1:** {Measurable result} — \`0 → 100\`
-- **KR 2:** {Measurable result} — \`5% → 15%\`
-- **KR 3:** {Measurable result}
+# Objective 1 — Make the product fast enough that nobody mentions speed
 
-# Objective 2 — {Second objective}
-- **KR 1:** {Measurable result}
-- **KR 2:** {Measurable result}
+- **KR 1:** p95 API latency \`410 ms → 250 ms\`
+- **KR 2:** Median time-to-first-render \`2.4 s → 1.2 s\`
+- **KR 3:** Zero P1 incidents attributed to database contention \`2 → 0\`
 
-> Grade each KR 0.0–1.0 at quarter end. Aim for 0.7 — if you hit 1.0, you aimed too low.
+# Objective 2 — Earn the trust of finance teams
+
+- **KR 1:** Billing migration completed with no customer-visible discrepancies \`0 incidents\`
+- **KR 2:** Invoice disputes raised per month \`14 → 4\`
+- **KR 3:** Self-serve refunds available to all plans \`0% → 100% of accounts\`
+
+# Objective 3 — Stop paying interest on the 2024 codebase
+
+- **KR 1:** Services still on the deprecated auth library \`7 → 0\`
+- **KR 2:** CI wall-clock time \`22 min → 10 min\`
+- **KR 3:** Test flake rate \`3.1% → below 0.5%\`
+
+> Grade each key result 0.0–1.0 at quarter end. Aim for 0.7 — a quarter of
+> straight 1.0s means the objectives were set too low.
 `,
   },
   {
@@ -729,24 +857,41 @@ title: OKRs — Q3 2026
     nameKey: 'template.retro.name',
     descKey: 'template.retro.desc',
     emoji: '🔄',
-    content: `# Retrospective — Sprint {N}
+    content: `---
+skin: notebook
+accent: #f59e0b
+title: Sprint 24 retrospective
+date: 2026-06-26
+---
 
-**Date:** 2026-06-30 · **Facilitator:** You
+# Sprint 24 Retrospective
 
-## 😀 What went well
-- {Win}
-- {Win}
+**Sprint:** 24 (15–26 June 2026) · **Facilitator:** Tom Brennan · **Present:** 6 of 7
 
-## 😕 What didn't
-- {Pain point}
-- {Pain point}
+## What went well
+- The billing soak test caught the refund edge case *before* customers did.
+- Pairing on the connection-pool change spread the context across three people
+  instead of one.
+- We finished the sprint without a single weekend deploy.
 
-## 💡 Ideas
-- {Experiment to try}
+## What did not
+- Two stories carried over because the design was still moving on day four.
+- The staging environment was down for most of Tuesday and nobody owned fixing it.
+- Standup routinely ran to 25 minutes.
 
-## ✅ Action items
-- [ ] {Action} — **owner**, due {date}
-- [ ] {Action} — **owner**, due {date}
+## What we are changing
+| Change | Owner | By |
+| :----- | :---- | :- |
+| No story enters a sprint without a signed-off design | Dana | Sprint 25 planning |
+| Rotate a named "environment owner" each sprint | Tom | Sprint 25 |
+| Hard-stop standup at 10 minutes; park the rest | Whole team | Immediately |
+
+## Still open
+- Do we split the platform board from the product board? Revisit at Sprint 26.
+
+> Kept from last retro: the "no story without a design" rule failed once this
+> sprint. If it fails again in Sprint 25, we stop treating it as a rule and find
+> out what is actually blocking it.
 `,
   },
   {
@@ -757,43 +902,64 @@ title: OKRs — Q3 2026
     descKey: 'template.rfc.desc',
     emoji: '🧩',
     content: `---
-title: 'RFC: {Title}'
-author: Your Name
-toc: true
+title: 'ADR-014: Move session storage to Redis'
+author: Priya Raman
+skin: rfc
+accent: #2563eb
 numbered: true
+toc: true
 ---
 
-# Summary
-One paragraph: what are we proposing and why.
+> **Status:** Accepted · **Date:** 2026-06-24 · **Deciders:** Platform guild
+> **Supersedes:** ADR-006 (sticky sessions at the load balancer)
 
-# Context & Problem
-Background and the problem this solves.
+# Context
 
-# Goals / Non-Goals
-- **Goals:** …
-- **Non-Goals:** …
+Sessions live in each API node's memory, so the load balancer has to pin every
+user to one node. That pinning is now the main reason we cannot deploy during
+business hours: draining a node logs out everyone assigned to it.
 
-# Proposal
-The detailed design.
+Traffic has roughly tripled since ADR-006. At 12 nodes, one node draining signs
+out about 8% of active users.
 
-\`\`\`mermaid
-flowchart LR
-  Client --> API --> DB[(Database)]
-\`\`\`
+# Decision
 
-# Alternatives Considered
-| Option | Pros | Cons |
-| :----- | :--- | :--- |
-| A (chosen) | … | … |
-| B | … | … |
+Move session storage to a managed Redis cluster, keyed by session id, with a
+30-day TTL. API nodes become stateless and the load balancer moves to plain
+round-robin.
 
-# Risks & Mitigations
-- **Risk:** … → **Mitigation:** …
+# Consequences
 
-# Rollout Plan
-1. Behind a flag
-2. Internal dogfood
-3. Gradual GA
+**We gain**
+- Rolling deploys with no forced logouts.
+- Sessions survive a node loss instead of vanishing with it.
+- Session state becomes inspectable during incidents.
+
+**We accept**
+- Redis becomes a hard dependency on the login path; an outage logs everyone out.
+- One extra network hop per authenticated request — measured at 3–6 ms in staging.
+- Roughly $340/month for the managed cluster.
+
+**We must**
+- Add a circuit breaker so a Redis timeout degrades to a re-login prompt rather
+  than a 500.
+- Alert on Redis memory above 70%; at current growth that is about 14 months away.
+
+# Alternatives considered
+
+| Option | Why not |
+| :----- | :------ |
+| Keep sticky sessions | Does not solve the deploy problem, which is the whole point |
+| Signed stateless JWTs | We cannot revoke on demand, and Security has said no |
+| Postgres session table | Works, but adds write load to the database we are trying to protect |
+
+# Rollout
+
+1. Dual-write sessions to memory and Redis; read from memory. *(1 week)*
+2. Flip reads to Redis behind a per-tenant flag; memory stays as fallback. *(1 week)*
+3. Remove the memory path and switch the balancer to round-robin. *(1 day)*
+
+Rollback is the flag, at any point before step 3.
 `,
   },
   {
@@ -804,29 +970,51 @@ flowchart LR
     descKey: 'template.press-release.desc',
     emoji: '📰',
     content: `---
-title: Press Release
+skin: newsprint
+accent: #111827
+title: 'Northwind raises £6M Series A'
 ---
+
+# Northwind Raises £6M to Put Financial Reporting in the Hands of Operators
 
 **FOR IMMEDIATE RELEASE**
 
-# {Company} Launches {Product} to {Benefit}
+**MANCHESTER, 30 June 2026** — Northwind, the reporting platform used by more
+than 900 finance teams, today announced a £6 million Series A led by Aldgate
+Ventures, with participation from existing investors Pennine Capital and a
+group of angel investors from the accounting software industry.
 
-**{City}, {Date}** — {Company} today announced {Product}, a {category} that helps
-{audience} {do something valuable}.
+The company will use the funding to triple its engineering team and to launch
+a self-serve tier aimed at finance teams of fewer than ten people.
 
-"{Punchy quote from a leader explaining why this matters}," said {Name}, {Title}
-at {Company}.
+Northwind's platform replaces the spreadsheet exports most finance teams still
+rely on, connecting directly to accounting and billing systems and producing
+board-ready reports without a data engineer in the loop. Customers report
+cutting their monthly close from nine days to four.
 
-{Product} is available today at {url}. Key capabilities include:
+> "Every finance team we met was doing the same thing: exporting to a
+> spreadsheet, fixing it by hand, and hoping nobody found the error later,"
+> said Dana Whitfield, co-founder and CEO of Northwind. "We are not trying to
+> replace the accountant. We are trying to give them back the fortnight a year
+> they spend reconciling exports."
 
-- {Feature 1}
-- {Feature 2}
-- {Feature 3}
+> "Northwind has the rare combination of deep domain knowledge and genuine
+> engineering discipline," said Marcus Osei, Partner at Aldgate Ventures.
+> "Their retention numbers are the best we have seen in the category."
 
-## About {Company}
-{One paragraph boilerplate about the company.}
+Northwind was founded in 2023 and now employs 24 people across Manchester and
+Lisbon. The self-serve tier opens for early access in September 2026.
 
-**Media contact:** press@company.com
+## About Northwind
+
+Northwind builds financial reporting software for operators. Founded in 2023 and
+headquartered in Manchester, the company serves more than 900 finance teams
+across the UK and EU. Learn more at northwind.example.
+
+## Media contact
+
+Priya Raman · Head of Communications
+press@northwind.example · +44 161 555 0198
 `,
   },
   {
@@ -839,6 +1027,9 @@ at {Company}.
     content: `---
 title: Case Study — {Customer}
 cover: true
+skin: editorial
+accent: #7c3aed
+margins: wide
 ---
 
 # {Customer} cut {metric} by {X}% with {Product}
@@ -872,6 +1063,9 @@ How the partnership grows from here.
 title: Mutual Non-Disclosure Agreement
 numbered: true
 pageNumbers: true
+skin: contract
+accent: #1f2937
+margins: wide
 ---
 
 # Parties
@@ -909,7 +1103,13 @@ This Agreement remains in effect for **{N} years** from the effective date.
     nameKey: 'template.onboarding.name',
     descKey: 'template.onboarding.desc',
     emoji: '🚀',
-    content: `# Onboarding — {New Hire Name}
+    content: `---
+skin: handout
+accent: #10b981
+title: Onboarding guide
+---
+
+# Onboarding — {New Hire Name}
 
 **Role:** {Role} · **Manager:** {Manager} · **Start:** {Date}
 
@@ -941,7 +1141,13 @@ Goal of week 1: make one real contribution and know who to ask for help.
     nameKey: 'template.recipe.name',
     descKey: 'template.recipe.desc',
     emoji: '🍳',
-    content: `# {Dish Name}
+    content: `---
+skin: notebook
+accent: #ea580c
+title: Recipe
+---
+
+# {Dish Name}
 
 *Serves 4 · Prep 15 min · Cook 30 min*
 
@@ -1343,7 +1549,13 @@ pageNumbers: false
     descKey: 'template.diagram-flowchart.desc',
     category: 'diagram',
     emoji: '🔀',
-    content: `# Process Flow
+    content: `---
+skin: blueprint
+accent: #0ea5e9
+title: Flowchart
+---
+
+# Process Flow
 
 A simple approval process with a decision and a loop back.
 
@@ -1363,7 +1575,13 @@ flowchart TD
     descKey: 'template.diagram-sequence.desc',
     category: 'diagram',
     emoji: '🔁',
-    content: `# Authentication Flow
+    content: `---
+skin: blueprint
+accent: #0ea5e9
+title: Sequence diagram
+---
+
+# Authentication Flow
 
 How a login request flows from the user to the auth server and back.
 
@@ -1387,7 +1605,14 @@ sequenceDiagram
     descKey: 'template.diagram-gantt.desc',
     category: 'diagram',
     emoji: '📅',
-    content: `# Project Plan
+    content: `---
+skin: corporate
+accent: #1d4ed8
+title: Project schedule
+paper: a4
+---
+
+# Project Plan
 
 A timeline of build and launch tasks.
 
@@ -1412,7 +1637,13 @@ gantt
     descKey: 'template.diagram-class.desc',
     category: 'diagram',
     emoji: '🧱',
-    content: `# Domain Model
+    content: `---
+skin: blueprint
+accent: #0ea5e9
+title: Class diagram
+---
+
+# Domain Model
 
 The core entities and how they relate.
 
@@ -1439,7 +1670,13 @@ classDiagram
     descKey: 'template.diagram-er.desc',
     category: 'diagram',
     emoji: '🗄️',
-    content: `# Database Schema
+    content: `---
+skin: blueprint
+accent: #0ea5e9
+title: Entity relationship diagram
+---
+
+# Database Schema
 
 How customers, orders, and products relate.
 
@@ -1459,7 +1696,13 @@ erDiagram
     descKey: 'template.diagram-state.desc',
     category: 'diagram',
     emoji: '🔄',
-    content: `# Content Lifecycle
+    content: `---
+skin: blueprint
+accent: #0ea5e9
+title: State machine
+---
+
+# Content Lifecycle
 
 The states a document moves through from draft to published.
 
@@ -1481,7 +1724,13 @@ stateDiagram-v2
     descKey: 'template.diagram-journey.desc',
     category: 'diagram',
     emoji: '🧭',
-    content: `# Checkout Experience
+    content: `---
+skin: corporate
+accent: #7c3aed
+title: User journey
+---
+
+# Checkout Experience
 
 A journey map of the checkout, scored step by step.
 
@@ -1505,7 +1754,13 @@ journey
     descKey: 'template.diagram-gitgraph.desc',
     category: 'diagram',
     emoji: '🌿',
-    content: `# Release History
+    content: `---
+skin: terminal
+accent: #22c55e
+title: Branching model
+---
+
+# Release History
 
 A typical feature-branch and merge flow.
 
@@ -1528,7 +1783,13 @@ gitGraph
     descKey: 'template.diagram-pie.desc',
     category: 'diagram',
     emoji: '🥧',
-    content: `# Budget Allocation
+    content: `---
+skin: corporate
+accent: #1d4ed8
+title: Breakdown
+---
+
+# Budget Allocation
 
 How the budget is split across teams.
 
@@ -1548,7 +1809,13 @@ pie title Budget allocation
     descKey: 'template.diagram-mindmap.desc',
     category: 'diagram',
     emoji: '🧠',
-    content: `# Product Brainstorm
+    content: `---
+skin: playful
+accent: #8b5cf6
+title: Mind map
+---
+
+# Product Brainstorm
 
 A mindmap of growth and retention ideas.
 
@@ -1572,7 +1839,13 @@ mindmap
     descKey: 'template.diagram-timeline.desc',
     category: 'diagram',
     emoji: '📈',
-    content: `# Company Timeline
+    content: `---
+skin: swiss
+accent: #dc2626
+title: Timeline
+---
+
+# Company Timeline
 
 Key milestones over the years.
 
@@ -1593,7 +1866,13 @@ timeline
     descKey: 'template.diagram-ascii-architecture.desc',
     category: 'diagram',
     emoji: '🖥️',
-    content: `# Server Architecture
+    content: `---
+skin: terminal
+accent: #22c55e
+title: System architecture
+---
+
+# Server Architecture
 
 Everything below runs on a single server behind Cloudflare.
 
@@ -1638,7 +1917,13 @@ tag a fence as \`plain\` to force plain rendering instead.
     descKey: 'template.diagram-ascii-tree.desc',
     category: 'diagram',
     emoji: '🌳',
-    content: `# Project Layout
+    content: `---
+skin: terminal
+accent: #22c55e
+title: Repository layout
+---
+
+# Project Layout
 
 The folders that matter, at a glance.
 
