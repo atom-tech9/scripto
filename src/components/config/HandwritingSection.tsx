@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { Loader2, PenLine } from 'lucide-react'
 import { Field, Slider, Switch } from '@/components/ui/Field'
 import { HANDS, handsForScript, type HandScript } from '@/lib/handwriting/hands'
@@ -6,7 +6,13 @@ import { loadHand } from '@/lib/handwriting/fonts'
 import { isRuled } from '@/lib/handwriting/rules'
 import { useLanguage } from '@/i18n'
 import { CustomHandsDialog } from './CustomHandsDialog'
-import { DrawAlphabetDialog } from './DrawAlphabetDialog'
+/**
+ * opentype.js is ~600 kB and only ever runs when someone draws an alphabet, so
+ * it must not sit in the editor's entry chunk. Loaded on first open instead.
+ */
+const DrawAlphabetDialog = lazy(() =>
+  import('./DrawAlphabetDialog').then((m) => ({ default: m.DrawAlphabetDialog })),
+)
 import { listCustomHands } from '@/lib/handwriting/customHands'
 import { cn } from '@/lib/utils'
 import type { HandConfig, HandStyle, InkStyle, PdfConfig, Stationery } from '@/types'
@@ -208,11 +214,15 @@ export function HandwritingSection({ config, onChange, onFontError }: Handwritin
               setDrawOpen(true)
             }}
           />
-          <DrawAlphabetDialog
-            open={drawOpen}
-            onClose={() => setDrawOpen(false)}
-            onCreated={chooseCustom}
-          />
+          {drawOpen && (
+            <Suspense fallback={null}>
+              <DrawAlphabetDialog
+                open={drawOpen}
+                onClose={() => setDrawOpen(false)}
+                onCreated={chooseCustom}
+              />
+            </Suspense>
+          )}
 
           <Field label={t('hand.ink')}>
             <div className="flex flex-wrap gap-1.5">
