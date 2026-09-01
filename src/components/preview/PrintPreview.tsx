@@ -31,6 +31,7 @@ import {
 } from '@/pdf/pageBreaks'
 import { PageBreakLayer, type BlockRange } from '@/preview/print/PageBreakLayer'
 import { logger } from '@/lib/logger'
+import { trackEvent } from '@/lib/analytics'
 import { useLanguage } from '@/i18n'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { cn } from '@/lib/utils'
@@ -129,6 +130,7 @@ export function PrintPreview({
       })
       setPageCount(count)
       setFit(fitResult)
+      trackEvent('Print Dialog Reached', { pages: count, hand: exportConfig.hand.hand })
       // Auto-fit the A4 page to the available width (never upscale past 100%).
       // Measure an actual page element — its offsetWidth is the true (unscaled)
       // page width, whereas the wrapping container just fills the surface width.
@@ -230,8 +232,10 @@ export function PrintPreview({
   )
 
   const handleInsertBreak = useCallback(
-    (bodyLine: number) =>
-      applyEdit(insertPageBreak(markdown, toDocumentLine(bodyLine, bodyLineOffset))),
+    (bodyLine: number) => (
+      trackEvent('Page Break Inserted', {}),
+      applyEdit(insertPageBreak(markdown, toDocumentLine(bodyLine, bodyLineOffset)))
+    ),
     [applyEdit, markdown, bodyLineOffset],
   )
 

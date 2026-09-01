@@ -8,6 +8,7 @@ import { githubLight, githubDark } from '@uiw/codemirror-theme-github'
 import type { ResolvedTheme, TextDirection } from '@/types'
 import { useLanguage } from '@/i18n'
 import { compressImage } from '@/lib/image'
+import { trackEvent } from '@/lib/analytics'
 import { htmlToMarkdown } from '@/io/importers'
 import { getErrorMessage, logger } from '@/lib/logger'
 import { collapseImages } from './collapseImages'
@@ -228,6 +229,7 @@ export function MarkdownEditor({
         paste: (event, view) => {
           const files = imageFiles(event.clipboardData?.files)
           if (files.length > 0) {
+            trackEvent('Paste Detected', { kind: 'image' })
             event.preventDefault()
             void embedImages(view, files, view.state.selection.main.from, (message) =>
               callbacks.current.onError?.(message),
@@ -236,7 +238,11 @@ export function MarkdownEditor({
           }
           // Rich content (Word, Docs, web) → convert the HTML clipboard to Markdown; plain text falls through.
           const html = event.clipboardData?.getData('text/html')?.trim()
-          if (!html || !hasRichHtml(html)) return false
+          if (!html || !hasRichHtml(html)) {
+            trackEvent('Paste Detected', { kind: 'plain' })
+            return false
+          }
+          trackEvent('Paste Detected', { kind: 'rich' })
           const md = htmlToMarkdown(html)
           if (!md) return false
           event.preventDefault()

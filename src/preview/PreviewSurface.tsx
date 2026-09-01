@@ -19,6 +19,7 @@ import { extractToc, MIN_TOC_HEADINGS } from '@/pdf/buildExportContent'
 import { documentClassName, documentDataAttrs, documentStyleVars } from '@/pdf/documentStyle'
 import { resolvePageDimensions } from '@/lib/constants'
 import { transitionQuick } from '@/lib/motion'
+import { trackEvent } from '@/lib/analytics'
 import { StageBackdrop } from './stage/StageBackdrop'
 import { PaperFrame } from './stage/PaperFrame'
 import { stageFor } from './stage/stages'
@@ -155,6 +156,12 @@ export const PreviewSurface = forwardRef<PreviewHandle, PreviewSurfaceProps>(
     // A hand can arrive from front-matter or a template, not just the picker,
     // so the face has to be fetched here too — otherwise the document silently
     // renders in the fallback and the PDF paginates against the wrong metrics.
+    // One event per skin actually rendered, not per hover — a hover preview is
+    // a trial, not a view.
+    useEffect(() => {
+      trackEvent('Stage Viewed', { skin: config.skin })
+    }, [config.skin])
+
     const activeHand = viewConfig.hand.hand
     const activeHeadingHand = viewConfig.hand.headingHand
     useEffect(() => {
@@ -243,10 +250,13 @@ export const PreviewSurface = forwardRef<PreviewHandle, PreviewSurfaceProps>(
     const previewSkin = useCallback((skin: DocumentSkin | null) => setHoverSkin(skin), [])
     const commitSkin = useCallback(
       (skin: DocumentSkin) => {
+        // Whether the palette's hover-preview is doing its job: a commit that
+        // followed a preview is the behaviour it was built for.
+        trackEvent('Skin Previewed', { skin, previewed: hoverSkin !== null })
         setHoverSkin(null)
         onSkinChange?.(skin)
       },
-      [onSkinChange],
+      [onSkinChange, hoverSkin],
     )
 
     const stackStyle: CSSProperties = {

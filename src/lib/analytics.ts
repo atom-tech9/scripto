@@ -17,8 +17,29 @@ export type AppAnalyticsEvent =
   | 'Import'
   | 'AI Action'
   | 'Onboarding Completed'
+  // The activation funnel. Without these there is no way to tell where a
+  // first-time user is lost: they arrive, and either a PDF comes out or it
+  // does not, and nothing in between was ever measured.
+  | 'Export Dialog Opened'
+  | 'Print Dialog Reached'
+  | 'Time To First Export'
+  | 'Paste Detected'
+  | 'Page Break Inserted'
+  | 'Stage Viewed'
+  | 'Skin Previewed'
+  | 'Mobile Export Attempted'
 
 type EventProps = Record<string, string | number | boolean>
+
+/**
+ * The two numbers this funnel exists to move:
+ *
+ *   Activation — a first export within the first session. Target: above 35%.
+ *   North star — weekly returning exporters.
+ *
+ * Everything else here is diagnostic: it exists to explain a change in those
+ * two, not to be watched on its own.
+ */
 
 /** Fire a custom event. No-ops off-Vercel; never throws into the app. */
 export function trackEvent(name: AppAnalyticsEvent, props?: EventProps): void {

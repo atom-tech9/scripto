@@ -150,6 +150,8 @@ export default function App({ lock }: AppProps) {
   const [pendingResume, setPendingResume] = useState<DocumentTemplate | null>(null)
   const [aiConfig, setAiConfig] = useLocalStorage<AiConfig>('scripto:ai', DEFAULT_AI_CONFIG)
   const [saving, setSaving] = useState(false)
+  const sessionStart = useRef(Date.now())
+  const firstExportSent = useRef(false)
 
   const [editorView, setEditorView] = useState<EditorView | null>(null)
   const [previewScrollEl, setPreviewScrollEl] = useState<HTMLElement | null>(null)
@@ -348,8 +350,27 @@ export default function App({ lock }: AppProps) {
     }
     openDialog('print')
     trackEvent('Export PDF', { skin: effectiveConfig.skin, paper: effectiveConfig.paperSize })
+    trackEvent('Export Dialog Opened', { mobile: !isDesktop })
+    if (!isDesktop) trackEvent('Mobile Export Attempted', {})
+    // Once per session: how long it took to get from arriving to exporting.
+    // Activation is a first export in the first session, so this is the number
+    // the whole funnel exists to explain.
+    if (!firstExportSent.current) {
+      firstExportSent.current = true
+      trackEvent('Time To First Export', {
+        seconds: Math.round((Date.now() - sessionStart.current) / 1000),
+      })
+    }
     markOnboarding('export')
-  }, [bodyEmpty, t, openDialog, markOnboarding, effectiveConfig.skin, effectiveConfig.paperSize])
+  }, [
+    bodyEmpty,
+    t,
+    openDialog,
+    markOnboarding,
+    isDesktop,
+    effectiveConfig.skin,
+    effectiveConfig.paperSize,
+  ])
 
   const handleExportWord = useCallback(() => {
     const doc = ensureDoc()
