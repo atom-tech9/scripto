@@ -1,0 +1,168 @@
+/*
+ * pageBreaks.css — the visual page-break editor's overlay.
+ *
+ * Screen-only chrome drawn on top of the paginated pages. It lives inside
+ * `.scripto-print-portal`, which print.css blanks out during export, and it
+ * never touches the paginated DOM itself.
+ */
+
+.break-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.break-block {
+  position: absolute;
+  border-radius: 3px;
+  outline: 1px solid transparent;
+  outline-offset: 3px;
+  transition: outline-color 140ms ease-out;
+}
+
+.break-block:hover {
+  outline-color: hsl(var(--primary) / 0.35);
+}
+
+.break-block--selected {
+  outline-color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.07);
+}
+
+.break-block__hit {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+.break-block__hit:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* --- insert a break ------------------------------------------------------ */
+
+.break-insert {
+  position: absolute;
+  inset-inline: -6px;
+  top: -11px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: auto;
+  transition: opacity 140ms ease-out;
+}
+
+.break-insert--visible,
+.break-insert:focus-visible {
+  opacity: 1;
+}
+
+.break-insert__rule {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: 0;
+  border-top: 1px dashed hsl(var(--primary) / 0.7);
+}
+
+.break-insert__pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 0.15rem 0.55rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--shadow-md);
+}
+
+/* --- an existing break --------------------------------------------------- */
+
+.break-marker {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.break-marker__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface));
+  padding: 0.15rem 0.35rem 0.15rem 0.6rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
+  box-shadow: var(--shadow-sm);
+  pointer-events: auto;
+}
+
+.break-marker__remove {
+  display: inline-flex;
+  height: 1rem;
+  width: 1rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 0;
+  background: none;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+}
+
+.break-marker__remove:hover {
+  background: hsl(var(--destructive) / 0.12);
+  color: hsl(var(--destructive));
+}
+
+/* --- too wide for the page ----------------------------------------------- */
+
+.break-wide {
+  position: absolute;
+  top: -0.6rem;
+  inset-inline-end: 0;
+  border-radius: 999px;
+  border: 1px solid hsl(38 92% 50% / 0.5);
+  background: hsl(38 92% 50% / 0.16);
+  color: hsl(32 80% 28%);
+  padding: 0.15rem 0.6rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.dark .break-wide {
+  color: hsl(38 92% 78%);
+}
+
+.break-wide:hover {
+  background: hsl(38 92% 50% / 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .break-block,
+  .break-insert {
+    transition: none;
+  }
+}

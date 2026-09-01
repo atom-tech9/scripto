@@ -898,6 +898,20 @@ export const EN_STRINGS = {
   'stage.galleryWall': 'Gallery wall',
   'print.frontMatter': 'Cover & contents',
 
+  // Visual page-break editor
+  'print.break.toggle': 'Page breaks',
+  'print.break.here': 'Break here',
+  'print.break.chip': 'Page break',
+  'print.break.remove': 'Remove this page break',
+  'print.break.wide': 'Too wide — make it landscape?',
+  'print.break.selectBlock': 'Select this block',
+  'print.break.selected': 'Selected',
+  'print.break.keepTogether': 'Keep together',
+  'print.break.landscape': 'Landscape page',
+  'print.break.clear': 'Clear selection',
+  'print.fit.scaled': 'elements were scaled down to fit',
+  'print.fit.clipped': 'still clipped',
+
   // Cover page & contents
   'pdf.contents': 'Contents',
   'config.section.cover': 'Cover page',
@@ -1765,6 +1779,20 @@ export const STRINGS: Record<UiLanguage, Dictionary> = {
     'stage.interoffice': 'مذكرة داخلية',
     'stage.galleryWall': 'جدار المعرض',
     'print.frontMatter': 'الغلاف والمحتويات',
+
+    // Visual page-break editor
+    'print.break.toggle': 'فواصل الصفحات',
+    'print.break.here': 'اقطع هنا',
+    'print.break.chip': 'فاصل صفحة',
+    'print.break.remove': 'إزالة فاصل الصفحة',
+    'print.break.wide': 'عريض جدًا — اجعلها صفحة أفقية؟',
+    'print.break.selectBlock': 'تحديد هذه الكتلة',
+    'print.break.selected': 'محدَّد',
+    'print.break.keepTogether': 'إبقاؤها معًا',
+    'print.break.landscape': 'صفحة أفقية',
+    'print.break.clear': 'مسح التحديد',
+    'print.fit.scaled': 'عنصرًا تم تصغيرها لتناسب الصفحة',
+    'print.fit.clipped': 'لا يزال مقصوصًا',
 
     // Cover page & contents
     'pdf.contents': 'المحتويات',

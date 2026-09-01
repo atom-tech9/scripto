@@ -819,6 +819,10 @@ export default function App({ lock }: AppProps) {
             onClose={closer('print')}
             getDocElement={getDoc}
             config={effectiveConfig}
+            markdown={markdown}
+            onMarkdownChange={setMarkdown}
+            bodyLineOffset={parsed.bodyLineOffset}
+            docRevision={parsed.body}
           />
         </Suspense>
       )}

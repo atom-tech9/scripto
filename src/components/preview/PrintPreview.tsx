@@ -1,13 +1,36 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'motion/react'
-import { BookOpen, Download, FileWarning, Loader2, Minus, Plus, Printer, RefreshCw, X } from 'lucide-react'
+import {
+  BookOpen,
+  Download,
+  FileWarning,
+  Loader2,
+  Minus,
+  Plus,
+  Printer,
+  RefreshCw,
+  RotateCcw,
+  Rows3,
+  Scissors,
+  TriangleAlert,
+  X,
+} from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { renderPagedPreview } from '@/pdf/renderPaged'
 import { buildPrintPageRule } from '@/pdf/pageStyles'
+import {
+  insertPageBreak,
+  removePageBreak,
+  toDocumentLine,
+  wrapKeepTogether,
+  wrapLandscape,
+} from '@/pdf/pageBreaks'
+import { PageBreakLayer, type BlockRange } from '@/preview/print/PageBreakLayer'
 import { logger } from '@/lib/logger'
 import { useLanguage } from '@/i18n'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { cn } from '@/lib/utils'
 import type { ExportProgress, PdfConfig } from '@/types'
 
 interface PrintPreviewProps {
@@ -15,23 +38,57 @@ interface PrintPreviewProps {
   onClose: () => void
   getDocElement: () => HTMLElement | null
   config: PdfConfig
+  /** The whole document source, including front-matter. */
+  markdown?: string
+  /** Applies an edit made in the paginated view. Omit to make the view read-only. */
+  onMarkdownChange?: (markdown: string) => void
+  /** Editor lines before the body starts, as `useScrollSync` uses it. */
+  bodyLineOffset?: number
+  /** Changes whenever the rendered document has, so pages re-paginate. */
+  docRevision?: string
 }
 
 const INITIAL_PROGRESS: ExportProgress = { stage: 'idle', message: '', percent: 0 }
+const NO_FIT = { scaled: 0, clipped: 0 }
 
-export function PrintPreview({ open, onClose, getDocElement, config }: PrintPreviewProps) {
+export function PrintPreview({
+  open,
+  onClose,
+  getDocElement,
+  config,
+  markdown = '',
+  onMarkdownChange,
+  bodyLineOffset = 0,
+  docRevision = '',
+}: PrintPreviewProps) {
   const { t, lang } = useLanguage()
   const surfaceRef = useRef<HTMLDivElement>(null)
-  const pagesRef = useRef<HTMLDivElement>(null)
+  const pagesRef = useRef<HTMLDivElement | null>(null)
+  const [pagesEl, setPagesEl] = useState<HTMLDivElement | null>(null)
+  const attachPages = useCallback((el: HTMLDivElement | null) => {
+    pagesRef.current = el
+    setPagesEl(el)
+  }, [])
   const renderingRef = useRef(false)
   const [progress, setProgress] = useState<ExportProgress>(INITIAL_PROGRESS)
   const [pageCount, setPageCount] = useState(0)
+  const [fit, setFit] = useState(NO_FIT)
+  // Bumped after each pagination so the break overlay re-measures.
+  const [renderTick, setRenderTick] = useState(0)
   const [zoom, setZoom] = useState(1)
   const zoomRef = useRef(1)
   zoomRef.current = zoom
   const setZoomClamped = useCallback((z: number) => setZoom(Math.min(3, Math.max(0.3, z))), [])
   // Cover + Contents are excluded from the export by default; this toggle adds them back.
-  const [includeFrontMatter, setIncludeFrontMatter] = useLocalStorage('scripto:export-front-matter', false)
+  const [includeFrontMatter, setIncludeFrontMatter] = useLocalStorage(
+    'scripto:export-front-matter',
+    false,
+  )
+  const [editing, setEditing] = useLocalStorage('scripto:break-editor', true)
+  const [selection, setSelection] = useState<BlockRange | null>(null)
+
+  const canEdit = typeof onMarkdownChange === 'function'
+  const editorOn = canEdit && editing
 
   const exportConfig = useMemo<PdfConfig>(
     () => ({ ...config, coverPage: includeFrontMatter, tableOfContents: includeFrontMatter }),
@@ -49,7 +106,7 @@ export function PrintPreview({ open, onClose, getDocElement, config }: PrintPrev
     try {
       setProgress({ stage: 'preparing', message: t('print.preparing'), percent: 8 })
       await (document as Document & { fonts?: FontFaceSet }).fonts?.ready
-      const { pageCount: count } = await renderPagedPreview({
+      const { pageCount: count, fit: fitResult } = await renderPagedPreview({
         liveDoc,
         config: exportConfig,
         container,
@@ -57,6 +114,7 @@ export function PrintPreview({ open, onClose, getDocElement, config }: PrintPrev
         strings: { contents: t('pdf.contents'), locale: lang },
       })
       setPageCount(count)
+      setFit(fitResult)
       // Auto-fit the A4 page to the available width (never upscale past 100%).
       // Measure an actual page element — its offsetWidth is the true (unscaled)
       // page width, whereas the wrapping container just fills the surface width.
@@ -68,31 +126,45 @@ export function PrintPreview({ open, onClose, getDocElement, config }: PrintPrev
           const gutter = window.innerWidth < 640 ? 24 : 48
           setZoomClamped(Math.min(1, (surface.clientWidth - gutter) / pageW))
         }
+        setRenderTick((tick) => tick + 1)
       })
     } catch (error) {
       logger.error('Print preview failed', error)
     } finally {
       renderingRef.current = false
     }
-  }, [exportConfig, getDocElement, t, lang])
+  }, [exportConfig, getDocElement, t, lang, setZoomClamped])
 
   useEffect(() => {
     if (open) void render()
     else {
       setProgress(INITIAL_PROGRESS)
       setPageCount(0)
+      setFit(NO_FIT)
+      setSelection(null)
       if (pagesRef.current) pagesRef.current.innerHTML = ''
     }
   }, [open, render])
 
+  // Re-paginate once one of our own edits has landed in the live document.
+  useEffect(() => {
+    if (!open) return
+    void render()
+    // `render` is deliberately not a dependency: the effect above already covers
+    // config changes, and this one exists purely to react to new content.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [docRevision])
+
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key !== 'Escape') return
+      if (selection) setSelection(null)
+      else onClose()
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  }, [open, onClose, selection])
 
   // Pinch-to-zoom on touch devices. Native non-passive listeners so the pinch
   // can preventDefault the browser's page zoom/scroll while two fingers are down.
@@ -103,10 +175,7 @@ export function PrintPreview({ open, onClose, getDocElement, config }: PrintPrev
     let startZoom = 1
     let pinching = false
     const distance = (touches: TouchList) =>
-      Math.hypot(
-        touches[0].clientX - touches[1].clientX,
-        touches[0].clientY - touches[1].clientY,
-      )
+      Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY)
     const onStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
         pinching = true
@@ -133,6 +202,53 @@ export function PrintPreview({ open, onClose, getDocElement, config }: PrintPrev
       el.removeEventListener('touchcancel', onEnd)
     }
   }, [open, setZoomClamped])
+
+  // ---- page-break editing -------------------------------------------------
+  // Every action rewrites the Markdown through the normal setter, so undo, the
+  // editor and the export all stay in step. The rendered DOM is never authored.
+  const applyEdit = useCallback(
+    (next: string) => {
+      if (next === markdown) return
+      onMarkdownChange?.(next)
+      setSelection(null)
+    },
+    [markdown, onMarkdownChange],
+  )
+
+  const handleInsertBreak = useCallback(
+    (bodyLine: number) =>
+      applyEdit(insertPageBreak(markdown, toDocumentLine(bodyLine, bodyLineOffset))),
+    [applyEdit, markdown, bodyLineOffset],
+  )
+
+  const handleRemoveBreak = useCallback(
+    (bodyLine: number) =>
+      applyEdit(removePageBreak(markdown, toDocumentLine(bodyLine, bodyLineOffset))),
+    [applyEdit, markdown, bodyLineOffset],
+  )
+
+  const handleKeepTogether = useCallback(() => {
+    if (!selection) return
+    applyEdit(
+      wrapKeepTogether(
+        markdown,
+        toDocumentLine(selection.from, bodyLineOffset),
+        toDocumentLine(selection.to, bodyLineOffset),
+      ),
+    )
+  }, [applyEdit, markdown, bodyLineOffset, selection])
+
+  const handleLandscape = useCallback(
+    (range: BlockRange) =>
+      applyEdit(
+        wrapLandscape(
+          markdown,
+          toDocumentLine(range.from, bodyLineOffset),
+          toDocumentLine(range.to, bodyLineOffset),
+        ),
+      ),
+    [applyEdit, markdown, bodyLineOffset],
+  )
 
   const handlePrint = useCallback(() => {
     const styleId = 'scripto-print-page-rule'
@@ -164,8 +280,10 @@ export function PrintPreview({ open, onClose, getDocElement, config }: PrintPrev
     })
   }, [exportConfig])
 
-  const isRendering = progress.stage !== 'idle' && progress.stage !== 'done' && progress.stage !== 'error'
+  const isRendering =
+    progress.stage !== 'idle' && progress.stage !== 'done' && progress.stage !== 'error'
   const isError = progress.stage === 'error'
+  const hasFitWarning = fit.scaled > 0 || fit.clipped > 0
 
   return createPortal(
     <AnimatePresence>
@@ -180,7 +298,9 @@ export function PrintPreview({ open, onClose, getDocElement, config }: PrintPrev
             <div className="flex min-w-0 items-center gap-2.5">
               <Printer size={18} className="shrink-0 text-primary" />
               <div className="hidden min-w-0 sm:block">
-                <div className="truncate text-sm font-semibold leading-tight">{t('action.printPreview')}</div>
+                <div className="truncate text-sm font-semibold leading-tight">
+                  {t('action.printPreview')}
+                </div>
                 <div className="truncate text-xs text-muted-foreground">
                   {isRendering
                     ? progress.message
@@ -211,25 +331,54 @@ export function PrintPreview({ open, onClose, getDocElement, config }: PrintPrev
                   <Plus size={14} />
                 </button>
               </div>
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={() => setEditing((value) => !value)}
+                  aria-pressed={editorOn}
+                  disabled={isRendering}
+                  title={t('print.break.toggle')}
+                  className={cn(
+                    'me-1 inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-colors disabled:opacity-50',
+                    editorOn
+                      ? 'border-primary/30 bg-primary/10 text-primary'
+                      : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground',
+                  )}
+                >
+                  <Scissors size={14} />
+                  <span className="hidden sm:inline">{t('print.break.toggle')}</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setIncludeFrontMatter((v) => !v)}
                 aria-pressed={includeFrontMatter}
                 disabled={isRendering}
-                className={`me-1 inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-colors disabled:opacity-50 ${
+                className={cn(
+                  'me-1 inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-colors disabled:opacity-50',
                   includeFrontMatter
                     ? 'border-primary/30 bg-primary/10 text-primary'
-                    : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
-                }`}
+                    : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground',
+                )}
               >
                 <BookOpen size={14} />
                 <span className="hidden sm:inline">{t('print.frontMatter')}</span>
               </button>
-              <Button variant="ghost" size="sm" onClick={() => void render()} disabled={isRendering}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => void render()}
+                disabled={isRendering}
+              >
                 <RefreshCw size={14} className={isRendering ? 'animate-spin' : ''} />
                 <span className="hidden sm:inline">{t('print.reRender')}</span>
               </Button>
-              <Button variant="primary" size="sm" onClick={handlePrint} disabled={isRendering || isError}>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handlePrint}
+                disabled={isRendering || isError}
+              >
                 <Download size={14} />
                 {t('print.savePdf')}
               </Button>
@@ -246,6 +395,22 @@ export function PrintPreview({ open, onClose, getDocElement, config }: PrintPrev
                 initial={{ width: 0 }}
                 animate={{ width: `${progress.percent}%` }}
               />
+            </div>
+          )}
+
+          {!isRendering && hasFitWarning && (
+            <div className="print-chrome flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-border bg-amber-500/10 px-3 py-1.5 text-[11px] text-amber-900 sm:px-4 dark:text-amber-200">
+              <TriangleAlert size={12} className="shrink-0" />
+              {fit.scaled > 0 && (
+                <span>
+                  {fit.scaled} {t('print.fit.scaled')}
+                </span>
+              )}
+              {fit.clipped > 0 && (
+                <span className="font-semibold">
+                  {fit.clipped} {t('print.fit.clipped')}
+                </span>
+              )}
             </div>
           )}
 
@@ -272,11 +437,53 @@ export function PrintPreview({ open, onClose, getDocElement, config }: PrintPrev
             )}
             <div
               style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
-              className="transition-transform"
+              className="relative transition-transform"
             >
-              <div ref={pagesRef} />
+              <div ref={attachPages} />
+              <PageBreakLayer
+                container={pagesEl}
+                zoom={zoom}
+                revision={renderTick}
+                enabled={editorOn && !isRendering && !isError}
+                onInsertBreak={handleInsertBreak}
+                onRemoveBreak={handleRemoveBreak}
+                onSelect={setSelection}
+                selection={selection}
+                onLandscape={handleLandscape}
+              />
             </div>
           </div>
+
+          <AnimatePresence>
+            {selection && (
+              <motion.div
+                className="print-chrome pointer-events-auto absolute inset-x-0 bottom-4 z-20 mx-auto flex w-fit items-center gap-1.5 rounded-full border border-border bg-surface/95 p-1.5 ps-3.5 shadow-xl backdrop-blur"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+              >
+                <span className="text-xs font-medium text-muted-foreground">
+                  {t('print.break.selected')}
+                </span>
+                <Button variant="secondary" size="sm" onClick={handleKeepTogether}>
+                  <Rows3 size={14} />
+                  {t('print.break.keepTogether')}
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => handleLandscape(selection)}>
+                  <RotateCcw size={14} />
+                  {t('print.break.landscape')}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSelection(null)}
+                  aria-label={t('print.break.clear')}
+                >
+                  <X size={16} />
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>,
