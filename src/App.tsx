@@ -27,7 +27,6 @@ import { SimpleHintBar } from '@/components/editor/SimpleHintBar'
 import { SelectionToolbar } from '@/components/editor/SelectionToolbar'
 import { AiSuggestionCard } from '@/components/editor/AiSuggestionCard'
 import { Preview, type PreviewHandle } from '@/components/preview/Preview'
-import { EmptyState } from '@/components/preview/EmptyState'
 import { ConfigPanel } from '@/components/config/ConfigPanel'
 
 import { useTheme } from '@/hooks/useTheme'
@@ -49,11 +48,7 @@ import { getErrorMessage } from '@/lib/logger'
 import { parseFrontmatter, applyFrontmatter } from '@/lib/frontmatter'
 import { SAMPLE_DOCUMENT } from '@/data/sampleDocument'
 import { DOCUMENT_PRESETS } from '@/data/presets'
-import {
-  fillResumePlaceholders,
-  type DocumentTemplate,
-  type ResumeDetails,
-} from '@/data/templates'
+import { fillResumePlaceholders, type DocumentTemplate, type ResumeDetails } from '@/data/templates'
 import { ResumeDetailsDialog } from '@/components/layout/ResumeDetailsDialog'
 import { GithubDialog } from '@/components/layout/GithubDialog'
 import { AiSettingsDialog } from '@/components/layout/AiSettingsDialog'
@@ -64,7 +59,7 @@ import { ACCEPTED_IMPORT, importFile } from '@/io/importers'
 import { trackEvent } from '@/lib/analytics'
 import { exportHtml, exportMarkdown, exportWord } from '@/io/exporters'
 import type { AppLockApi } from '@/hooks/useAppLock'
-import type { PdfConfig, ViewMode } from '@/types'
+import type { DocumentSkin, PdfConfig, ViewMode } from '@/types'
 
 // The PDF engine (Paged.js) is heavy — load it only when a PDF/print is requested.
 const PrintPreview = lazy(() =>
@@ -178,7 +173,10 @@ export default function App({ lock }: AppProps) {
 
   const debouncedMarkdown = useDebouncedValue(markdown, 120)
   const parsed = useMemo(() => parseFrontmatter(debouncedMarkdown), [debouncedMarkdown])
-  const effectiveConfig = useMemo(() => applyFrontmatter(config, parsed.data), [config, parsed.data])
+  const effectiveConfig = useMemo(
+    () => applyFrontmatter(config, parsed.data),
+    [config, parsed.data],
+  )
   const headingCount = useMemo(() => countHeadings(parsed.body), [parsed.body])
   const bodyEmpty = parsed.body.trim().length === 0
 
@@ -364,7 +362,9 @@ export default function App({ lock }: AppProps) {
         return
       }
       setMarkdown(template.content)
-      toast.success(`${t('toast.templateLoaded')} “${template.nameKey ? t(template.nameKey) : template.name}”`)
+      toast.success(
+        `${t('toast.templateLoaded')} “${template.nameKey ? t(template.nameKey) : template.name}”`,
+      )
     },
     [setMarkdown, t, markOnboarding],
   )
@@ -504,6 +504,16 @@ export default function App({ lock }: AppProps) {
     return () => document.removeEventListener('keydown', onKey)
   }, [zen, closeDialog])
 
+  const toggleSync = useCallback(() => setSyncEnabled((value) => !value), [setSyncEnabled])
+
+  const handleSkinChange = useCallback(
+    (skin: DocumentSkin) => {
+      updateConfig({ skin })
+      trackEvent('Skin Applied', { skin, source: 'rail' })
+    },
+    [updateConfig],
+  )
+
   const handleNewDocument = useCallback(() => library.createDoc(), [library])
   const handleLoadSample = useCallback(() => setMarkdown(SAMPLE_DOCUMENT), [setMarkdown])
   const handleLockNow = useCallback(() => void lock.lockNow(), [lock])
@@ -537,7 +547,9 @@ export default function App({ lock }: AppProps) {
       {!zen && (
         <Header
           title={config.meta.title}
-          onTitleChange={(title) => setConfig((prev) => ({ ...prev, meta: { ...prev.meta, title } }))}
+          onTitleChange={(title) =>
+            setConfig((prev) => ({ ...prev, meta: { ...prev.meta, title } }))
+          }
           viewMode={viewMode}
           onViewMode={setViewMode}
           outlineOpen={dialogs.state.outline}
@@ -646,22 +658,21 @@ export default function App({ lock }: AppProps) {
 
         {/* Preview (kept mounted for export even when visually hidden) */}
         <section className={`min-w-0 flex-1 ${showPreview ? 'block' : 'hidden'}`}>
-          {bodyEmpty ? (
-            <EmptyState
-              onUseTemplate={opener('templates')}
-              onUseSample={handleLoadSample}
-            />
-          ) : (
-            <Preview
-              ref={previewRef}
-              content={parsed.body}
-              config={effectiveConfig}
-              resolvedTheme={resolvedTheme}
-              onScrollElement={setPreviewScrollEl}
-              syncEnabled={isSplit ? syncEnabled : undefined}
-              onToggleSync={isSplit ? () => setSyncEnabled((v) => !v) : undefined}
-            />
-          )}
+          <Preview
+            ref={previewRef}
+            content={parsed.body}
+            config={effectiveConfig}
+            resolvedTheme={resolvedTheme}
+            onScrollElement={setPreviewScrollEl}
+            syncEnabled={isSplit ? syncEnabled : undefined}
+            onToggleSync={isSplit ? toggleSync : undefined}
+            onSkinChange={handleSkinChange}
+            onOpenPrint={openPrint}
+            forceMinimal={zen}
+            isEmpty={bodyEmpty}
+            onUseTemplate={opener('templates')}
+            onUseSample={handleLoadSample}
+          />
         </section>
 
         {!zen && dialogs.state.config && (
@@ -740,7 +751,9 @@ export default function App({ lock }: AppProps) {
         onDuplicate={library.duplicateDoc}
         onDelete={library.deleteDoc}
         onImport={library.importDocs}
-        onNotify={(type, message) => (type === 'success' ? toast.success(message) : toast.error(message))}
+        onNotify={(type, message) =>
+          type === 'success' ? toast.success(message) : toast.error(message)
+        }
       />
       <SecurityDialog open={dialogs.state.security} onClose={closer('security')} lock={lock} />
       <StatsDialog open={dialogs.state.stats} onClose={closer('stats')} markdown={parsed.body} />

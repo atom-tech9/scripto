@@ -39,7 +39,11 @@ export interface AiActionsApi {
  * a staged suggestion, and the prompt-driven actions (tone / translate /
  * generate). The document is never mutated until the user accepts.
  */
-export function useAiActions({ view, aiConfig, onNeedsSettings }: UseAiActionsOptions): AiActionsApi {
+export function useAiActions({
+  view,
+  aiConfig,
+  onNeedsSettings,
+}: UseAiActionsOptions): AiActionsApi {
   const { t } = useLanguage()
   const [suggestion, setSuggestion] = useState<AiSuggestionState | null>(null)
   const [input, setInput] = useState<{
@@ -279,6 +283,16 @@ export function useAiActions({ view, aiConfig, onNeedsSettings }: UseAiActionsOp
       regenerate,
       ghostComplete,
     }),
-    [suggestion, input, submitInput, closeInput, handleAction, accept, reject, regenerate, ghostComplete],
+    [
+      suggestion,
+      input,
+      submitInput,
+      closeInput,
+      handleAction,
+      accept,
+      reject,
+      regenerate,
+      ghostComplete,
+    ],
   )
 }

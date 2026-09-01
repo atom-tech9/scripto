@@ -1,16 +1,13 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { execFile } from 'node:child_process'
+import { spawn } from 'node:child_process'
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { promisify } from 'node:util'
 import { build } from 'esbuild'
 import { DEFAULT_CONFIG } from '@/lib/constants'
 import { buildPageCss } from '@/pdf/pageStyles'
 import type { PdfConfig } from '@/types'
-
-const execFileAsync = promisify(execFile)
 
 export const ROOT = new URL('../..', import.meta.url).pathname.replace(/\/$/, '')
 const FIXTURES = `${ROOT}/tests/visual/fixtures`
@@ -71,10 +68,7 @@ function inlineKatexFonts(): string {
     const woff2 = face.match(/url\(fonts\/([\w-]+\.woff2)\)/)
     if (!woff2) return ''
     const data = readFileSync(`${dist}/fonts/${woff2[1]}`).toString('base64')
-    return face.replace(
-      /src:[^;}]+/,
-      `src:url(data:font/woff2;base64,${data}) format("woff2")`,
-    )
+    return face.replace(/src:[^;}]+/, `src:url(data:font/woff2;base64,${data}) format("woff2")`)
   })
 }
 
@@ -110,12 +104,16 @@ async function bundleTransforms(): Promise<string> {
  * export does — same stylesheet, same page CSS, same DOM transforms, same
  * paginator — then probes the laid-out result.
  */
-async function buildHarnessPage(markdown: string, config: PdfConfig, rtl: boolean): Promise<string> {
+async function buildHarnessPage(
+  markdown: string,
+  config: PdfConfig,
+  rtl: boolean,
+): Promise<string> {
   const body = renderToStaticMarkup(
-    createElement(
-      (await import('@/markdown/MarkdownRenderer')).MarkdownRenderer,
-      { content: markdown, resolvedTheme: 'light' },
-    ),
+    createElement((await import('@/markdown/MarkdownRenderer')).MarkdownRenderer, {
+      content: markdown,
+      resolvedTheme: 'light',
+    }),
   )
   const documentCss = readFileSync(`${ROOT}/src/styles/document.css`, 'utf8')
   const katexCss = inlineKatexFonts()
@@ -194,7 +192,91 @@ ${buildPageCss(config)}
 <script>${polyfill}</script>`
 }
 
-/** Render a fixture through the full export pipeline and report the layout. */
+/** How long to wait for Paged.js to finish laying a fixture out. */
+const PROBE_TIMEOUT_MS = 180_000
+const PROBE_POLL_MS = 250
+
+interface CdpTarget {
+  type: string
+  webSocketDebuggerUrl?: string
+}
+
+/** Minimal DevTools Protocol client: enough to evaluate one expression. */
+class CdpSession {
+  private readonly socket: WebSocket
+  private nextId = 1
+  private readonly pending = new Map<number, (result: unknown) => void>()
+
+  private constructor(socket: WebSocket) {
+    this.socket = socket
+    this.socket.addEventListener('message', (event) => {
+      const frame = JSON.parse(String((event as MessageEvent).data)) as {
+        id?: number
+        result?: unknown
+      }
+      if (frame.id === undefined) return
+      this.pending.get(frame.id)?.(frame.result)
+      this.pending.delete(frame.id)
+    })
+  }
+
+  static async connect(url: string): Promise<CdpSession> {
+    const socket = new WebSocket(url)
+    await new Promise<void>((resolve, reject) => {
+      socket.addEventListener('open', () => resolve(), { once: true })
+      socket.addEventListener('error', () => reject(new Error('CDP socket failed')), { once: true })
+    })
+    return new CdpSession(socket)
+  }
+
+  send(method: string, params: Record<string, unknown> = {}): Promise<unknown> {
+    const id = this.nextId++
+    return new Promise((resolve) => {
+      this.pending.set(id, resolve)
+      this.socket.send(JSON.stringify({ id, method, params }))
+    })
+  }
+
+  close(): void {
+    this.socket.close()
+  }
+}
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+/** Poll DevTools for the debugging port Chrome wrote into its profile. */
+async function readDevToolsPort(profile: string): Promise<number> {
+  const file = join(profile, 'DevToolsActivePort')
+  for (let attempt = 0; attempt < 120; attempt++) {
+    if (existsSync(file)) {
+      const port = Number(readFileSync(file, 'utf8').split('\n')[0])
+      if (Number.isFinite(port) && port > 0) return port
+    }
+    await delay(100)
+  }
+  throw new Error('Chrome never reported a DevTools port')
+}
+
+async function findPageTarget(port: number): Promise<string> {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const response = await fetch(`http://127.0.0.1:${port}/json/list`)
+    const targets = (await response.json()) as CdpTarget[]
+    const page = targets.find((t) => t.type === 'page' && t.webSocketDebuggerUrl)
+    if (page?.webSocketDebuggerUrl) return page.webSocketDebuggerUrl
+    await delay(100)
+  }
+  throw new Error('no DevTools page target appeared')
+}
+
+/**
+ * Render a fixture through the full export pipeline and report the layout.
+ *
+ * Driven over the DevTools Protocol rather than `--dump-dom`: Chrome 132
+ * removed the old headless mode, and the new one ignores
+ * `--virtual-time-budget`, so a DOM dump snapshots the page long before
+ * Paged.js has finished paginating. Polling for the probe element waits for the
+ * real thing instead of a timer.
+ */
 export async function paginate(
   fixture: string,
   overrides: Partial<PdfConfig> = {},
@@ -210,37 +292,52 @@ export async function paginate(
   const page = join(dir, `${fixture}.html`)
   writeFileSync(page, html)
 
-  const { stdout } = await execFileAsync(
+  const profile = mkdtempSync(join(tmpdir(), 'scripto-profile-'))
+  const browser = spawn(
     chrome,
     [
-      '--headless',
+      '--headless=new',
       '--disable-gpu',
       '--no-sandbox',
-      '--virtual-time-budget=120000',
-      '--dump-dom',
+      '--no-first-run',
+      '--disable-extensions',
+      '--force-device-scale-factor=1',
+      `--user-data-dir=${profile}`,
+      '--remote-debugging-port=0',
       `file://${page}`,
     ],
-    { maxBuffer: 64 * 1024 * 1024 },
+    { stdio: 'ignore' },
   )
 
-  const match = stdout.match(/<pre id="probe">([\s\S]*?)<\/pre>/)
-  if (!match || !match[1].trim()) {
+  let session: CdpSession | undefined
+  try {
+    const port = await readDevToolsPort(profile)
+    session = await CdpSession.connect(await findPageTarget(port))
+
+    const deadline = Date.now() + PROBE_TIMEOUT_MS
+    while (Date.now() < deadline) {
+      const result = (await session.send('Runtime.evaluate', {
+        expression: "document.querySelector('#probe')?.textContent ?? ''",
+        returnByValue: true,
+      })) as { result?: { value?: string } } | undefined
+      const value = result?.result?.value
+      if (value) {
+        const report = JSON.parse(value) as PageReport & { error?: string }
+        if (report.error) throw new Error(`pagination failed: ${report.error}`)
+        return report
+      }
+      await delay(PROBE_POLL_MS)
+    }
+
     if (process.env.SCRIPTO_VISUAL_DEBUG) {
       // eslint-disable-next-line no-console
       console.error(`[visual] page kept at ${page}`)
     }
     throw new Error('probe produced no output')
+  } finally {
+    session?.close()
+    browser.kill('SIGKILL')
   }
-
-  const decoded = match[1]
-    .replace(/&quot;/g, '"')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&#39;/g, "'")
-    .replace(/&amp;/g, '&')
-  const report = JSON.parse(decoded) as PageReport & { error?: string }
-  if (report.error) throw new Error(`pagination failed: ${report.error}`)
-  return report
 }
 
 export const fixtureSource = (fixture: string): string =>

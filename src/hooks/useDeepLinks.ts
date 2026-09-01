@@ -33,7 +33,12 @@ export function useDeepLinks({ createDoc, setConfig, markOnboarding }: UseDeepLi
   useEffect(() => {
     if (handled.current) return
     handled.current = true
-    const { createDoc: create, setConfig: setCfg, markOnboarding: mark, t: translate } = latest.current
+    const {
+      createDoc: create,
+      setConfig: setCfg,
+      markOnboarding: mark,
+      t: translate,
+    } = latest.current
 
     const params = new URLSearchParams(window.location.search)
     const templateId = params.get('template')
