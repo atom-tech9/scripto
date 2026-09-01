@@ -1,37 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Toaster, toast } from 'sonner'
 import type { EditorView } from '@codemirror/view'
-import {
-  BookOpen,
-  Eye,
-  FileCode2,
-  FileDown,
-  FilePlus,
-  FileText,
-  FileType2,
-  FolderOpen,
-  Github,
-  GraduationCap,
-  Import,
-  BarChart3,
-  Keyboard,
-  KeyRound,
-  Languages,
-  LayoutTemplate,
-  ListTree,
-  Lock,
-  Maximize2,
-  Minimize2,
-  Moon,
-  Palette,
-  Sparkles,
-  Wand2,
-  Pencil,
-  Printer,
-  Settings2,
-  ShieldCheck,
-  Trash2,
-} from 'lucide-react'
+import { FileDown, Minimize2, Moon, Settings2 } from 'lucide-react'
 
 import { Header } from '@/components/layout/Header'
 import { StatusBar } from '@/components/layout/StatusBar'
@@ -41,7 +11,7 @@ import {
   type OnboardingState,
 } from '@/components/layout/OnboardingChecklist'
 import { OutlineNavigator } from '@/components/layout/OutlineNavigator'
-import { CommandPalette, type Command } from '@/components/layout/CommandPalette'
+import { CommandPalette } from '@/components/layout/CommandPalette'
 import { TemplatesDialog } from '@/components/layout/TemplatesDialog'
 import { ThemeGalleryDialog } from '@/components/layout/ThemeGalleryDialog'
 import { ShortcutsDialog } from '@/components/layout/ShortcutsDialog'
@@ -50,16 +20,12 @@ import { DocumentsDialog } from '@/components/layout/DocumentsDialog'
 import { StatsDialog } from '@/components/layout/StatsDialog'
 import { SecurityDialog } from '@/components/security/SecurityDialog'
 import { useConfirm } from '@/components/ui/Confirm'
-import {
-  getSelectionText,
-  insertText,
-  selectionOrParagraph,
-} from '@/components/editor/editorCommands'
+import { getSelectionText, insertText } from '@/components/editor/editorCommands'
 import { MarkdownEditor } from '@/components/editor/MarkdownEditor'
-import { EditorToolbar, type AiToolbarAction } from '@/components/editor/EditorToolbar'
+import { EditorToolbar } from '@/components/editor/EditorToolbar'
 import { SimpleHintBar } from '@/components/editor/SimpleHintBar'
 import { SelectionToolbar } from '@/components/editor/SelectionToolbar'
-import { AiSuggestionCard, type AiSuggestionState } from '@/components/editor/AiSuggestionCard'
+import { AiSuggestionCard } from '@/components/editor/AiSuggestionCard'
 import { Preview, type PreviewHandle } from '@/components/preview/Preview'
 import { EmptyState } from '@/components/preview/EmptyState'
 import { ConfigPanel } from '@/components/config/ConfigPanel'
@@ -72,6 +38,10 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useDocumentLibrary } from '@/hooks/useDocumentLibrary'
 import { useScrollSync } from '@/hooks/useScrollSync'
+import { useDialogs } from '@/hooks/useDialogs'
+import { useAiActions } from '@/hooks/useAiActions'
+import { useDeepLinks } from '@/hooks/useDeepLinks'
+import { useCommands } from '@/hooks/useCommands'
 
 import { DEFAULT_CONFIG, MARGIN_PRESETS, STORAGE_KEYS } from '@/lib/constants'
 import { countHeadings } from '@/lib/utils'
@@ -80,24 +50,21 @@ import { parseFrontmatter, applyFrontmatter } from '@/lib/frontmatter'
 import { SAMPLE_DOCUMENT } from '@/data/sampleDocument'
 import { DOCUMENT_PRESETS } from '@/data/presets'
 import {
-  TEMPLATES,
   fillResumePlaceholders,
   type DocumentTemplate,
   type ResumeDetails,
 } from '@/data/templates'
-import { SKIN_VALUES } from '@/data/skins'
 import { ResumeDetailsDialog } from '@/components/layout/ResumeDetailsDialog'
 import { GithubDialog } from '@/components/layout/GithubDialog'
 import { AiSettingsDialog } from '@/components/layout/AiSettingsDialog'
 import { AiDashboardDialog } from '@/components/layout/AiDashboardDialog'
-import { AiInputDialog, type AiInputRequest } from '@/components/layout/AiInputDialog'
-import { AI_PROMPTS } from '@/lib/aiPrompts'
-import { DEFAULT_AI_CONFIG, isAiConfigured, runAi, type AiConfig } from '@/lib/ai'
+import { AiInputDialog } from '@/components/layout/AiInputDialog'
+import { DEFAULT_AI_CONFIG, isAiConfigured, type AiConfig } from '@/lib/ai'
 import { ACCEPTED_IMPORT, importFile } from '@/io/importers'
 import { trackEvent } from '@/lib/analytics'
 import { exportHtml, exportMarkdown, exportWord } from '@/io/exporters'
 import type { AppLockApi } from '@/hooks/useAppLock'
-import type { DocumentSkin, PdfConfig, ViewMode } from '@/types'
+import type { PdfConfig, ViewMode } from '@/types'
 
 // The PDF engine (Paged.js) is heavy — load it only when a PDF/print is requested.
 const PrintPreview = lazy(() =>
@@ -140,6 +107,20 @@ export default function App({ lock }: AppProps) {
     [activeDoc.config],
   )
 
+  // Every overlay/chrome flag lives in one reducer (see hooks/useDialogs.ts).
+  // `openDialog`/`closeDialog`/`toggleDialog` and the thunk lookups are
+  // identity-stable, so effects and memos below never re-run on a dialog toggle.
+  const dialogs = useDialogs()
+  const {
+    open: openDialog,
+    close: closeDialog,
+    toggle: toggleDialog,
+    opener,
+    closer,
+    toggler,
+  } = dialogs
+  const zen = dialogs.state.zen
+
   const [viewMode, setViewMode] = useLocalStorage<ViewMode>(STORAGE_KEYS.viewMode, 'split')
   const [splitRatio, setSplitRatio] = useLocalStorage<number>('scripto:split', 0.5)
   const [onboarding, setOnboarding] = useLocalStorage<OnboardingState>(
@@ -166,24 +147,8 @@ export default function App({ lock }: AppProps) {
   }, [onboarding])
 
   const isDesktop = useMediaQuery('(min-width: 1024px)')
-  const [configOpen, setConfigOpen] = useState(false)
-  const [outlineOpen, setOutlineOpen] = useState(false)
-  const [templatesOpen, setTemplatesOpen] = useState(false)
-  const [galleryOpen, setGalleryOpen] = useState(false)
   const [pendingResume, setPendingResume] = useState<DocumentTemplate | null>(null)
-  const [githubOpen, setGithubOpen] = useState(false)
   const [aiConfig, setAiConfig] = useLocalStorage<AiConfig>('scripto:ai', DEFAULT_AI_CONFIG)
-  const [aiSettingsOpen, setAiSettingsOpen] = useState(false)
-  const [aiDashboardOpen, setAiDashboardOpen] = useState(false)
-  const [aiInput, setAiInput] = useState<{ request: AiInputRequest; run: (value: string) => void } | null>(null)
-  const [shortcutsOpen, setShortcutsOpen] = useState(false)
-  const [formattingHelpOpen, setFormattingHelpOpen] = useState(false)
-  const [paletteOpen, setPaletteOpen] = useState(false)
-  const [printOpen, setPrintOpen] = useState(false)
-  const [docsOpen, setDocsOpen] = useState(false)
-  const [securityOpen, setSecurityOpen] = useState(false)
-  const [statsOpen, setStatsOpen] = useState(false)
-  const [zen, setZen] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const [editorView, setEditorView] = useState<EditorView | null>(null)
@@ -200,11 +165,16 @@ export default function App({ lock }: AppProps) {
     if (activityRaf.current !== undefined) return
     activityRaf.current = window.requestAnimationFrame(() => {
       activityRaf.current = undefined
-      setActivityTick((t) => t + 1)
+      setActivityTick((tick) => tick + 1)
     })
   }, [])
-  const [aiSuggestion, setAiSuggestion] = useState<AiSuggestionState | null>(null)
-  const suggestionAbortRef = useRef<AbortController | null>(null)
+  // Never leave a queued frame behind on unmount.
+  useEffect(
+    () => () => {
+      if (activityRaf.current !== undefined) window.cancelAnimationFrame(activityRaf.current)
+    },
+    [],
+  )
 
   const debouncedMarkdown = useDebouncedValue(markdown, 120)
   const parsed = useMemo(() => parseFrontmatter(debouncedMarkdown), [debouncedMarkdown])
@@ -264,8 +234,8 @@ export default function App({ lock }: AppProps) {
 
   // Open the settings panel by default on desktop.
   useEffect(() => {
-    if (isDesktop) setConfigOpen(true)
-  }, [isDesktop])
+    if (isDesktop) openDialog('config')
+  }, [isDesktop, openDialog])
 
   // Warn when the browser's storage quota is exceeded (usually large images).
   useEffect(() => {
@@ -293,7 +263,7 @@ export default function App({ lock }: AppProps) {
     [setMarkdown, markOnboarding],
   )
 
-  const openFormattingHelp = useCallback(() => setFormattingHelpOpen(true), [])
+  const openFormattingHelp = opener('formattingHelp')
 
   const applyPreset = useCallback(
     (presetId: string) => {
@@ -344,10 +314,10 @@ export default function App({ lock }: AppProps) {
       toast.error(t('toast.nothingToExport'))
       return
     }
-    setPrintOpen(true)
+    openDialog('print')
     trackEvent('Export PDF', { skin: effectiveConfig.skin, paper: effectiveConfig.paperSize })
     markOnboarding('export')
-  }, [bodyEmpty, t, markOnboarding, effectiveConfig.skin, effectiveConfig.paperSize])
+  }, [bodyEmpty, t, openDialog, markOnboarding, effectiveConfig.skin, effectiveConfig.paperSize])
 
   const handleExportWord = useCallback(() => {
     const doc = ensureDoc()
@@ -419,45 +389,7 @@ export default function App({ lock }: AppProps) {
   }, [pendingResume, loadResumeContent, t])
 
   // Deep links from the marketing pages: /app?template=<id>&skin=<id>.
-  // A template opens as a NEW document (never clobbers existing work); a skin
-  // applies to the now-active document. Params are consumed from the URL.
-  const deepLinkHandled = useRef(false)
-  useEffect(() => {
-    if (deepLinkHandled.current) return
-    deepLinkHandled.current = true
-    const params = new URLSearchParams(window.location.search)
-    const templateId = params.get('template')
-    const skinId = params.get('skin')
-    if (templateId === null && skinId === null) return
-
-    const template = templateId ? TEMPLATES.find((entry) => entry.id === templateId) : undefined
-    const skin: DocumentSkin | undefined =
-      skinId && (SKIN_VALUES as string[]).includes(skinId) ? (skinId as DocumentSkin) : undefined
-
-    if (template) {
-      const name = template.nameKey ? t(template.nameKey) : template.name
-      library.createDoc(template.content, name)
-      const { data } = parseFrontmatter(template.content)
-      if (Object.keys(data).length > 0) setConfig((prev) => applyFrontmatter(prev, data))
-      toast.success(`${t('toast.templateLoaded')} “${name}”`)
-      trackEvent('Template Used', { template: template.id, source: 'deeplink' })
-      markOnboarding('template')
-    }
-    if (skin) {
-      setConfig((prev) => ({ ...prev, skin }))
-      trackEvent('Skin Applied', { skin, source: 'deeplink' })
-      toast.success(t('toast.skinApplied'))
-    }
-
-    params.delete('template')
-    params.delete('skin')
-    const query = params.toString()
-    window.history.replaceState(
-      null,
-      '',
-      `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`,
-    )
-  }, [library, setConfig, t, markOnboarding])
+  useDeepLinks({ createDoc: library.createDoc, setConfig, markOnboarding })
 
   const handleClear = useCallback(async () => {
     const ok = await confirm({
@@ -522,217 +454,8 @@ export default function App({ lock }: AppProps) {
   }, [ensureDoc, t])
 
   // ---- AI assist (bring your own key) --------------------------------------
-  // Resolve the text an AI action should operate on: the selection if there is
-  // one, otherwise the paragraph around the cursor (so users aren't blocked by
-  // having to select first). Also makes that range the active selection so the
-  // result visibly replaces it. Routes to settings when no key is configured.
-  const requireSelection = useCallback((): {
-    view: EditorView
-    from: number
-    to: number
-    text: string
-  } | null => {
-    if (!editorView) {
-      toast.error(t('toast.openEditorForAi'))
-      return null
-    }
-    const target = selectionOrParagraph(editorView)
-    if (!target) {
-      toast.error(t('toast.addTextFirst'))
-      return null
-    }
-    if (!isAiConfigured(aiConfig)) {
-      toast.error(t('toast.addApiKeyFirst'))
-      setAiSettingsOpen(true)
-      return null
-    }
-    // Select the resolved range so the AI result replaces it in place.
-    editorView.dispatch({ selection: { anchor: target.from, head: target.to } })
-    return { view: editorView, from: target.from, to: target.to, text: target.text }
-  }, [editorView, aiConfig, t])
-
-  // Stream an AI edit into a staged suggestion the document shows live; the user
-  // then accepts, rejects, or regenerates it. The doc isn't changed until accept.
-  const runStaged = useCallback(
-    (params: {
-      system: string
-      source: string
-      kind: 'replace' | 'insert'
-      from: number
-      to: number
-      label: string
-    }) => {
-      const { system, source, kind, from, to, label } = params
-      suggestionAbortRef.current?.abort()
-      const controller = new AbortController()
-      suggestionAbortRef.current = controller
-      setAiSuggestion({ from, to, kind, label, text: '', status: 'streaming', system, source })
-      void (async () => {
-        try {
-          const full = await runAi(aiConfig, system, source, {
-            signal: controller.signal,
-            onToken: (chunk) =>
-              setAiSuggestion((prev) =>
-                prev && prev.status === 'streaming' ? { ...prev, text: prev.text + chunk } : prev,
-              ),
-          })
-          if (controller.signal.aborted) return
-          setAiSuggestion((prev) =>
-            prev ? { ...prev, text: full.trim() || prev.text, status: 'done' } : prev,
-          )
-        } catch (error) {
-          if (controller.signal.aborted) return
-          setAiSuggestion((prev) =>
-            prev ? { ...prev, status: 'error', error: getErrorMessage(error) } : prev,
-          )
-        }
-      })()
-    },
-    [aiConfig],
-  )
-
-  const acceptSuggestion = useCallback(() => {
-    if (!aiSuggestion || !editorView || aiSuggestion.status === 'streaming') return
-    const { from, to, text } = aiSuggestion
-    editorView.dispatch({
-      changes: { from, to, insert: text },
-      selection: { anchor: from, head: from + text.length },
-    })
-    editorView.focus()
-    setAiSuggestion(null)
-    toast.success(t('toast.aiEditApplied'))
-  }, [aiSuggestion, editorView, t])
-
-  const rejectSuggestion = useCallback(() => {
-    suggestionAbortRef.current?.abort()
-    setAiSuggestion(null)
-    editorView?.focus()
-  }, [editorView])
-
-  const regenerateSuggestion = useCallback(() => {
-    if (!aiSuggestion) return
-    const { system, source, kind, from, to, label } = aiSuggestion
-    runStaged({ system, source, kind, from, to, label })
-  }, [aiSuggestion, runStaged])
-
-  // Inline ghost-text autocomplete (only wired when enabled in AI settings).
-  const ghostComplete = useCallback(
-    (prefix: string, signal: AbortSignal): Promise<string> =>
-      runAi(aiConfig, AI_PROMPTS.autocomplete, prefix, { signal, bare: true }),
-    [aiConfig],
-  )
-
-  const runSelectionTransform = useCallback(
-    (system: string, label: string) => {
-      const sel = requireSelection()
-      if (!sel) return
-      runStaged({ system, source: sel.text, kind: 'replace', from: sel.from, to: sel.to, label })
-    },
-    [requireSelection, runStaged],
-  )
-
-  const startGenerate = useCallback(() => {
-    if (!editorView) {
-      toast.error(t('toast.openEditorForAi'))
-      return
-    }
-    if (!isAiConfigured(aiConfig)) {
-      toast.error(t('toast.addApiKeyFirst'))
-      setAiSettingsOpen(true)
-      return
-    }
-    const pos = editorView.state.selection.main.head
-    setAiInput({
-      request: {
-        title: t('ai.generate.title'),
-        description: t('ai.generate.desc'),
-        label: t('ai.generate.label'),
-        placeholder: t('ai.generate.placeholder'),
-        multiline: true,
-        submitLabel: t('ai.generate.submit'),
-      },
-      run: (prompt) =>
-        runStaged({
-          system: AI_PROMPTS.generate,
-          source: prompt,
-          kind: 'insert',
-          from: pos,
-          to: pos,
-          label: t('ai.generating'),
-        }),
-    })
-  }, [editorView, aiConfig, runStaged, t])
-
-  const startTone = useCallback(() => {
-    const sel = requireSelection()
-    if (!sel) return
-    setAiInput({
-      request: {
-        title: t('ai.tone.title'),
-        label: t('ai.tone.label'),
-        placeholder: t('ai.tone.placeholder'),
-        submitLabel: t('ai.tone.submit'),
-      },
-      run: (tone) =>
-        runStaged({
-          system: AI_PROMPTS.tone(tone),
-          source: sel.text,
-          kind: 'replace',
-          from: sel.from,
-          to: sel.to,
-          label: t('ai.rewriting'),
-        }),
-    })
-  }, [requireSelection, runStaged, t])
-
-  const startTranslate = useCallback(() => {
-    const sel = requireSelection()
-    if (!sel) return
-    setAiInput({
-      request: {
-        title: t('ai.translate.title'),
-        label: t('ai.translate.label'),
-        placeholder: t('ai.translate.placeholder'),
-        submitLabel: t('ai.translate.submit'),
-      },
-      run: (language) =>
-        runStaged({
-          system: AI_PROMPTS.translate(language),
-          source: sel.text,
-          kind: 'replace',
-          from: sel.from,
-          to: sel.to,
-          label: t('ai.translating'),
-        }),
-    })
-  }, [requireSelection, runStaged, t])
-
-  const handleAiAction = useCallback(
-    (action: AiToolbarAction) => {
-      if (action !== 'settings') trackEvent('AI Action', { action })
-      switch (action) {
-        case 'improve':
-          return runSelectionTransform(AI_PROMPTS.improve, t('ai.improving'))
-        case 'grammar':
-          return runSelectionTransform(AI_PROMPTS.grammar, t('ai.fixingGrammar'))
-        case 'concise':
-          return runSelectionTransform(AI_PROMPTS.concise, t('ai.makingConcise'))
-        case 'expand':
-          return runSelectionTransform(AI_PROMPTS.expand, t('ai.expanding'))
-        case 'summarize':
-          return runSelectionTransform(AI_PROMPTS.summarize, t('ai.summarizing'))
-        case 'tone':
-          return startTone()
-        case 'translate':
-          return startTranslate()
-        case 'generate':
-          return startGenerate()
-        case 'settings':
-          return setAiSettingsOpen(true)
-      }
-    },
-    [runSelectionTransform, startTone, startTranslate, startGenerate, t],
-  )
+  const openAiSettings = opener('aiSettings')
+  const ai = useAiActions({ view: editorView, aiConfig, onNeedsSettings: openAiSettings })
 
   const handleRemoveAiKey = useCallback(async () => {
     const ok = await confirm({
@@ -743,9 +466,9 @@ export default function App({ lock }: AppProps) {
     })
     if (!ok) return
     setAiConfig((prev) => ({ ...prev, apiKey: '' }))
-    setAiDashboardOpen(false)
+    closeDialog('aiDashboard')
     toast.success(t('toast.apiKeyRemoved'))
-  }, [confirm, setAiConfig, t])
+  }, [confirm, setAiConfig, closeDialog, t])
 
   // Global keyboard shortcuts.
   useEffect(() => {
@@ -755,7 +478,7 @@ export default function App({ lock }: AppProps) {
       const key = e.key.toLowerCase()
       if (key === 'k') {
         e.preventDefault()
-        setPaletteOpen((o) => !o)
+        toggleDialog('palette')
       } else if (key === 's' || key === 'p') {
         e.preventDefault()
         openPrint()
@@ -764,98 +487,50 @@ export default function App({ lock }: AppProps) {
         handleImportClick()
       } else if (key === '/') {
         e.preventDefault()
-        setShortcutsOpen((o) => !o)
+        toggleDialog('shortcuts')
       }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [openPrint, handleImportClick])
+  }, [openPrint, handleImportClick, toggleDialog])
 
   // Escape exits focus mode.
   useEffect(() => {
     if (!zen) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setZen(false)
+      if (e.key === 'Escape') closeDialog('zen')
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [zen])
+  }, [zen, closeDialog])
 
-  const commands = useMemo<Command[]>(
-    () => [
-      { id: 'pdf', label: t('action.exportPdf'), group: t('group.export'), icon: FileDown, run: openPrint, hint: '⌘S' },
-      { id: 'print', label: t('action.printPreview'), group: t('group.export'), icon: Printer, run: openPrint },
-      { id: 'word', label: t('action.exportWord'), group: t('group.export'), icon: FileType2, run: handleExportWord },
-      { id: 'html', label: t('action.exportHtml'), group: t('group.export'), icon: FileCode2, run: handleExportHtml },
-      { id: 'md', label: t('action.exportMarkdown'), group: t('group.export'), icon: FileText, run: handleExportMarkdown },
-      { id: 'copy-html', label: t('command.copyHtml'), group: t('group.export'), icon: FileCode2, run: handleCopyHtml },
-      { id: 'insert-toc', label: tocPresent ? t('command.removeToc') : t('command.insertToc'), group: t('group.edit'), icon: ListTree, run: handleToggleToc },
-      { id: 'ai-improve', label: t('command.aiImprove'), group: t('group.ai'), icon: Sparkles, keywords: 'rewrite polish', run: () => runSelectionTransform(AI_PROMPTS.improve, t('ai.improving')) },
-      { id: 'ai-grammar', label: t('command.aiGrammar'), group: t('group.ai'), icon: Sparkles, keywords: 'spelling proofread', run: () => runSelectionTransform(AI_PROMPTS.grammar, t('ai.fixingGrammar')) },
-      { id: 'ai-concise', label: t('command.aiConcise'), group: t('group.ai'), icon: Sparkles, keywords: 'shorten trim', run: () => runSelectionTransform(AI_PROMPTS.concise, t('ai.makingConcise')) },
-      { id: 'ai-expand', label: t('command.aiExpand'), group: t('group.ai'), icon: Sparkles, keywords: 'elaborate lengthen', run: () => runSelectionTransform(AI_PROMPTS.expand, t('ai.expanding')) },
-      { id: 'ai-summarize', label: t('command.aiSummarize'), group: t('group.ai'), icon: Sparkles, keywords: 'tldr summary', run: () => runSelectionTransform(AI_PROMPTS.summarize, t('ai.summarizing')) },
-      { id: 'ai-tone', label: t('command.aiTone'), group: t('group.ai'), icon: Wand2, keywords: 'voice style', run: startTone },
-      { id: 'ai-translate', label: t('command.aiTranslate'), group: t('group.ai'), icon: Languages, keywords: 'language localize', run: startTranslate },
-      { id: 'ai-generate', label: t('command.aiGenerate'), group: t('group.ai'), icon: Wand2, keywords: 'write create', run: startGenerate },
-      { id: 'ai-settings', label: t('command.aiSettings'), group: t('group.ai'), icon: KeyRound, keywords: 'api key openai anthropic', run: () => setAiSettingsOpen(true) },
-      { id: 'themes', label: t('action.themes'), group: t('group.view'), icon: Palette, run: () => setGalleryOpen(true) },
-      { id: 'stats', label: t('command.stats'), group: t('group.view'), icon: BarChart3, run: () => setStatsOpen(true) },
-      { id: 'docs', label: t('action.documents'), group: t('group.file'), icon: FolderOpen, run: () => setDocsOpen(true) },
-      { id: 'new', label: t('action.newDocument'), group: t('group.file'), icon: FilePlus, run: () => library.createDoc() },
-      { id: 'import', label: t('command.importFile'), group: t('group.file'), icon: Import, run: handleImportClick, hint: '⌘O' },
-      { id: 'github', label: t('action.importGithub'), group: t('group.file'), icon: Github, run: () => setGithubOpen(true) },
-      { id: 'templates', label: t('command.browseTemplates'), group: t('group.file'), icon: LayoutTemplate, run: () => setTemplatesOpen(true) },
-      { id: 'sample', label: t('command.loadSample'), group: t('group.file'), icon: FileText, run: () => setMarkdown(SAMPLE_DOCUMENT) },
-      { id: 'clear', label: t('action.clear'), group: t('group.file'), icon: Trash2, run: handleClear },
-      { id: 'simple-mode', label: isSimple ? t('mode.toStandard') : t('mode.toSimple'), group: t('group.view'), icon: GraduationCap, keywords: 'beginner easy simple guided', run: toggleMode },
-      { id: 'zen', label: t('command.toggleFocus'), group: t('group.view'), icon: Maximize2, run: () => setZen((z) => !z) },
-      { id: 'settings', label: t('command.toggleSettings'), group: t('group.view'), icon: Settings2, run: () => setConfigOpen((o) => !o) },
-      { id: 'outline', label: t('command.toggleOutline'), group: t('group.view'), icon: LayoutTemplate, run: () => setOutlineOpen((o) => !o) },
-      { id: 'editor', label: t('view.editor'), group: t('group.view'), icon: Pencil, run: () => setViewMode('editor') },
-      { id: 'split', label: t('view.split'), group: t('group.view'), icon: LayoutTemplate, run: () => setViewMode('split') },
-      { id: 'preview-view', label: t('view.preview'), group: t('group.view'), icon: Eye, run: () => setViewMode('preview') },
-      { id: 'theme', label: t('command.cycleTheme'), group: t('group.view'), icon: Moon, run: cycleTheme },
-      { id: 'security', label: t('action.security'), group: t('group.view'), icon: ShieldCheck, run: () => setSecurityOpen(true) },
-      ...(lock.status === 'unlocked'
-        ? [{ id: 'lock', label: t('command.lockNow'), group: t('group.view'), icon: Lock, run: () => void lock.lockNow() }]
-        : []),
-      { id: 'formatting-help', label: t('action.formattingHelp'), group: t('group.help'), icon: BookOpen, keywords: 'markdown syntax cheatsheet guide how', run: () => setFormattingHelpOpen(true) },
-      { id: 'shortcuts', label: t('action.shortcuts'), group: t('group.help'), icon: Keyboard, run: () => setShortcutsOpen(true), hint: '⌘/' },
-      ...DOCUMENT_PRESETS.map((p) => ({
-        id: `preset-${p.id}`,
-        label: `${t('command.themePrefix')} ${t(p.nameKey)}`,
-        group: t('group.documentTheme'),
-        icon: FileText,
-        keywords: t(p.descKey),
-        run: () => applyPreset(p.id),
-      })),
-    ],
-    [
-      t,
-      openPrint,
-      handleExportWord,
-      handleExportHtml,
-      handleExportMarkdown,
-      handleCopyHtml,
-      handleToggleToc,
-      tocPresent,
-      isSimple,
-      toggleMode,
-      handleClear,
-      handleImportClick,
-      setMarkdown,
-      setViewMode,
-      cycleTheme,
-      applyPreset,
-      library,
-      lock,
-      runSelectionTransform,
-      startTone,
-      startTranslate,
-      startGenerate,
-    ],
-  )
+  const handleNewDocument = useCallback(() => library.createDoc(), [library])
+  const handleLoadSample = useCallback(() => setMarkdown(SAMPLE_DOCUMENT), [setMarkdown])
+  const handleLockNow = useCallback(() => void lock.lockNow(), [lock])
+
+  const commands = useCommands({
+    openDialog: opener,
+    toggleDialog: toggler,
+    onExportPdf: openPrint,
+    onExportWord: handleExportWord,
+    onExportHtml: handleExportHtml,
+    onExportMarkdown: handleExportMarkdown,
+    onCopyHtml: handleCopyHtml,
+    tocPresent,
+    onToggleToc: handleToggleToc,
+    onAi: ai.handleAction,
+    onNewDocument: handleNewDocument,
+    onImport: handleImportClick,
+    onLoadSample: handleLoadSample,
+    onClear: handleClear,
+    isSimple,
+    onToggleSimpleMode: toggleMode,
+    onViewMode: setViewMode,
+    onCycleTheme: cycleTheme,
+    canLock: lock.status === 'unlocked',
+    onLockNow: handleLockNow,
+    onApplyPreset: applyPreset,
+  })
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
@@ -865,29 +540,29 @@ export default function App({ lock }: AppProps) {
           onTitleChange={(title) => setConfig((prev) => ({ ...prev, meta: { ...prev.meta, title } }))}
           viewMode={viewMode}
           onViewMode={setViewMode}
-          outlineOpen={outlineOpen}
-          onToggleOutline={() => setOutlineOpen((o) => !o)}
+          outlineOpen={dialogs.state.outline}
+          onToggleOutline={toggler('outline')}
           themeMode={themeMode}
           onCycleTheme={cycleTheme}
           saving={saving}
-          configOpen={configOpen}
-          onToggleConfig={() => setConfigOpen((o) => !o)}
-          onOpenTemplates={() => setTemplatesOpen(true)}
-          onOpenThemes={() => setGalleryOpen(true)}
-          onOpenDocuments={() => setDocsOpen(true)}
-          onToggleZen={() => setZen(true)}
+          configOpen={dialogs.state.config}
+          onToggleConfig={toggler('config')}
+          onOpenTemplates={opener('templates')}
+          onOpenThemes={opener('gallery')}
+          onOpenDocuments={opener('docs')}
+          onToggleZen={opener('zen')}
           onImport={handleImportClick}
-          onImportGithub={() => setGithubOpen(true)}
+          onImportGithub={opener('github')}
           onExportPdf={openPrint}
           onPrintPreview={openPrint}
           onExportWord={handleExportWord}
           onExportHtml={handleExportHtml}
           onExportMarkdown={handleExportMarkdown}
-          onShortcuts={() => setShortcutsOpen(true)}
-          onOpenFormattingHelp={() => setFormattingHelpOpen(true)}
-          onOpenSecurity={() => setSecurityOpen(true)}
-          onOpenAi={() => setAiDashboardOpen(true)}
-          onOpenCommand={() => setPaletteOpen(true)}
+          onShortcuts={opener('shortcuts')}
+          onOpenFormattingHelp={openFormattingHelp}
+          onOpenSecurity={opener('security')}
+          onOpenAi={opener('aiDashboard')}
+          onOpenCommand={opener('palette')}
           uiLang={ui.lang}
           onToggleLang={ui.toggle}
           secured={lock.status === 'unlocked'}
@@ -896,7 +571,7 @@ export default function App({ lock }: AppProps) {
       )}
 
       <div ref={mainRef} className="relative flex min-h-0 flex-1">
-        {!zen && outlineOpen && (
+        {!zen && dialogs.state.outline && (
           <aside className="hidden w-60 shrink-0 border-e border-border bg-surface sm:block">
             <div className="border-b border-border px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t('action.outline')}
@@ -917,7 +592,7 @@ export default function App({ lock }: AppProps) {
             view={editorView}
             tocPresent={tocPresent}
             onToggleToc={handleToggleToc}
-            onAi={handleAiAction}
+            onAi={ai.handleAction}
           />
           {isSimple && <SimpleHintBar onOpenFormattingHelp={openFormattingHelp} />}
           <div ref={editorWrapRef} className="relative min-h-0 flex-1 bg-surface">
@@ -928,11 +603,11 @@ export default function App({ lock }: AppProps) {
               direction={effectiveConfig.direction === 'auto' ? ui.dir : effectiveConfig.direction}
               onReady={setEditorView}
               onActivity={bumpActivity}
-              slashAi={handleAiAction}
+              slashAi={ai.handleAction}
               onSlashHelp={openFormattingHelp}
               onPastedAsMarkdown={handlePastedAsMarkdown}
               ghostComplete={
-                aiConfig.autocomplete && isAiConfigured(aiConfig) ? ghostComplete : undefined
+                aiConfig.autocomplete && isAiConfigured(aiConfig) ? ai.ghostComplete : undefined
               }
               onError={handleEditorError}
             />
@@ -940,18 +615,18 @@ export default function App({ lock }: AppProps) {
               view={editorView}
               wrapperRef={editorWrapRef}
               tick={activityTick}
-              suppressed={aiSuggestion !== null}
-              onAction={handleAiAction}
+              suppressed={ai.suggestion !== null}
+              onAction={ai.handleAction}
             />
-            {aiSuggestion && (
+            {ai.suggestion && (
               <AiSuggestionCard
                 view={editorView}
                 wrapperRef={editorWrapRef}
                 tick={activityTick}
-                suggestion={aiSuggestion}
-                onAccept={acceptSuggestion}
-                onReject={rejectSuggestion}
-                onRegenerate={regenerateSuggestion}
+                suggestion={ai.suggestion}
+                onAccept={ai.accept}
+                onReject={ai.reject}
+                onRegenerate={ai.regenerate}
               />
             )}
           </div>
@@ -973,8 +648,8 @@ export default function App({ lock }: AppProps) {
         <section className={`min-w-0 flex-1 ${showPreview ? 'block' : 'hidden'}`}>
           {bodyEmpty ? (
             <EmptyState
-              onUseTemplate={() => setTemplatesOpen(true)}
-              onUseSample={() => setMarkdown(SAMPLE_DOCUMENT)}
+              onUseTemplate={opener('templates')}
+              onUseSample={handleLoadSample}
             />
           ) : (
             <Preview
@@ -989,12 +664,12 @@ export default function App({ lock }: AppProps) {
           )}
         </section>
 
-        {!zen && configOpen && (
+        {!zen && dialogs.state.config && (
           <aside className="absolute inset-y-0 end-0 z-20 w-80 max-w-[85vw] border-s border-border bg-surface shadow-xl lg:static lg:z-0 lg:max-w-none lg:shadow-none">
             <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
               <span className="text-sm font-semibold">{t('config.exportSettings')}</span>
               <button
-                onClick={() => setConfigOpen(false)}
+                onClick={closer('config')}
                 className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden"
                 aria-label={t('aria.closeSettings')}
               >
@@ -1013,7 +688,7 @@ export default function App({ lock }: AppProps) {
           content={parsed.body}
           config={effectiveConfig}
           headingCount={headingCount}
-          onOpenStats={() => setStatsOpen(true)}
+          onOpenStats={opener('stats')}
         />
       )}
 
@@ -1021,7 +696,7 @@ export default function App({ lock }: AppProps) {
         <OnboardingChecklist
           state={onboarding}
           onDismiss={() => setOnboarding((prev) => ({ ...prev, dismissed: true }))}
-          onOpenTemplates={() => setTemplatesOpen(true)}
+          onOpenTemplates={opener('templates')}
         />
       )}
 
@@ -1041,7 +716,7 @@ export default function App({ lock }: AppProps) {
             <Moon size={15} />
           </button>
           <button
-            onClick={() => setZen(false)}
+            onClick={closer('zen')}
             aria-label={t('zen.exitAria')}
             className="flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-foreground hover:bg-muted"
           >
@@ -1050,29 +725,33 @@ export default function App({ lock }: AppProps) {
         </div>
       )}
 
-      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} commands={commands} />
+      <CommandPalette
+        open={dialogs.state.palette}
+        onClose={closer('palette')}
+        commands={commands}
+      />
       <DocumentsDialog
-        open={docsOpen}
-        onClose={() => setDocsOpen(false)}
+        open={dialogs.state.docs}
+        onClose={closer('docs')}
         docs={library.docs}
         activeId={library.activeId}
         onSelect={library.selectDoc}
-        onCreate={() => library.createDoc()}
+        onCreate={handleNewDocument}
         onDuplicate={library.duplicateDoc}
         onDelete={library.deleteDoc}
         onImport={library.importDocs}
         onNotify={(type, message) => (type === 'success' ? toast.success(message) : toast.error(message))}
       />
-      <SecurityDialog open={securityOpen} onClose={() => setSecurityOpen(false)} lock={lock} />
-      <StatsDialog open={statsOpen} onClose={() => setStatsOpen(false)} markdown={parsed.body} />
+      <SecurityDialog open={dialogs.state.security} onClose={closer('security')} lock={lock} />
+      <StatsDialog open={dialogs.state.stats} onClose={closer('stats')} markdown={parsed.body} />
       <TemplatesDialog
-        open={templatesOpen}
-        onClose={() => setTemplatesOpen(false)}
+        open={dialogs.state.templates}
+        onClose={closer('templates')}
         onSelect={handleTemplate}
       />
       <ThemeGalleryDialog
-        open={galleryOpen}
-        onClose={() => setGalleryOpen(false)}
+        open={dialogs.state.gallery}
+        onClose={closer('gallery')}
         config={config}
         onApply={updateConfig}
         onApplyPreset={applyPreset}
@@ -1085,43 +764,46 @@ export default function App({ lock }: AppProps) {
         onSkip={handleResumeSkip}
       />
       <GithubDialog
-        open={githubOpen}
-        onClose={() => setGithubOpen(false)}
+        open={dialogs.state.github}
+        onClose={closer('github')}
         onImport={(md, name) => library.createDoc(md, name)}
       />
       <AiDashboardDialog
-        open={aiDashboardOpen}
-        onClose={() => setAiDashboardOpen(false)}
+        open={dialogs.state.aiDashboard}
+        onClose={closer('aiDashboard')}
         config={aiConfig}
         encryptedAtRest={lock.status !== 'open'}
         hasSelection={!!editorView && getSelectionText(editorView).trim().length > 0}
-        onRun={handleAiAction}
+        onRun={ai.handleAction}
         onEditSettings={() => {
-          setAiDashboardOpen(false)
-          setAiSettingsOpen(true)
+          closeDialog('aiDashboard')
+          openDialog('aiSettings')
         }}
         onRemoveKey={handleRemoveAiKey}
-        onOpenSecurity={() => setSecurityOpen(true)}
+        onOpenSecurity={opener('security')}
       />
       <AiSettingsDialog
-        open={aiSettingsOpen}
-        onClose={() => setAiSettingsOpen(false)}
+        open={dialogs.state.aiSettings}
+        onClose={closer('aiSettings')}
         config={aiConfig}
         onSave={setAiConfig}
       />
       <AiInputDialog
-        open={aiInput !== null}
-        request={aiInput?.request ?? null}
-        onClose={() => setAiInput(null)}
-        onSubmit={(value) => aiInput?.run(value)}
+        open={ai.inputRequest !== null}
+        request={ai.inputRequest}
+        onClose={ai.closeInput}
+        onSubmit={ai.submitInput}
       />
-      <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
-      <FormattingHelpDialog open={formattingHelpOpen} onClose={() => setFormattingHelpOpen(false)} />
-      {printOpen && (
+      <ShortcutsDialog open={dialogs.state.shortcuts} onClose={closer('shortcuts')} />
+      <FormattingHelpDialog
+        open={dialogs.state.formattingHelp}
+        onClose={closer('formattingHelp')}
+      />
+      {dialogs.state.print && (
         <Suspense fallback={null}>
           <PrintPreview
-            open={printOpen}
-            onClose={() => setPrintOpen(false)}
+            open={dialogs.state.print}
+            onClose={closer('print')}
             getDocElement={getDoc}
             config={effectiveConfig}
           />
