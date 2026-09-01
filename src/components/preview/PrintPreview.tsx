@@ -19,6 +19,7 @@ import {
 import { Button } from '@/components/ui/Button'
 import { renderPagedPreview } from '@/pdf/renderPaged'
 import { buildPrintPageRule } from '@/pdf/pageStyles'
+import { loadHand } from '@/lib/handwriting/fonts'
 import {
   insertPageBreak,
   removePageBreak,
@@ -105,6 +106,9 @@ export function PrintPreview({
     renderingRef.current = true
     try {
       setProgress({ stage: 'preparing', message: t('print.preparing'), percent: 8 })
+      // A hand that is still loading when Paged.js measures paginates against
+      // the fallback metrics, and the PDF comes out wrong.
+      if (exportConfig.hand.hand !== 'none') await loadHand(exportConfig.hand.hand)
       await (document as Document & { fonts?: FontFaceSet }).fonts?.ready
       const { pageCount: count, fit: fitResult } = await renderPagedPreview({
         liveDoc,

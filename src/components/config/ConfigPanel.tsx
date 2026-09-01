@@ -12,6 +12,7 @@ import {
 import { MARGIN_PRESETS } from '@/lib/constants'
 import { DOCUMENT_PRESETS } from '@/data/presets'
 import { SKIN_OPTIONS } from '@/data/skins'
+import { HandwritingSection } from './HandwritingSection'
 import { useLanguage } from '@/i18n'
 import { useMode } from '@/mode'
 import type { TranslationKey } from '@/lib/i18n'
@@ -35,6 +36,8 @@ interface ConfigPanelProps {
   onApplyPreset: (presetId: string) => void
   /** Opens the saved-presets manager. Omit to hide the entry point. */
   onManagePresets?: () => void
+  /** Reports a handwriting font that could not be fetched. */
+  onHandFontError?: (family: string) => void
 }
 
 function Section({
@@ -120,6 +123,7 @@ export function ConfigPanel({
   onChange,
   onApplyPreset,
   onManagePresets,
+  onHandFontError = () => {},
 }: ConfigPanelProps) {
   const { t } = useLanguage()
   const { isSimple } = useMode()
@@ -164,6 +168,10 @@ export function ConfigPanel({
             {t('presets.manage')}
           </button>
         )}
+      </Section>
+
+      <Section title={t('hand.section')} defaultOpen={false}>
+        <HandwritingSection config={config} onChange={onChange} onFontError={onHandFontError} />
       </Section>
 
       <Section title={t('config.section.page')}>

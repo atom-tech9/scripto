@@ -1,0 +1,494 @@
+/*
+ * handwriting.css — the variation engine's visual half.
+ *
+ * Loaded only when a hand is active. `hand: 'none'` adds no attribute, so none
+ * of this matches and a user who never touches handwriting pays nothing.
+ *
+ * Amplitudes are `em`-relative on purpose: jitter has to scale with the type,
+ * or headings look drunk while body text looks fine. They are also small on
+ * purpose — a real hand drifts by a fraction of an x-height, not by a line.
+ */
+
+.scripto-doc[data-hand] {
+  /* Set from HandConfig; the sliders change only these, which is why neatness
+     and slant are instant and never re-wrap or re-paginate the document. */
+  --hw-neatness: 0.5;
+  --hw-slant: 0deg;
+  --hw-aging: 0;
+  --hw-ink: #1c3f94;
+  --hw-ink-soft: #43619f;
+  --hw-amp: calc(var(--hw-neatness) * 1);
+
+  font-family: var(--doc-hand-font, var(--doc-font));
+  color: var(--hw-ink);
+  --doc-fg: var(--hw-ink);
+  --doc-quote: var(--hw-ink-soft);
+  --doc-accent: var(--hw-ink);
+}
+
+/*
+ * Everything the reader would have written by hand is written by hand.
+ *
+ * Inheriting from the root is not enough: skins set `font-family` directly on
+ * headings, table headers, callout titles and the like, and a direct
+ * declaration always beats an inherited one. These selectors are deliberately
+ * specific enough to win, and are listed rather than universal so the
+ * exclusions below stay in charge of code, maths and diagrams.
+ */
+.scripto-doc[data-hand]
+  :is(
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p,
+    li,
+    dt,
+    dd,
+    blockquote,
+    figcaption,
+    caption,
+    th,
+    td,
+    a,
+    strong,
+    em,
+    b,
+    i,
+    mark,
+    del,
+    ins,
+    small,
+    summary,
+    .callout__title,
+    .callout__body,
+    .toc-text
+  ) {
+  font-family: var(--doc-hand-font, var(--doc-font));
+}
+
+/* Headings can take a second, tidier hand — real notes title more carefully
+   than they write. Falls back to the body hand when none is chosen. */
+.scripto-doc[data-hand] :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--doc-heading-hand-font, var(--doc-hand-font, var(--doc-font)));
+}
+
+/* The word wrapper. No `will-change`: tens of thousands of composited layers
+   would cost far more than the jitter is worth. */
+.scripto-doc[data-hand] .hw {
+  display: inline-block;
+  transform: rotate(var(--hw-slant));
+}
+
+/* Large type magnifies wobble, so the biggest text jitters least. */
+.scripto-doc[data-hand] :is(h1, h2) .hw {
+  --hw-amp: calc(var(--hw-neatness) * 0.4);
+}
+
+.scripto-doc[data-hand] :is(h3, h4) .hw {
+  --hw-amp: calc(var(--hw-neatness) * 0.65);
+}
+
+/* Tabular data reads worst of all when it wanders. */
+.scripto-doc[data-hand] :is(th, td) .hw {
+  --hw-amp: calc(var(--hw-neatness) * 0.5);
+}
+
+/*
+ * Code, maths and diagrams keep their own typeface. Setting them in a
+ * handwriting font makes them unreadable, which is the mistake every
+ * handwriting theme makes. Last, and more specific, so it beats the rule above.
+ */
+.scripto-doc[data-hand] :is(pre, code, kbd, samp, .katex, .katex-display),
+.scripto-doc[data-hand] :is(pre, code, .katex, .katex-display) :is(span, code) {
+  font-family: var(--doc-mono);
+}
+
+.scripto-doc[data-hand] :is(.katex, .katex-display) {
+  color: var(--doc-fg);
+}
+
+/* Figures that were "printed and taped in" rather than written by hand. */
+.scripto-doc[data-hand][data-drawn] :is(.code-block, .katex-display, .mermaid-figure) {
+  background: #fff;
+  border-radius: 2px;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.14),
+    0 6px 16px -6px rgb(0 0 0 / 0.22);
+  transform: rotate(-0.35deg);
+}
+
+.scripto-doc[data-hand][data-drawn] :is(.katex-display, .mermaid-figure) {
+  padding: 0.8em 1em;
+}
+
+/* Aging fades the ink a little. Seasoning, not a filter. */
+.scripto-doc[data-hand] .hw {
+  opacity: calc(1 - var(--hw-aging) * 0.16);
+}
+
+/* --- jitter buckets: 16 for `word` --- */
+.scripto-doc[data-hand] .hw-0 {
+  transform: translateY(calc(-0.035em * var(--hw-amp)))
+    rotate(calc(-0.55deg * var(--hw-amp) + var(--hw-slant))) scaleX(0.994);
+}
+.scripto-doc[data-hand] .hw-1 {
+  transform: translateY(calc(-0.0117em * var(--hw-amp)))
+    rotate(calc(-0.037deg * var(--hw-amp) + var(--hw-slant))) scaleX(0.9964);
+}
+.scripto-doc[data-hand] .hw-2 {
+  transform: translateY(calc(0.0117em * var(--hw-amp)))
+    rotate(calc(0.477deg * var(--hw-amp) + var(--hw-slant))) scaleX(0.9988);
+}
+.scripto-doc[data-hand] .hw-3 {
+  transform: translateY(calc(0.035em * var(--hw-amp)))
+    rotate(calc(-0.183deg * var(--hw-amp) + var(--hw-slant))) scaleX(1.0012);
+}
+.scripto-doc[data-hand] .hw-4 {
+  transform: translateY(calc(-0.0163em * var(--hw-amp)))
+    rotate(calc(0.33deg * var(--hw-amp) + var(--hw-slant))) scaleX(1.0036);
+}
+.scripto-doc[data-hand] .hw-5 {
+  transform: translateY(calc(0.007em * var(--hw-amp)))
+    rotate(calc(-0.33deg * var(--hw-amp) + var(--hw-slant))) scaleX(1.006);
+}
+.scripto-doc[data-hand] .hw-6 {
+  transform: translateY(calc(0.0303em * var(--hw-amp)))
+    rotate(calc(0.183deg * var(--hw-amp) + var(--hw-slant))) scaleX(0.9956);
+}
+.scripto-doc[data-hand] .hw-7 {
+  transform: translateY(calc(-0.021em * var(--hw-amp)))
+    rotate(calc(-0.477deg * var(--hw-amp) + var(--hw-slant))) scaleX(0.998);
+}
+.scripto-doc[data-hand] .hw-8 {
+  transform: translateY(calc(0.0023em * var(--hw-amp)))
+    rotate(calc(0.037deg * var(--hw-amp) + var(--hw-slant))) scaleX(1.0004);
+}
+.scripto-doc[data-hand] .hw-9 {
+  transform: translateY(calc(0.0257em * var(--hw-amp)))
+    rotate(calc(0.55deg * var(--hw-amp) + var(--hw-slant))) scaleX(1.0028);
+}
+.scripto-doc[data-hand] .hw-10 {
+  transform: translateY(calc(-0.0257em * var(--hw-amp)))
+    rotate(calc(-0.11deg * var(--hw-amp) + var(--hw-slant))) scaleX(1.0052);
+}
+.scripto-doc[data-hand] .hw-11 {
+  transform: translateY(calc(-0.0023em * var(--hw-amp)))
+    rotate(calc(0.403deg * var(--hw-amp) + var(--hw-slant))) scaleX(0.9948);
+}
+.scripto-doc[data-hand] .hw-12 {
+  transform: translateY(calc(0.021em * var(--hw-amp)))
+    rotate(calc(-0.257deg * var(--hw-amp) + var(--hw-slant))) scaleX(0.9972);
+}
+.scripto-doc[data-hand] .hw-13 {
+  transform: translateY(calc(-0.0303em * var(--hw-amp)))
+    rotate(calc(0.257deg * var(--hw-amp) + var(--hw-slant))) scaleX(0.9996);
+}
+.scripto-doc[data-hand] .hw-14 {
+  transform: translateY(calc(-0.007em * var(--hw-amp)))
+    rotate(calc(-0.403deg * var(--hw-amp) + var(--hw-slant))) scaleX(1.002);
+}
+.scripto-doc[data-hand] .hw-15 {
+  transform: translateY(calc(0.0163em * var(--hw-amp)))
+    rotate(calc(0.11deg * var(--hw-amp) + var(--hw-slant))) scaleX(1.0044);
+}
+
+/* Pen pressure, on hands with a weight axis — what stops the text
+   reading flat. */
+.scripto-doc[data-hand][data-hand-variable] .hw-0 {
+  font-variation-settings: 'wght' 380;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-1 {
+  font-variation-settings: 'wght' 438;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-2 {
+  font-variation-settings: 'wght' 412;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-3 {
+  font-variation-settings: 'wght' 385;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-4 {
+  font-variation-settings: 'wght' 444;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-5 {
+  font-variation-settings: 'wght' 417;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-6 {
+  font-variation-settings: 'wght' 390;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-7 {
+  font-variation-settings: 'wght' 449;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-8 {
+  font-variation-settings: 'wght' 422;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-9 {
+  font-variation-settings: 'wght' 396;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-10 {
+  font-variation-settings: 'wght' 454;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-11 {
+  font-variation-settings: 'wght' 428;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-12 {
+  font-variation-settings: 'wght' 401;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-13 {
+  font-variation-settings: 'wght' 460;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-14 {
+  font-variation-settings: 'wght' 433;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-15 {
+  font-variation-settings: 'wght' 406;
+}
+
+/* --- `expressive` adds buckets 16-31, with wider amplitude --- */
+.scripto-doc[data-hand] .hw-16 {
+  transform: translateY(calc(0.0011em * var(--hw-amp) * 1.4))
+    rotate(calc(0.018deg * var(--hw-amp) * 1.4 + var(--hw-slant))) scaleX(1.0002);
+}
+.scripto-doc[data-hand] .hw-17 {
+  transform: translateY(calc(0.0124em * var(--hw-amp) * 1.4))
+    rotate(calc(0.266deg * var(--hw-amp) * 1.4 + var(--hw-slant))) scaleX(1.0014);
+}
+.scripto-doc[data-hand] .hw-18 {
+  transform: translateY(calc(0.0237em * var(--hw-amp) * 1.4))
+    rotate(calc(0.515deg * var(--hw-amp) * 1.4 + var(--hw-slant))) scaleX(1.0025);
+}
+.scripto-doc[data-hand] .hw-19 {
+  transform: translateY(calc(0.035em * var(--hw-amp) * 1.4))
+    rotate(calc(-0.373deg * var(--hw-amp) * 1.4 + var(--hw-slant))) scaleX(1.0037);
+}
+.scripto-doc[data-hand] .hw-20 {
+  transform: translateY(calc(-0.026em * var(--hw-amp) * 1.4))
+    rotate(calc(-0.124deg * var(--hw-amp) * 1.4 + var(--hw-slant))) scaleX(1.0048);
+}
+.scripto-doc[data-hand] .hw-21 {
+  transform: translateY(calc(-0.0147em * var(--hw-amp) * 1.4))
+    rotate(calc(0.124deg * var(--hw-amp) * 1.4 + var(--hw-slant))) scaleX(1.006);
+}
+.scripto-doc[data-hand] .hw-22 {
+  transform: translateY(calc(-0.0034em * var(--hw-amp) * 1.4))
+    rotate(calc(0.373deg * var(--hw-amp) * 1.4 + var(--hw-slant))) scaleX(0.9948);
+}
+.scripto-doc[data-hand] .hw-23 {
+  transform: translateY(calc(0.0079em * var(--hw-amp) * 1.4))
+    rotate(calc(-0.515deg * var(--hw-amp) * 1.4 + var(--hw-slant))) scaleX(0.9959);
+}
+.scripto-doc[data-hand] .hw-24 {
+  transform: translateY(calc(0.0192em * var(--hw-amp) * 1.4))
+    rotate(calc(-0.266deg * var(--hw-amp) * 1.4 + var(--hw-slant))) scaleX(0.9971);
+}
+.scripto-doc[data-hand] .hw-25 {
+  transform: translateY(calc(0.0305em * var(--hw-amp) * 1.4))
+    rotate(calc(-0.018deg * var(--hw-amp) * 1.4 + var(--hw-slant))) scaleX(0.9983);
+}
+.scripto-doc[data-hand] .hw-26 {
+  transform: translateY(calc(-0.0305em * var(--hw-amp) * 1.4))
+    rotate(calc(0.231deg * var(--hw-amp) * 1.4 + var(--hw-slant))) scaleX(0.9994);
+}
+.scripto-doc[data-hand] .hw-27 {
+  transform: translateY(calc(-0.0192em * var(--hw-amp) * 1.4))
+    rotate(calc(0.479deg * var(--hw-amp) * 1.4 + var(--hw-slant))) scaleX(1.0006);
+}
+.scripto-doc[data-hand] .hw-28 {
+  transform: translateY(calc(-0.0079em * var(--hw-amp) * 1.4))
+    rotate(calc(-0.408deg * var(--hw-amp) * 1.4 + var(--hw-slant))) scaleX(1.0017);
+}
+.scripto-doc[data-hand] .hw-29 {
+  transform: translateY(calc(0.0034em * var(--hw-amp) * 1.4))
+    rotate(calc(-0.16deg * var(--hw-amp) * 1.4 + var(--hw-slant))) scaleX(1.0029);
+}
+.scripto-doc[data-hand] .hw-30 {
+  transform: translateY(calc(0.0147em * var(--hw-amp) * 1.4))
+    rotate(calc(0.089deg * var(--hw-amp) * 1.4 + var(--hw-slant))) scaleX(1.0041);
+}
+.scripto-doc[data-hand] .hw-31 {
+  transform: translateY(calc(0.026em * var(--hw-amp) * 1.4))
+    rotate(calc(0.337deg * var(--hw-amp) * 1.4 + var(--hw-slant))) scaleX(1.0052);
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-16 {
+  font-variation-settings: 'wght' 421;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-17 {
+  font-variation-settings: 'wght' 449;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-18 {
+  font-variation-settings: 'wght' 395;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-19 {
+  font-variation-settings: 'wght' 423;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-20 {
+  font-variation-settings: 'wght' 452;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-21 {
+  font-variation-settings: 'wght' 398;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-22 {
+  font-variation-settings: 'wght' 426;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-23 {
+  font-variation-settings: 'wght' 454;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-24 {
+  font-variation-settings: 'wght' 400;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-25 {
+  font-variation-settings: 'wght' 429;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-26 {
+  font-variation-settings: 'wght' 457;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-27 {
+  font-variation-settings: 'wght' 403;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-28 {
+  font-variation-settings: 'wght' 431;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-29 {
+  font-variation-settings: 'wght' 460;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-30 {
+  font-variation-settings: 'wght' 405;
+}
+.scripto-doc[data-hand][data-hand-variable] .hw-31 {
+  font-variation-settings: 'wght' 434;
+}
+
+/* --- inks --- */
+.scripto-doc[data-hand][data-ink='ballpoint-blue'] {
+  --hw-ink: #1c3f94;
+  --hw-ink-soft: #43619f;
+}
+.scripto-doc[data-hand][data-ink='ballpoint-black'] {
+  --hw-ink: #1b1d22;
+  --hw-ink-soft: #4a4d55;
+}
+.scripto-doc[data-hand][data-ink='fountain-blue'] {
+  --hw-ink: #16307a;
+  --hw-ink-soft: #3a538f;
+}
+.scripto-doc[data-hand][data-ink='fountain-black'] {
+  --hw-ink: #14161b;
+  --hw-ink-soft: #3f434c;
+}
+.scripto-doc[data-hand][data-ink='pencil'] {
+  --hw-ink: #4a4f57;
+  --hw-ink-soft: #767c86;
+}
+.scripto-doc[data-hand][data-ink='marker'] {
+  --hw-ink: #0f2f5e;
+  --hw-ink-soft: #3a5a86;
+}
+.scripto-doc[data-hand][data-ink='red-pen'] {
+  --hw-ink: #a01b1b;
+  --hw-ink-soft: #c04b4b;
+}
+.scripto-doc[data-hand][data-ink='gel'] {
+  --hw-ink: #0b2e4f;
+  --hw-ink-soft: #37607f;
+}
+.scripto-doc[data-hand][data-ink='chalk-white'] {
+  --hw-ink: #f2f4f0;
+  --hw-ink-soft: #c9cfc6;
+}
+.scripto-doc[data-hand][data-ink='sepia'] {
+  --hw-ink: #5a3a1e;
+  --hw-ink-soft: #8a6a49;
+}
+
+/* ==========================================================================
+   Rule locking
+
+   Handwriting has to sit ON the rule. If a line box or a block margin is even a
+   fraction of a rule out, the error accumulates down the page and the text
+   visibly drifts away from the lines — which looks worse than plain text on
+   plain paper.
+
+   So on ruled paper nothing is expressed in `em`: every line box and every gap
+   is an exact multiple of `--hw-pitch`. Headings take two rules because their
+   type is larger than one.
+   ========================================================================== */
+
+.scripto-doc[data-ruled] {
+  line-height: var(--hw-pitch);
+  padding-top: 0;
+}
+
+.scripto-doc[data-ruled] :is(p, ul, ol, dl, blockquote, pre, table, figure, .callout) {
+  margin-top: 0;
+  margin-bottom: var(--hw-pitch);
+}
+
+.scripto-doc[data-ruled] :is(li, dd, dt) {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.scripto-doc[data-ruled] :is(ul, ol) :is(ul, ol) {
+  margin-bottom: 0;
+}
+
+.scripto-doc[data-ruled] li > p {
+  margin-bottom: 0;
+}
+
+/* Two rules for a heading: enough room for larger type, still in phase. */
+.scripto-doc[data-ruled] :is(h1, h2, h3, h4, h5, h6) {
+  line-height: calc(var(--hw-pitch) * 2);
+  margin-top: var(--hw-pitch);
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.scripto-doc[data-ruled] :is(h1, h2) {
+  font-size: calc(var(--hw-pitch) * 1.05);
+}
+
+.scripto-doc[data-ruled] :is(h3, h4, h5, h6) {
+  font-size: calc(var(--hw-pitch) * 0.78);
+}
+
+/* A first heading must not push the first line off the top rule. */
+.scripto-doc[data-ruled] > :first-child {
+  margin-top: 0;
+}
+
+/* Quote and callout padding in whole rules, so their contents stay in phase. */
+.scripto-doc[data-ruled] :is(blockquote, .callout) {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* A rule occupies exactly one line of the page. */
+.scripto-doc[data-ruled] hr {
+  margin-top: 0;
+  margin-bottom: calc(var(--hw-pitch) - 1px);
+}
+
+/* Code and figures are taped-in artefacts, so they only have to consume a
+   whole number of rules — the paginator handles the rest. */
+.scripto-doc[data-ruled] :is(.code-block, .katex-display, .mermaid-figure) {
+  margin-top: 0;
+  margin-bottom: var(--hw-pitch);
+  line-height: normal;
+}
+
+/* List markers and counters are drawn by the browser, so they need telling
+   too — otherwise the numbers in an ordered list stay typeset while the items
+   beside them are handwritten. */
+.scripto-doc[data-hand] :is(li, summary)::marker {
+  font-family: var(--doc-hand-font, var(--doc-font));
+}
+
+.scripto-doc[data-hand][data-numbered] :is(h1, h2, h3, h4)::before,
+.scripto-doc[data-hand] .heading-number,
+.scripto-doc[data-hand] .footnotes li::marker {
+  font-family: var(--doc-heading-hand-font, var(--doc-hand-font, var(--doc-font)));
+}

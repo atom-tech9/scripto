@@ -1,6 +1,7 @@
 import { FONT_STACKS, resolvePageDimensions } from '@/lib/constants'
 import { escapeHtml } from '@/lib/utils'
 import type { PdfConfig } from '@/types'
+import { resolveMargins } from '@/lib/handwriting/rules'
 
 /** Resolve a concrete direction for the generated cover/TOC pages. */
 export function resolveDocDirection(config: PdfConfig): 'ltr' | 'rtl' {
@@ -16,7 +17,13 @@ export function resolveDocDirection(config: PdfConfig): 'ltr' | 'rtl' {
  */
 export function buildPageCss(config: PdfConfig): string {
   const { width, height } = resolvePageDimensions(config)
-  const { top, right, bottom, left } = config.margins
+  // Ruled handwriting paper needs the top margin on a whole rule (see
+  // lib/handwriting/rules.ts); every other document keeps its own margins.
+  const { top, right, bottom, left } = resolveMargins(
+    config.margins,
+    config.hand.stationery,
+    config.hand.hand !== 'none',
+  )
   const accent = config.accentColor
   const docDir = resolveDocDirection(config)
   const rtl = docDir === 'rtl' || config.font === 'arabic'

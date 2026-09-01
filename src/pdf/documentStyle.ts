@@ -1,5 +1,7 @@
 import type { CSSProperties } from 'react'
 import { FONT_STACKS } from '@/lib/constants'
+import { handDescriptor, handFontStack } from '@/lib/handwriting/hands'
+import { isRuled, rulePitchMm } from '@/lib/handwriting/rules'
 import type { PdfConfig } from '@/types'
 
 /** Points → pixels (CSS reference: 1pt = 1.333px). */
@@ -14,12 +16,44 @@ export const PT_TO_PX = 96 / 72
  * point size for on-screen comfort while keeping every proportion intact.
  */
 export function documentStyleVars(config: PdfConfig, scale = 1): CSSProperties {
-  return {
+  const sizePx = config.fontSize * PT_TO_PX * scale
+  const vars: Record<string, string | number> = {
     '--doc-font': FONT_STACKS[config.font],
-    '--doc-size': `${config.fontSize * PT_TO_PX * scale}px`,
+    '--doc-size': `${sizePx}px`,
     '--doc-leading': config.lineHeight,
     '--doc-accent': config.accentColor,
-  } as CSSProperties
+  }
+
+  const { hand } = config
+  if (hand.hand !== 'none') {
+    const descriptor = handDescriptor(hand.hand)
+    const stack = handFontStack(hand.hand)
+    if (stack) vars['--doc-hand-font'] = stack
+    if (descriptor) vars['--doc-size'] = `${sizePx * descriptor.sizeAdjust}px`
+
+    const headingHand = hand.headingHand === 'same' ? hand.hand : hand.headingHand
+    const headingStack = handFontStack(headingHand)
+    if (headingStack) vars['--doc-heading-hand-font'] = headingStack
+
+    vars['--hw-neatness'] = hand.neatness
+    vars['--hw-slant'] = `${hand.slant * 3}deg`
+    vars['--hw-aging'] = hand.aging
+
+    // Ruled paper only works if the leading matches the rule pitch exactly.
+    // Half a rule out of phase and every line drifts, which looks worse than
+    // plain text on plain paper — so the pitch wins over the line-height
+    // setting, and the UI disables that slider rather than letting it silently
+    // break the page.
+    // Ruled paper only works if every line and every gap between blocks is a
+    // whole number of rules. The pitch is published here and `[data-ruled]` in
+    // handwriting.css locks the rhythm to it in absolute units — deriving a
+    // unitless line-height instead leaves rounding error that accumulates down
+    // the page until the text visibly drifts off the lines.
+    const pitch = rulePitchMm(hand.stationery)
+    if (pitch !== null) vars['--hw-pitch'] = `${pitch}mm`
+  }
+
+  return vars as CSSProperties
 }
 
 export function documentDataAttrs(config: PdfConfig): Record<string, string> {
@@ -31,6 +65,22 @@ export function documentDataAttrs(config: PdfConfig): Record<string, string> {
   }
   if (config.direction === 'rtl' || config.font === 'arabic') attrs.lang = 'ar'
   if (config.numberedHeadings) attrs['data-numbered'] = 'true'
+
+  // Handwriting. `hand: 'none'` emits nothing at all, so none of the
+  // handwriting or stationery CSS can match and the feature costs a document
+  // that never uses it precisely nothing.
+  const { hand } = config
+  if (hand.hand !== 'none') {
+    attrs['data-hand'] = hand.hand
+    attrs['data-ink'] = hand.ink
+    if (hand.stationery !== 'blank') attrs['data-stationery'] = hand.stationery
+    if (isRuled(hand.stationery)) attrs['data-ruled'] = 'true'
+    if (hand.headingHand !== 'same') attrs['data-heading-hand'] = hand.headingHand
+    if (hand.drawnElements) attrs['data-drawn'] = 'true'
+    if (hand.aging > 0) attrs['data-aged'] = 'true'
+    if (handDescriptor(hand.hand)?.variable) attrs['data-hand-variable'] = 'true'
+  }
+
   return attrs
 }
 

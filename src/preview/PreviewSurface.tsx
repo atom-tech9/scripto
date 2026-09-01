@@ -22,6 +22,8 @@ import { transitionQuick } from '@/lib/motion'
 import { StageBackdrop } from './stage/StageBackdrop'
 import { PaperFrame } from './stage/PaperFrame'
 import { stageFor } from './stage/stages'
+import { loadHand } from '@/lib/handwriting/fonts'
+import { resolveMargins } from '@/lib/handwriting/rules'
 import { SKIN_OPTIONS } from '@/data/skins'
 import { isPreviewMode, isStageLevel, type PreviewMode, type StageLevel } from './stage/types'
 import { useStageTransition } from './motion/useStageTransition'
@@ -150,6 +152,17 @@ export const PreviewSurface = forwardRef<PreviewHandle, PreviewSurfaceProps>(
       return () => onScrollElement?.(null)
     }, [onScrollElement])
 
+    // A hand can arrive from front-matter or a template, not just the picker,
+    // so the face has to be fetched here too — otherwise the document silently
+    // renders in the fallback and the PDF paginates against the wrong metrics.
+    const activeHand = viewConfig.hand.hand
+    const activeHeadingHand = viewConfig.hand.headingHand
+    useEffect(() => {
+      if (activeHand === 'none') return
+      void loadHand(activeHand)
+      if (activeHeadingHand !== 'same') void loadHand(activeHeadingHand)
+    }, [activeHand, activeHeadingHand])
+
     // Pinch-to-zoom on touch devices. Native non-passive listeners so the
     // gesture can preventDefault the browser's own page zoom.
     useEffect(() => {
@@ -213,12 +226,17 @@ export const PreviewSurface = forwardRef<PreviewHandle, PreviewSurfaceProps>(
     const pageGeometry = useMemo(() => {
       if (mode !== 'pages') return null
       const page = resolvePageDimensions(config)
+      const margins = resolveMargins(
+        config.margins,
+        config.hand.stationery,
+        config.hand.hand !== 'none',
+      )
       return {
         width: Math.round(page.width * MM_TO_PX),
-        paddingTop: Math.round(config.margins.top * MM_TO_PX),
-        paddingBottom: Math.round(config.margins.bottom * MM_TO_PX),
-        paddingInlineStart: Math.round(config.margins.left * MM_TO_PX),
-        paddingInlineEnd: Math.round(config.margins.right * MM_TO_PX),
+        paddingTop: Math.round(margins.top * MM_TO_PX),
+        paddingBottom: Math.round(margins.bottom * MM_TO_PX),
+        paddingInlineStart: Math.round(margins.left * MM_TO_PX),
+        paddingInlineEnd: Math.round(margins.right * MM_TO_PX),
       }
     }, [mode, config])
 
@@ -372,7 +390,11 @@ export const PreviewSurface = forwardRef<PreviewHandle, PreviewSurfaceProps>(
                       {...docAttrs}
                     >
                       {!isEmpty && (
-                        <MarkdownRenderer content={content} resolvedTheme={resolvedTheme} />
+                        <MarkdownRenderer
+                          content={content}
+                          resolvedTheme={resolvedTheme}
+                          hand={viewConfig.hand}
+                        />
                       )}
                     </div>
                   </ErrorBoundary>

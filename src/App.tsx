@@ -546,6 +546,11 @@ export default function App({ lock }: AppProps) {
     [updateConfig],
   )
 
+  const handleHandFontError = useCallback(
+    (family: string) => toast.error(`${t('toast.handFontFailed')} (${family})`),
+    [t],
+  )
+
   const handleNewDocument = useCallback(() => library.createDoc(), [library])
   const handleLoadSample = useCallback(() => setMarkdown(SAMPLE_DOCUMENT), [setMarkdown])
   const handleLockNow = useCallback(() => void lock.lockNow(), [lock])
@@ -725,6 +730,7 @@ export default function App({ lock }: AppProps) {
                 onChange={updateConfig}
                 onApplyPreset={applyPreset}
                 onManagePresets={opener('presets')}
+                onHandFontError={handleHandFontError}
               />
             </div>
           </aside>
