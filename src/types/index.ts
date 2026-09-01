@@ -45,6 +45,14 @@ export type DocumentSkin =
   | 'zen'
   | 'memo'
   | 'poster'
+  | 'invoice'
+  | 'contract'
+  | 'letter'
+  | 'journal'
+  | 'thesis'
+  | 'changelog'
+  | 'rfc'
+  | 'handout'
 
 export type MarginPreset = 'narrow' | 'normal' | 'wide' | 'custom'
 

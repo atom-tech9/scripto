@@ -2147,7 +2147,13 @@
 .scripto-doc[data-skin='ledger'] .callout__icon,
 .scripto-doc[data-skin='memo'] .callout__icon,
 .scripto-doc[data-skin='resume'] .callout__icon,
-.scripto-doc[data-skin='classic'] .callout__icon {
+.scripto-doc[data-skin='classic'] .callout__icon,
+.scripto-doc[data-skin='rfc'] .callout__icon,
+.scripto-doc[data-skin='invoice'] .callout__icon,
+.scripto-doc[data-skin='contract'] .callout__icon,
+.scripto-doc[data-skin='letter'] .callout__icon,
+.scripto-doc[data-skin='journal'] .callout__icon,
+.scripto-doc[data-skin='thesis'] .callout__icon {
   display: none;
 }
 
@@ -2186,4 +2192,312 @@
   --doc-muted: #97a3b8;
   --doc-rule: #2e3850;
   --doc-surface: #161c28;
+}
+
+/* ==========================================================================
+   Business, academic, engineering and teaching skins
+   ========================================================================== */
+
+/* ---------- Invoice — the table is the document ---------- */
+.scripto-doc[data-skin='invoice'] {
+  --doc-radius: 2px;
+  --doc-radius-sm: 2px;
+  --doc-fill: 0%;
+  --doc-accent-line: 3px;
+  --doc-shadow: none;
+  --doc-rule-line: 2px;
+  --doc-label-spacing: 0.09em;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.scripto-doc[data-skin='invoice'] h1 {
+  font-size: 1.7em;
+  letter-spacing: -0.01em;
+  border-bottom: 2px solid var(--doc-accent);
+  padding-bottom: 0.3em;
+}
+.scripto-doc[data-skin='invoice'] h2 {
+  font-size: 0.95em;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--doc-muted);
+  border: none;
+}
+.scripto-doc[data-skin='invoice'] th {
+  text-transform: uppercase;
+  font-size: 0.75em;
+  letter-spacing: 0.09em;
+  border-bottom: 2px solid var(--doc-fg);
+}
+/* Money belongs on the right, and the last row is the total. */
+.scripto-doc[data-skin='invoice'] :is(th, td):last-child {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.scripto-doc[data-skin='invoice'] tbody tr:last-child {
+  font-weight: 700;
+  border-top: 2px solid var(--doc-fg);
+}
+.scripto-doc[data-skin='invoice'] blockquote {
+  border: 1px solid var(--doc-rule);
+  border-inline-start-width: var(--doc-accent-line);
+  padding: 0.8em 1.1em;
+  color: var(--doc-fg);
+}
+
+/* ---------- Contract — clauses, not prose ---------- */
+.scripto-doc[data-skin='contract'] {
+  --doc-radius: 0;
+  --doc-fill: 0%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  text-align: justify;
+  hyphens: auto;
+}
+.scripto-doc[data-skin='contract'] h1 {
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 1.35em;
+  letter-spacing: 0.08em;
+  border: none;
+}
+.scripto-doc[data-skin='contract'] h2 {
+  font-size: 1em;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  border: none;
+  margin-top: 1.9em;
+}
+.scripto-doc[data-skin='contract'] ol {
+  padding-inline-start: 2.4em;
+}
+.scripto-doc[data-skin='contract'] ol > li {
+  margin: 0.75em 0;
+}
+.scripto-doc[data-skin='contract'] ol > li::marker {
+  font-weight: 700;
+  color: var(--doc-fg);
+}
+.scripto-doc[data-skin='contract'] hr {
+  background: var(--doc-rule);
+  margin: 3em 0 2em;
+}
+
+/* ---------- Letterhead — one rule, then you write ---------- */
+.scripto-doc[data-skin='letter'] {
+  --doc-radius: 0;
+  --doc-fill: 0%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+}
+.scripto-doc[data-skin='letter'] h1 {
+  font-size: 1.25em;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border-bottom: 3px solid var(--doc-accent);
+  padding-bottom: 0.6em;
+  margin-bottom: 1.8em;
+}
+.scripto-doc[data-skin='letter'] h2 {
+  font-size: 1em;
+  font-weight: 700;
+  border: none;
+  letter-spacing: 0.02em;
+}
+.scripto-doc[data-skin='letter'] p {
+  margin-bottom: 1.1em;
+}
+.scripto-doc[data-skin='letter'] blockquote {
+  font-style: italic;
+  border-inline-start-color: var(--doc-rule);
+}
+.scripto-doc[data-skin='letter'] hr {
+  background: var(--doc-rule);
+  margin: 2.6em 0;
+}
+
+/* ---------- Journal — the academic register ---------- */
+.scripto-doc[data-skin='journal'] {
+  --doc-radius: 0;
+  --doc-fill: 0%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  --doc-label-spacing: 0.1em;
+  text-align: justify;
+  hyphens: auto;
+}
+.scripto-doc[data-skin='journal'] h1 {
+  text-align: center;
+  font-size: 1.55em;
+  line-height: 1.25;
+  border: none;
+  margin-bottom: 0.9em;
+}
+.scripto-doc[data-skin='journal'] h2 {
+  font-size: 1.02em;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.08em;
+  border: none;
+  margin-top: 1.9em;
+}
+.scripto-doc[data-skin='journal'] h3 {
+  font-size: 0.98em;
+  font-style: italic;
+  font-weight: 600;
+}
+/* The opening quote reads as the abstract. */
+.scripto-doc[data-skin='journal'] > blockquote:first-of-type {
+  border: none;
+  border-block: 1px solid var(--doc-rule);
+  padding: 1em 1.6em;
+  margin-inline: 1.6em;
+  font-size: 0.94em;
+  text-align: start;
+}
+.scripto-doc[data-skin='journal'] table {
+  font-size: 0.88em;
+}
+
+/* ---------- Thesis — chapters, and room to breathe ---------- */
+.scripto-doc[data-skin='thesis'] {
+  --doc-radius: 0;
+  --doc-fill: 0%;
+  --doc-accent-line: 2px;
+  --doc-shadow: none;
+  line-height: calc(var(--doc-leading) * 1.12);
+}
+.scripto-doc[data-skin='thesis'] h1 {
+  text-align: center;
+  font-size: 1.8em;
+  border: none;
+  margin-top: 2.4em;
+  margin-bottom: 1.6em;
+  padding-bottom: 0.8em;
+  border-bottom: 1px solid var(--doc-rule);
+}
+.scripto-doc[data-skin='thesis'] h2 {
+  font-size: 1.22em;
+  border: none;
+  margin-top: 2.2em;
+}
+.scripto-doc[data-skin='thesis'] p + p {
+  text-indent: 1.6em;
+  margin-top: -0.5em;
+}
+.scripto-doc[data-skin='thesis'] blockquote {
+  font-size: 0.95em;
+  margin-inline: 1.4em;
+  border-inline-start-color: var(--doc-rule);
+}
+
+/* ---------- Changelog — versions as chips ---------- */
+.scripto-doc[data-skin='changelog'] {
+  --doc-radius: 6px;
+  --doc-radius-sm: 4px;
+  --doc-fill: 9%;
+  --doc-accent-line: 3px;
+  --doc-shadow: none;
+}
+.scripto-doc[data-skin='changelog'] h1 {
+  font-size: 1.5em;
+  border: none;
+}
+.scripto-doc[data-skin='changelog'] h2 {
+  display: inline-block;
+  font-size: 0.95em;
+  font-family: var(--doc-ui-font);
+  background: var(--doc-accent);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.15em 0.8em;
+  margin-top: 2em;
+  letter-spacing: 0.02em;
+}
+.scripto-doc[data-skin='changelog'] h3 {
+  font-size: 0.82em;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--doc-muted);
+  margin-top: 1.3em;
+}
+.scripto-doc[data-skin='changelog'] ul {
+  padding-inline-start: 1.2em;
+}
+.scripto-doc[data-skin='changelog'] li {
+  margin: 0.15em 0;
+}
+.scripto-doc[data-skin='changelog'] ul > li::marker {
+  content: '– ';
+  color: var(--doc-muted);
+}
+
+/* ---------- RFC / ADR — status first, then the argument ---------- */
+.scripto-doc[data-skin='rfc'] {
+  --doc-radius: 0;
+  --doc-radius-sm: 2px;
+  --doc-fill: 5%;
+  --doc-accent-line: 3px;
+  --doc-shadow: none;
+  --doc-ui-font: var(--doc-mono);
+  --doc-label-spacing: 0.1em;
+}
+.scripto-doc[data-skin='rfc'] h1 {
+  font-size: 1.5em;
+  border-bottom: 3px double var(--doc-rule);
+  padding-bottom: 0.45em;
+}
+.scripto-doc[data-skin='rfc'] h2 {
+  font-family: var(--doc-mono);
+  font-size: 0.98em;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: none;
+  margin-top: 2em;
+}
+/* The opening quote is the metadata block: status, date, deciders. */
+.scripto-doc[data-skin='rfc'] > blockquote:first-of-type {
+  font-family: var(--doc-mono);
+  font-size: 0.84em;
+  background: var(--doc-surface);
+  border: 1px solid var(--doc-rule);
+  border-inline-start: var(--doc-accent-line) solid var(--doc-accent);
+  padding: 0.8em 1.1em;
+  color: var(--doc-fg);
+}
+.scripto-doc[data-skin='rfc'] th {
+  font-family: var(--doc-mono);
+  text-transform: uppercase;
+  font-size: 0.75em;
+}
+
+/* ---------- Handout — one topic per page, read from the back row ---------- */
+.scripto-doc[data-skin='handout'] {
+  --doc-radius: 8px;
+  --doc-fill: 10%;
+  --doc-accent-line: 5px;
+  --doc-shadow: none;
+  font-size: calc(var(--doc-size) * 1.12);
+  line-height: calc(var(--doc-leading) * 1.08);
+}
+.scripto-doc[data-skin='handout'] h1 {
+  font-size: 2em;
+  letter-spacing: -0.02em;
+  border: none;
+}
+.scripto-doc[data-skin='handout'] h2 {
+  font-size: 1.5em;
+  border: none;
+  padding-top: 0.5em;
+  border-top: 5px solid var(--doc-accent);
+  margin-top: 1.8em;
+}
+.scripto-doc[data-skin='handout'] h3 {
+  font-size: 1.12em;
+}
+.scripto-doc[data-skin='handout'] li {
+  margin: 0.55em 0;
+}
+.scripto-doc[data-skin='handout'] ul > li::marker {
+  color: var(--doc-accent);
+  font-size: 1.15em;
 }

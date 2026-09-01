@@ -167,6 +167,10 @@ export function buildPageCss(config: PdfConfig): string {
     .scripto-doc tr { break-inside: avoid; break-after: auto; }
     .scripto-doc img { break-inside: avoid; }
 
+    /* Handout: one topic per page, so every section starts a fresh sheet. */
+    .scripto-doc[data-skin='handout'] h2 { break-before: page; }
+    .scripto-doc[data-skin='handout'] h2:first-of-type { break-before: auto; }
+
     /* Images that failed to load get a fixed box so the paginator can place them. */
     .scripto-doc img[data-unavailable] {
       display: block;
@@ -243,8 +247,16 @@ const MUTED_COLOR = '#5b6472'
 /** HTML for the optional cover page, honouring the chosen style, direction, and
  * the document's cover fields. Used by both the live preview and the export. */
 export function buildCoverHtml(config: PdfConfig, locale?: string): string {
-  const { title, author, subject, subtitle, organization, date: customDate, version, docType } =
-    config.meta
+  const {
+    title,
+    author,
+    subject,
+    subtitle,
+    organization,
+    date: customDate,
+    version,
+    docType,
+  } = config.meta
   const accent = config.accentColor
   const dir = resolveDocDirection(config)
   const font = dir === 'rtl' || config.font === 'arabic' ? FONT_STACKS.arabic : 'Inter, sans-serif'
@@ -266,7 +278,8 @@ export function buildCoverHtml(config: PdfConfig, locale?: string): string {
       : ''
   const metaHtml = (align: 'start' | 'center'): string => {
     const rows = [
-      author.trim() && `<div style="font-weight:600;color:${TITLE_COLOR};">${escapeHtml(author)}</div>`,
+      author.trim() &&
+        `<div style="font-weight:600;color:${TITLE_COLOR};">${escapeHtml(author)}</div>`,
       organization.trim() && `<div>${escapeHtml(organization)}</div>`,
       date && `<div>${escapeHtml(date)}</div>`,
       version.trim() && `<div>${escapeHtml(version)}</div>`,

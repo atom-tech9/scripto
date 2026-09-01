@@ -4,19 +4,23 @@
  */
 export const SKIN_BLURBS: Record<string, { voice: string; bestFor: string }> = {
   modern: {
-    voice: 'Clean sans-serif typography, balanced spacing and a quiet indigo accent — the default that never embarrasses you.',
+    voice:
+      'Clean sans-serif typography, balanced spacing and a quiet indigo accent — the default that never embarrasses you.',
     bestFor: 'Reports, proposals, product docs and anything a client will read tomorrow morning.',
   },
   classic: {
-    voice: 'Centered headings over ruled lines with bookish serif body text — formal without being stiff.',
-    bestFor: 'Letters, academic hand-ins, official statements and documents with signatures at the bottom.',
+    voice:
+      'Centered headings over ruled lines with bookish serif body text — formal without being stiff.',
+    bestFor:
+      'Letters, academic hand-ins, official statements and documents with signatures at the bottom.',
   },
   editorial: {
     voice: 'Magazine DNA: a drop cap, confident serif headlines and generous leading.',
     bestFor: 'Essays, long-form articles, newsletters and anything meant to be read for pleasure.',
   },
   technical: {
-    voice: 'Side-bar headings, boxed code blocks and a no-nonsense grid — reads like excellent API documentation.',
+    voice:
+      'Side-bar headings, boxed code blocks and a no-nonsense grid — reads like excellent API documentation.',
     bestFor: 'READMEs, API references, runbooks, engineering handbooks.',
   },
   compact: {
@@ -86,5 +90,50 @@ export const SKIN_BLURBS: Record<string, { voice: string; bestFor: string }> = {
   poster: {
     voice: 'Oversized display headings that treat the page like a billboard.',
     bestFor: 'Event flyers, announcements, section dividers, cover pages.',
+  },
+  invoice: {
+    voice:
+      'Lining, tabular figures under uppercase column heads, with the total ruled off the way an accountant would.',
+    bestFor:
+      'Invoices, quotes, statements, expense claims and anything where the numbers have to line up.',
+  },
+  contract: {
+    voice:
+      'Justified serif set in numbered clauses, centred title, nothing decorative anywhere near the terms.',
+    bestFor:
+      'Contracts, terms of service, NDAs, statements of work and policies people actually sign.',
+  },
+  letter: {
+    voice:
+      'A single accent rule under a letterspaced masthead, then generous paragraphs and room for a signature.',
+    bestFor:
+      'Cover letters, formal correspondence, offer letters and anything printed on company paper.',
+  },
+  journal: {
+    voice:
+      'Justified and hyphenated with small-caps section heads, and the opening quote set as an abstract.',
+    bestFor:
+      'Papers, literature reviews, conference submissions and coursework with a house style to meet.',
+  },
+  thesis: {
+    voice:
+      'Chapter openers over a rule, indented continuation paragraphs and leading with room to annotate.',
+    bestFor: 'Dissertations, theses, long reports and any document read a chapter at a time.',
+  },
+  changelog: {
+    voice:
+      'Versions land as accent chips over tight dashed lists, with muted uppercase groupings between them.',
+    bestFor: 'Release notes, changelogs, sprint summaries and migration guides.',
+  },
+  rfc: {
+    voice:
+      'A monospaced status block up top, uppercase numbered sections and a double rule under the title.',
+    bestFor:
+      'RFCs, architecture decision records, design docs and proposals that need a decision recorded.',
+  },
+  handout: {
+    voice:
+      'Large type, one topic per printed page, and section rules you can read from the back of the room.',
+    bestFor: 'Lecture handouts, workshop notes, training material and leave-behinds.',
   },
 }

@@ -1145,3 +1145,140 @@
     transform: none;
   }
 }
+
+/* --- Business, academic, engineering and teaching stages ----------------- */
+
+/* 22 · Billing desk */
+[data-stage='invoice'] {
+  --stage-ground: hsl(210 18% 88%);
+  --stage-ground-2: hsl(210 22% 94%);
+  --stage-radius: 0.15rem;
+  --stage-lift: var(--stage-lift-1);
+  --stage-edge: hsl(210 18% 58% / 0.55);
+}
+[data-stage='invoice'] .stage-texture {
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0 23px,
+    hsl(210 30% 40% / 0.08) 23px 24px
+  );
+}
+.dark [data-stage='invoice'] {
+  --stage-ground: hsl(210 20% 10%);
+  --stage-ground-2: hsl(210 18% 14%);
+}
+
+/* 23 · Chambers */
+[data-stage='contract'] {
+  --stage-ground: hsl(30 10% 82%);
+  --stage-ground-2: hsl(30 12% 89%);
+  --stage-radius: 0;
+  --stage-lift: var(--stage-lift-2);
+  --stage-edge: hsl(30 12% 55% / 0.6);
+}
+[data-stage='contract'] .stage-texture {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 79px,
+    hsl(30 20% 35% / 0.05) 79px 80px
+  );
+}
+.dark [data-stage='contract'] {
+  --stage-ground: hsl(30 10% 10%);
+  --stage-ground-2: hsl(30 8% 14%);
+}
+
+/* 24 · Writing desk */
+[data-stage='letter'] {
+  --stage-ground: hsl(36 24% 87%);
+  --stage-ground-2: hsl(38 30% 93%);
+  --stage-radius: 0.1rem;
+  --stage-lift: var(--stage-lift-2);
+  --stage-air: clamp(1.75rem, 7cqi, 4rem);
+}
+.dark [data-stage='letter'] {
+  --stage-ground: hsl(34 12% 11%);
+  --stage-ground-2: hsl(36 10% 15%);
+}
+
+/* 25 · Reading room */
+[data-stage='journal'] {
+  --stage-ground: hsl(45 14% 87%);
+  --stage-ground-2: hsl(45 18% 93%);
+  --stage-radius: 0;
+  --stage-lift: var(--stage-lift-1);
+  --stage-sheet-max: 760px;
+}
+[data-stage='journal'] .stage-light {
+  background: radial-gradient(90% 60% at 50% 0%, hsl(45 40% 96% / 0.7), transparent 65%);
+}
+.dark [data-stage='journal'] {
+  --stage-ground: hsl(45 8% 10%);
+  --stage-ground-2: hsl(45 8% 14%);
+}
+
+/* 26 · Study */
+[data-stage='thesis'] {
+  --stage-ground: hsl(220 14% 82%);
+  --stage-ground-2: hsl(220 18% 90%);
+  --stage-radius: 0;
+  --stage-lift: var(--stage-lift-2);
+  --stage-air: clamp(2rem, 8cqi, 4.5rem);
+  --stage-sheet-max: 740px;
+}
+[data-stage='thesis'] .stage-light {
+  background: radial-gradient(60% 45% at 50% 12%, hsl(42 70% 88% / 0.4), transparent 72%);
+}
+.dark [data-stage='thesis'] {
+  --stage-ground: hsl(220 22% 9%);
+  --stage-ground-2: hsl(220 18% 13%);
+}
+
+/* 27 · Release board */
+[data-stage='changelog'] {
+  --stage-ground: hsl(232 24% 10%);
+  --stage-ground-2: hsl(232 20% 15%);
+  --stage-radius: 0.45rem;
+  --stage-lift: var(--stage-lift-3);
+  --stage-edge: hsl(232 20% 40% / 0.5);
+}
+[data-stage='changelog'] .stage-texture {
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0 47px,
+    hsl(232 40% 70% / 0.07) 47px 48px
+  );
+}
+
+/* 28 · Review table */
+[data-stage='rfc'] {
+  --stage-ground: hsl(200 16% 87%);
+  --stage-ground-2: hsl(200 20% 93%);
+  --stage-radius: 0;
+  --stage-lift: var(--stage-lift-1);
+  --stage-tick: hsl(200 25% 40% / 0.55);
+  --stage-edge: hsl(200 18% 55% / 0.55);
+}
+[data-stage='rfc'] .stage-texture {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 31px, hsl(200 25% 45% / 0.06) 31px 32px),
+    repeating-linear-gradient(90deg, transparent 0 31px, hsl(200 25% 45% / 0.06) 31px 32px);
+}
+.dark [data-stage='rfc'] {
+  --stage-ground: hsl(200 22% 10%);
+  --stage-ground-2: hsl(200 18% 14%);
+  --stage-tick: hsl(200 30% 70% / 0.6);
+}
+
+/* 29 · Lecture hall */
+[data-stage='handout'] {
+  --stage-ground: hsl(160 14% 88%);
+  --stage-ground-2: hsl(160 18% 94%);
+  --stage-radius: 0.5rem;
+  --stage-lift: var(--stage-lift-2);
+  --stage-sheet-max: 860px;
+}
+.dark [data-stage='handout'] {
+  --stage-ground: hsl(160 16% 9%);
+  --stage-ground-2: hsl(160 14% 13%);
+}

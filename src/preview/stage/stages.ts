@@ -179,6 +179,78 @@ export const STAGES: Record<DocumentSkin, StageDescriptor> = {
     tone: 'dark',
     frame: [],
   },
+
+  // 22 · Billing desk — ruled ledger paper, figures aligned to the gutter.
+  invoice: {
+    skin: 'invoice',
+    nameKey: 'stage.billingDesk',
+    motion: 'cascade',
+    tone: 'light',
+    frame: ['gutter-rules'],
+  },
+
+  // 23 · Chambers — sober panelled ground, nothing to distract from the terms.
+  contract: {
+    skin: 'contract',
+    nameKey: 'stage.chambers',
+    motion: 'rise',
+    tone: 'light',
+    frame: [],
+  },
+
+  // 24 · Writing desk — warm paper, a single accent rule across the head.
+  letter: {
+    skin: 'letter',
+    nameKey: 'stage.writingDesk',
+    motion: 'wipe',
+    tone: 'light',
+    frame: ['accent-band'],
+  },
+
+  // 25 · Reading room — quiet paper stock under an even library light.
+  journal: {
+    skin: 'journal',
+    nameKey: 'stage.readingRoom',
+    motion: 'rise',
+    tone: 'light',
+    frame: [],
+  },
+
+  // 26 · Study — deep calm ground with a soft pool of lamplight.
+  thesis: {
+    skin: 'thesis',
+    nameKey: 'stage.study',
+    motion: 'bloom',
+    tone: 'light',
+    frame: [],
+  },
+
+  // 27 · Release board — dark board with faint version rules.
+  changelog: {
+    skin: 'changelog',
+    nameKey: 'stage.releaseBoard',
+    motion: 'cascade',
+    tone: 'dark',
+    frame: [],
+  },
+
+  // 28 · Review table — cool working surface with registration ticks.
+  rfc: {
+    skin: 'rfc',
+    nameKey: 'stage.reviewTable',
+    motion: 'draw',
+    tone: 'light',
+    frame: ['ticks'],
+  },
+
+  // 29 · Lecture hall — clean board with a bold banner across the top.
+  handout: {
+    skin: 'handout',
+    nameKey: 'stage.lectureHall',
+    motion: 'stamp',
+    tone: 'light',
+    frame: ['header-band'],
+  },
 }
 
 /** The stage for a skin. Falls back to the default stage for unknown values. */

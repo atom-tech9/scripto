@@ -35,6 +35,14 @@ export const SKIN_OPTIONS: SkinOption[] = [
   { value: 'zen', label: 'Zen — ultra-minimal, centered', labelKey: 'skin.zen.label' },
   { value: 'memo', label: 'Memo — corporate header band, compact', labelKey: 'skin.memo.label' },
   { value: 'poster', label: 'Poster — oversized display heads', labelKey: 'skin.poster.label' },
+  { value: 'invoice', label: 'Invoice — tabular figures, ruled totals', labelKey: 'skin.invoice.label' },
+  { value: 'contract', label: 'Contract — numbered clauses, justified', labelKey: 'skin.contract.label' },
+  { value: 'letter', label: 'Letterhead — formal correspondence', labelKey: 'skin.letter.label' },
+  { value: 'journal', label: 'Journal — academic, justified, numbered', labelKey: 'skin.journal.label' },
+  { value: 'thesis', label: 'Thesis — chapter openers, wide leading', labelKey: 'skin.thesis.label' },
+  { value: 'changelog', label: 'Changelog — version chips, tight lists', labelKey: 'skin.changelog.label' },
+  { value: 'rfc', label: 'RFC / ADR — status block, strict numbering', labelKey: 'skin.rfc.label' },
+  { value: 'handout', label: 'Handout — large type, one topic per page', labelKey: 'skin.handout.label' },
 ]
 
 /** Runtime list of valid skin identifiers (for front-matter validation, etc.). */
