@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DEFAULT_CONFIG, STORAGE_KEYS } from '@/lib/constants'
+import { normaliseDoc } from '@/lib/documentRecord'
 import { SAMPLE_DOCUMENT } from '@/data/sampleDocument'
 import { getErrorMessage, logger } from '@/lib/logger'
 import type { DocumentLibrary, DocumentRecord, PdfConfig } from '@/types'
@@ -41,8 +42,17 @@ function loadLibrary(): DocumentLibrary {
   try {
     const raw = window.localStorage.getItem(LIBRARY_KEY)
     if (raw) {
-      const parsed = JSON.parse(raw) as DocumentLibrary
-      if (parsed?.docs?.length) return parsed
+      const parsed = JSON.parse(raw) as unknown
+      const docs = (
+        Array.isArray((parsed as DocumentLibrary)?.docs) ? (parsed as DocumentLibrary).docs : []
+      )
+        .map(normaliseDoc)
+        .filter((doc): doc is DocumentRecord => doc !== null)
+      if (docs.length > 0) {
+        const storedId = (parsed as DocumentLibrary).activeId
+        const activeId = docs.some((doc) => doc.id === storedId) ? storedId : docs[0].id
+        return { docs, activeId }
+      }
     }
   } catch (error) {
     logger.warn(`Failed to read document library: ${getErrorMessage(error)}`)
@@ -192,13 +202,12 @@ export function useDocumentLibrary(): DocumentLibraryApi {
 
   const importDocs = useCallback(
     (records: DocumentRecord[]): number => {
-      const valid = records.filter(
-        (r) => r && typeof r.content === 'string' && r.config && typeof r.config === 'object',
-      )
+      const valid = records.map(normaliseDoc).filter((doc): doc is DocumentRecord => doc !== null)
       if (valid.length === 0) return 0
-      const rehydrated = valid.map((r) => ({
-        ...makeDoc(r.content, { ...DEFAULT_CONFIG, ...r.config }),
-        createdAt: r.createdAt ?? now(),
+      // Fresh ids so an imported file can never collide with an existing doc.
+      const rehydrated = valid.map((doc) => ({
+        ...makeDoc(doc.content, doc.config),
+        createdAt: doc.createdAt,
       }))
       setLibrary((prev) => ({ docs: [...prev.docs, ...rehydrated], activeId: rehydrated[0].id }))
       return rehydrated.length
