@@ -12,6 +12,7 @@ import {
   FolderOpen,
   Github,
   GraduationCap,
+  History,
   Import,
   Keyboard,
   KeyRound,
@@ -241,6 +242,14 @@ export function useCommands(options: UseCommandsOptions): Command[] {
         group: group.view,
         icon: Palette,
         run: openDialog('gallery'),
+      },
+      {
+        id: 'history',
+        label: t('history.title'),
+        group: group.file,
+        icon: History,
+        keywords: 'version snapshot restore undo previous',
+        run: openDialog('history'),
       },
       {
         id: 'presets',

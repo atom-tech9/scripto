@@ -21,6 +21,7 @@ export type DialogName =
   | 'security'
   | 'stats'
   | 'presets'
+  | 'history'
   | 'zen'
 
 const DIALOG_NAMES: readonly DialogName[] = [
@@ -39,6 +40,7 @@ const DIALOG_NAMES: readonly DialogName[] = [
   'security',
   'stats',
   'presets',
+  'history',
   'zen',
 ]
 

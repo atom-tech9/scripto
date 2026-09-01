@@ -20,6 +20,7 @@ import { FormattingHelpDialog } from '@/components/layout/FormattingHelpDialog'
 import { DocumentsDialog } from '@/components/layout/DocumentsDialog'
 import { StatsDialog } from '@/components/layout/StatsDialog'
 import { PresetsDialog } from '@/components/layout/PresetsDialog'
+import { HistoryDialog } from '@/components/layout/HistoryDialog'
 import { SecurityDialog } from '@/components/security/SecurityDialog'
 import { useConfirm } from '@/components/ui/Confirm'
 import { getSelectionText, insertText } from '@/components/editor/editorCommands'
@@ -841,6 +842,13 @@ export default function App({ lock }: AppProps) {
         userPresets={exportPresets.presets}
         onApplyUserPreset={applyExportPreset}
         onManagePresets={opener('presets')}
+      />
+      <HistoryDialog
+        open={dialogs.state.history}
+        onClose={closer('history')}
+        snapshots={library.snapshots}
+        current={markdown}
+        onRestore={library.restoreSnapshot}
       />
       <PresetsDialog
         open={dialogs.state.presets}

@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DEFAULT_CONFIG, STORAGE_KEYS } from '@/lib/constants'
 import { normaliseDoc } from '@/lib/documentRecord'
+import {
+  LIBRARY_RECORD,
+  SNAPSHOTS_RECORD,
+  isStoreAvailable,
+  readRecord,
+  writeRecord,
+} from '@/lib/docStore'
 import { SAMPLE_DOCUMENT } from '@/data/sampleDocument'
 import { getErrorMessage, logger } from '@/lib/logger'
 import type { DocumentLibrary, DocumentRecord, PdfConfig } from '@/types'
@@ -71,12 +78,79 @@ export interface DocumentLibraryApi {
   duplicateDoc: (id: string) => void
   deleteDoc: (id: string) => void
   importDocs: (records: DocumentRecord[]) => number
+  /** Past versions of the active document, newest first. */
+  snapshots: DocumentSnapshot[]
+  /** Replace the active document's content with a past version. */
+  restoreSnapshot: (takenAt: number) => void
+}
+
+/** One past version of a document. */
+export interface DocumentSnapshot {
+  readonly docId: string
+  readonly takenAt: number
+  readonly content: string
 }
 
 /**
  * Manages a local library of documents, each carrying its own content and
  * export config. Persists to localStorage and always keeps at least one doc.
  */
+/** Set once the library has been copied into IndexedDB and verified. */
+const MIGRATED_KEY = 'scripto:library-migrated'
+
+/** How many past versions to keep per document. */
+const MAX_SNAPSHOTS = 20
+
+/** Minimum gap between versions, so typing does not fill the history. */
+const SNAPSHOT_INTERVAL_MS = 3 * 60_000
+
+function hasMigrated(): boolean {
+  try {
+    return window.localStorage.getItem(MIGRATED_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Copy the localStorage library into IndexedDB, once.
+ *
+ * Non-destructive on purpose: the old key is read back and verified before the
+ * migration is marked done, and is then left in place — unwritten but readable —
+ * so a user who downgrades a release still finds their documents.
+ */
+async function migrateToStore(library: DocumentLibrary): Promise<boolean> {
+  if (!(await isStoreAvailable())) return false
+  const existing = await readRecord<DocumentLibrary>(LIBRARY_RECORD)
+  if (existing?.docs?.length) return true
+
+  if (!(await writeRecord(LIBRARY_RECORD, library))) return false
+  const verify = await readRecord<DocumentLibrary>(LIBRARY_RECORD)
+  if (verify?.docs?.length !== library.docs.length) {
+    logger.warn('Library migration could not be verified; keeping localStorage')
+    return false
+  }
+  try {
+    window.localStorage.setItem(MIGRATED_KEY, '1')
+  } catch {
+    /* the migration still stands even if the marker cannot be written */
+  }
+  return true
+}
+
+/** Keep only the newest `MAX_SNAPSHOTS` per document. */
+function trimSnapshots(all: DocumentSnapshot[]): DocumentSnapshot[] {
+  const byDoc = new Map<string, DocumentSnapshot[]>()
+  for (const snap of [...all].sort((a, b) => b.takenAt - a.takenAt)) {
+    const list = byDoc.get(snap.docId) ?? []
+    if (list.length < MAX_SNAPSHOTS) {
+      list.push(snap)
+      byDoc.set(snap.docId, list)
+    }
+  }
+  return [...byDoc.values()].flat()
+}
+
 export function useDocumentLibrary(): DocumentLibraryApi {
   // React state is authoritative and updates instantly on every keystroke; the
   // (expensive) localStorage serialization is debounced so typing stays smooth.
@@ -84,9 +158,74 @@ export function useDocumentLibrary(): DocumentLibraryApi {
   const libraryRef = useRef(library)
   libraryRef.current = library
   const writeTimer = useRef<number | undefined>(undefined)
+  const storeReady = useRef(false)
+  const [snapshots, setSnapshots] = useState<DocumentSnapshot[]>([])
+  const snapshotsRef = useRef(snapshots)
+  snapshotsRef.current = snapshots
+  const lastSnapshotAt = useRef(0)
+
+  // Adopt IndexedDB on first load, migrating the localStorage library across.
+  // The synchronous localStorage read above still runs, so the first paint is
+  // never blocked on a database open.
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      if (!(await isStoreAvailable())) return
+      const stored = await readRecord<DocumentLibrary>(LIBRARY_RECORD)
+      if (cancelled) return
+
+      if (stored?.docs?.length) {
+        storeReady.current = true
+        // Only adopt it when it differs, so we never clobber edits made in the
+        // moments before the database answered.
+        if (!hasMigrated() || stored.activeId !== libraryRef.current.activeId) {
+          const docs = stored.docs
+            .map(normaliseDoc)
+            .filter((doc): doc is DocumentRecord => doc !== null)
+          if (docs.length > 0) {
+            const activeId = docs.some((d) => d.id === stored.activeId)
+              ? stored.activeId
+              : docs[0].id
+            setLibraryState({ docs, activeId })
+          }
+        }
+        return
+      }
+
+      storeReady.current = await migrateToStore(libraryRef.current)
+    })()
+    void readRecord<DocumentSnapshot[]>(SNAPSHOTS_RECORD).then((stored) => {
+      if (!cancelled && Array.isArray(stored)) setSnapshots(stored)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const flush = useCallback(() => {
     window.clearTimeout(writeTimer.current)
+    // IndexedDB is the durable home; localStorage stays as the fallback for
+    // profiles where it is unavailable, and as the pre-migration store.
+    if (storeReady.current) {
+      void writeRecord(LIBRARY_RECORD, libraryRef.current)
+      // A version every few minutes, now that there is room for them. Cheap
+      // insurance against the one mistake local-first software cannot undo.
+      const active = libraryRef.current.docs.find((d) => d.id === libraryRef.current.activeId)
+      if (active && Date.now() - lastSnapshotAt.current > SNAPSHOT_INTERVAL_MS) {
+        const latest = snapshotsRef.current.find((s) => s.docId === active.id)
+        if (latest?.content !== active.content) {
+          lastSnapshotAt.current = Date.now()
+          const next = trimSnapshots([
+            { docId: active.id, takenAt: Date.now(), content: active.content },
+            ...snapshotsRef.current,
+          ])
+          snapshotsRef.current = next
+          setSnapshots(next)
+          void writeRecord(SNAPSHOTS_RECORD, next)
+        }
+      }
+      return
+    }
     try {
       window.localStorage.setItem(LIBRARY_KEY, JSON.stringify(libraryRef.current))
     } catch (error) {
@@ -215,9 +354,27 @@ export function useDocumentLibrary(): DocumentLibraryApi {
     [setLibrary],
   )
 
+  const restoreSnapshot = useCallback(
+    (takenAt: number) => {
+      const snap = snapshotsRef.current.find(
+        (s) => s.takenAt === takenAt && s.docId === libraryRef.current.activeId,
+      )
+      if (snap) patchActive((doc) => ({ ...doc, content: snap.content, updatedAt: now() }))
+    },
+    [patchActive],
+  )
+
+  const activeSnapshots = useMemo(
+    () =>
+      snapshots.filter((s) => s.docId === library.activeId).sort((a, b) => b.takenAt - a.takenAt),
+    [snapshots, library.activeId],
+  )
+
   return {
     docs: library.docs,
     activeId: library.activeId,
+    snapshots: activeSnapshots,
+    restoreSnapshot,
     activeDoc,
     selectDoc,
     updateContent,
