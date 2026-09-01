@@ -37,6 +37,18 @@
     padding: 0 !important;
   }
 
+  /* The print root must lay out left-to-right even under the Arabic UI.
+   *
+   * With `<html dir="rtl">` the sheet stack's overflow lands on the *left*, so
+   * the page is positioned off the left edge of the paper and Chrome shrinks
+   * everything to compensate -- small, left-clipped output that looked like a
+   * font problem but was pure geometry. Each document keeps its own direction
+   * from the `dir` attribute `documentStyle` writes onto `.scripto-doc`, so
+   * Arabic still sets RTL where it matters. */
+  html {
+    direction: ltr !important;
+  }
+
   /* During export we add `.scripto-printing` to <body>; hide everything that
    * isn't the print portal so only the paginated pages reach the PDF. */
   body.scripto-printing > *:not(.scripto-print-portal) {
@@ -68,9 +80,18 @@
     transform: none !important;
   }
 
+  .scripto-print-portal {
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  /* A plain block stack. Centring each sheet inside a container that can be
+   * wider than the paper is what pushed it off-page to begin with. */
   .pagedjs_pages {
+    display: block !important;
     gap: 0 !important;
     padding: 0 !important;
+    width: auto !important;
   }
 
   .pagedjs_page {
