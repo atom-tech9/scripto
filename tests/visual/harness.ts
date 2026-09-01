@@ -136,7 +136,7 @@ ${buildPageCss(config)}
 <script>
   const fail = (message) => {
     const out = document.createElement('pre')
-    out.id = 'probe'
+    out.id = 'scripto-probe-result'
     out.textContent = JSON.stringify({ error: String(message) })
     document.body.appendChild(out)
   }
@@ -184,7 +184,7 @@ ${buildPageCss(config)}
     // Paged.js replaces the body with its own pages, so the probe element can
     // only be created once it is done.
     const out = document.createElement('pre')
-    out.id = 'probe'
+    out.id = 'scripto-probe-result'
     out.textContent = JSON.stringify(report)
     document.body.appendChild(out)
   }
@@ -193,7 +193,7 @@ ${buildPageCss(config)}
 }
 
 /** How long to wait for Paged.js to finish laying a fixture out. */
-const PROBE_TIMEOUT_MS = 180_000
+const PROBE_TIMEOUT_MS = Number(process.env.SCRIPTO_VISUAL_TIMEOUT_MS) || 180_000
 const PROBE_POLL_MS = 250
 
 interface CdpTarget {
@@ -280,6 +280,7 @@ async function findPageTarget(port: number): Promise<string> {
 export async function paginate(
   fixture: string,
   overrides: Partial<PdfConfig> = {},
+  options: { timeoutMs?: number } = {},
 ): Promise<PageReport> {
   const chrome = findChrome()
   if (!chrome) throw new Error('no Chrome binary found')
@@ -314,10 +315,10 @@ export async function paginate(
     const port = await readDevToolsPort(profile)
     session = await CdpSession.connect(await findPageTarget(port))
 
-    const deadline = Date.now() + PROBE_TIMEOUT_MS
+    const deadline = Date.now() + (options.timeoutMs ?? PROBE_TIMEOUT_MS)
     while (Date.now() < deadline) {
       const result = (await session.send('Runtime.evaluate', {
-        expression: "document.querySelector('#probe')?.textContent ?? ''",
+        expression: "document.getElementById('scripto-probe-result')?.textContent ?? ''",
         returnByValue: true,
       })) as { result?: { value?: string } } | undefined
       const value = result?.result?.value

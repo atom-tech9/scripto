@@ -43,44 +43,67 @@ const report = (fixture: string): Promise<PageReport> => {
   return reports.get(fixture)!
 }
 
-suite('paginated layout', () => {
-  describe.each(FIXTURES)('%s', (fixture) => {
-    it('lays out at least one page', async () => {
-      expect((await report(fixture)).pages).toBeGreaterThan(0)
+suite(
+  'paginated layout',
+  () => {
+    describe.each(FIXTURES)('%s', (fixture) => {
+      it('lays out at least one page', async () => {
+        expect((await report(fixture)).pages).toBeGreaterThan(0)
+      })
+
+      it('keeps every element inside the page box', async () => {
+        // Anything sticking out horizontally is silently clipped in the PDF —
+        // there is no scrollbar on paper. This is what caught the flex task-list,
+        // the unwrapped code lines, and the overflowing wide tables.
+        const { overflowing } = await report(fixture)
+        expect(overflowing).toEqual([])
+      })
+
+      it('renders every source code line exactly once, in order', async () => {
+        // Paged.js can drop the line straddling a page edge when it fragments a
+        // code block, leaving an empty shell behind. Comparing the rendered run
+        // against the source is the only way to see it.
+        const { codeLines } = await report(fixture)
+        const source = sourceCodeLines(fixtureSource(fixture))
+        expect(codeLines.map((l) => l.text.replace(/\n$/, ''))).toEqual(source)
+      })
+
+      it('never renders a blank line where the source has content', async () => {
+        const { codeLines } = await report(fixture)
+        const source = sourceCodeLines(fixtureSource(fixture))
+        const blanked = codeLines.filter(
+          (rendered, index) => !rendered.text.trim() && (source[index] ?? '').trim(),
+        )
+        expect(blanked).toEqual([])
+      })
     })
 
-    it('keeps every element inside the page box', async () => {
-      // Anything sticking out horizontally is silently clipped in the PDF —
-      // there is no scrollbar on paper. This is what caught the flex task-list,
-      // the unwrapped code lines, and the overflowing wide tables.
-      const { overflowing } = await report(fixture)
-      expect(overflowing).toEqual([])
+    it('honours ::page-break and :::landscape', async () => {
+      const { pages } = await report('page-directives')
+      // Two forced breaks plus a landscape section that breaks either side.
+      expect(pages).toBeGreaterThanOrEqual(4)
     })
 
-    it('renders every source code line exactly once, in order', async () => {
-      // Paged.js can drop the line straddling a page edge when it fragments a
-      // code block, leaving an empty shell behind. Comparing the rendered run
-      // against the source is the only way to see it.
-      const { codeLines } = await report(fixture)
-      const source = sourceCodeLines(fixtureSource(fixture))
-      expect(codeLines.map((l) => l.text.replace(/\n$/, ''))).toEqual(source)
+    /**
+     * Known upstream defect, kept as a tripwire.
+     *
+     * Paged.js 0.4.3 stalls when an `<img>` has to be placed at a page boundary:
+     * it lays out two pages and then stops dead — no further pages, and the
+     * `after` hook never fires. Bisected down from the `checklists` fixture; it is
+     * the replaced element itself, not RTL, task lists, `break-inside: avoid`,
+     * `overflow-x`, image dimensions or image preloading. Replacing the `<img>`
+     * with any non-replaced element paginates fine.
+     *
+     * `it.fails` passes while the bug is present and starts failing the moment it
+     * is fixed, so the mitigation can be removed deliberately rather than by
+     * accident. The 25 s cap keeps the suite fast — the real stall is unbounded.
+     *
+     * See docs/PAGEDJS_IMAGE_STALL.md.
+     */
+    it.fails('stalls when an image lands on a page boundary (pagedjs#0.4.3)', async () => {
+      const { pages } = await paginate('image-stall', {}, { timeoutMs: 25_000 })
+      expect(pages).toBeGreaterThan(0)
     })
-
-    it('never renders a blank line where the source has content', async () => {
-      const { codeLines } = await report(fixture)
-      const source = sourceCodeLines(fixtureSource(fixture))
-      const blanked = codeLines.filter(
-        (rendered, index) => !rendered.text.trim() && (source[index] ?? '').trim(),
-      )
-      expect(blanked).toEqual([])
-    })
-  })
-
-  it('honours ::page-break and :::landscape', async () => {
-    const { pages } = await report('page-directives')
-    // Two forced breaks plus a landscape section that breaks either side.
-    expect(pages).toBeGreaterThanOrEqual(4)
-  })
-}, 240_000)
-
-
+  },
+  240_000,
+)
