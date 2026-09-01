@@ -1,6 +1,14 @@
 import { useState } from 'react'
-import { ChevronDown } from 'lucide-react'
-import { Field, Segmented, Select, Slider, Switch, TextArea, TextInput } from '@/components/ui/Field'
+import { Bookmark, ChevronDown } from 'lucide-react'
+import {
+  Field,
+  Segmented,
+  Select,
+  Slider,
+  Switch,
+  TextArea,
+  TextInput,
+} from '@/components/ui/Field'
 import { MARGIN_PRESETS } from '@/lib/constants'
 import { DOCUMENT_PRESETS } from '@/data/presets'
 import { SKIN_OPTIONS } from '@/data/skins'
@@ -25,6 +33,8 @@ interface ConfigPanelProps {
   config: PdfConfig
   onChange: (patch: Partial<PdfConfig>) => void
   onApplyPreset: (presetId: string) => void
+  /** Opens the saved-presets manager. Omit to hide the entry point. */
+  onManagePresets?: () => void
 }
 
 function Section({
@@ -105,7 +115,12 @@ const ACCENT_SWATCHES = [
   '#334155',
 ]
 
-export function ConfigPanel({ config, onChange, onApplyPreset }: ConfigPanelProps) {
+export function ConfigPanel({
+  config,
+  onChange,
+  onApplyPreset,
+  onManagePresets,
+}: ConfigPanelProps) {
   const { t } = useLanguage()
   const { isSimple } = useMode()
 
@@ -139,6 +154,16 @@ export function ConfigPanel({ config, onChange, onApplyPreset }: ConfigPanelProp
             </button>
           ))}
         </div>
+        {onManagePresets && (
+          <button
+            type="button"
+            onClick={onManagePresets}
+            className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+          >
+            <Bookmark size={13} />
+            {t('presets.manage')}
+          </button>
+        )}
       </Section>
 
       <Section title={t('config.section.page')}>
@@ -281,7 +306,11 @@ export function ConfigPanel({ config, onChange, onApplyPreset }: ConfigPanelProp
       </Section>
 
       <Section title={t('config.section.style')}>
-        <Field label={t('config.field.documentSkin')} htmlFor="skin" hint={t('config.hint.documentSkin')}>
+        <Field
+          label={t('config.field.documentSkin')}
+          htmlFor="skin"
+          hint={t('config.hint.documentSkin')}
+        >
           <Select
             id="skin"
             value={config.skin}
@@ -437,7 +466,10 @@ export function ConfigPanel({ config, onChange, onApplyPreset }: ConfigPanelProp
               />
             </Field>
             <Field label={t('config.field.subtitle')}>
-              <TextInput value={config.meta.subtitle} onChange={(e) => setMeta('subtitle', e.target.value)} />
+              <TextInput
+                value={config.meta.subtitle}
+                onChange={(e) => setMeta('subtitle', e.target.value)}
+              />
             </Field>
             <Field label={t('config.field.organization')}>
               <TextInput
@@ -466,7 +498,9 @@ export function ConfigPanel({ config, onChange, onApplyPreset }: ConfigPanelProp
       <Section title={t('config.section.structure')} defaultOpen={false}>
         <Field label={t('config.field.tableOfContents')}>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">{t('config.hint.tableOfContents')}</span>
+            <span className="text-sm text-muted-foreground">
+              {t('config.hint.tableOfContents')}
+            </span>
             <Switch
               checked={config.tableOfContents}
               onChange={(tableOfContents) => onChange({ tableOfContents })}
@@ -487,7 +521,9 @@ export function ConfigPanel({ config, onChange, onApplyPreset }: ConfigPanelProp
         )}
         <Field label={t('config.field.numberedHeadings')}>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">{t('config.hint.numberedHeadings')}</span>
+            <span className="text-sm text-muted-foreground">
+              {t('config.hint.numberedHeadings')}
+            </span>
             <Switch
               checked={config.numberedHeadings}
               onChange={(numberedHeadings) => onChange({ numberedHeadings })}
@@ -506,7 +542,10 @@ export function ConfigPanel({ config, onChange, onApplyPreset }: ConfigPanelProp
           />
         </Field>
         {config.watermarkText.trim() !== '' && (
-          <Field label={t('config.field.opacity')} hint={`${Math.round(config.watermarkOpacity * 100)}%`}>
+          <Field
+            label={t('config.field.opacity')}
+            hint={`${Math.round(config.watermarkOpacity * 100)}%`}
+          >
             <Slider
               min={0.02}
               max={0.3}
@@ -540,10 +579,16 @@ export function ConfigPanel({ config, onChange, onApplyPreset }: ConfigPanelProp
           <TextInput value={config.meta.title} onChange={(e) => setMeta('title', e.target.value)} />
         </Field>
         <Field label={t('config.field.metaAuthor')}>
-          <TextInput value={config.meta.author} onChange={(e) => setMeta('author', e.target.value)} />
+          <TextInput
+            value={config.meta.author}
+            onChange={(e) => setMeta('author', e.target.value)}
+          />
         </Field>
         <Field label={t('config.field.metaSubject')}>
-          <TextInput value={config.meta.subject} onChange={(e) => setMeta('subject', e.target.value)} />
+          <TextInput
+            value={config.meta.subject}
+            onChange={(e) => setMeta('subject', e.target.value)}
+          />
         </Field>
         <Field label={t('config.field.metaKeywords')}>
           <TextInput

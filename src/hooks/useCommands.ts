@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import {
   BarChart3,
   BookOpen,
+  Bookmark,
   Eye,
   FileCode2,
   FileDown,
@@ -240,6 +241,14 @@ export function useCommands(options: UseCommandsOptions): Command[] {
         group: group.view,
         icon: Palette,
         run: openDialog('gallery'),
+      },
+      {
+        id: 'presets',
+        label: t('command.presets'),
+        group: group.view,
+        icon: Bookmark,
+        keywords: 'save settings house style share preset',
+        run: openDialog('presets'),
       },
       {
         id: 'stats',

@@ -18,6 +18,7 @@ import { ShortcutsDialog } from '@/components/layout/ShortcutsDialog'
 import { FormattingHelpDialog } from '@/components/layout/FormattingHelpDialog'
 import { DocumentsDialog } from '@/components/layout/DocumentsDialog'
 import { StatsDialog } from '@/components/layout/StatsDialog'
+import { PresetsDialog } from '@/components/layout/PresetsDialog'
 import { SecurityDialog } from '@/components/security/SecurityDialog'
 import { useConfirm } from '@/components/ui/Confirm'
 import { getSelectionText, insertText } from '@/components/editor/editorCommands'
@@ -41,8 +42,10 @@ import { useDialogs } from '@/hooks/useDialogs'
 import { useAiActions } from '@/hooks/useAiActions'
 import { useDeepLinks } from '@/hooks/useDeepLinks'
 import { useCommands } from '@/hooks/useCommands'
+import { useExportPresets } from '@/hooks/useExportPresets'
 
-import { DEFAULT_CONFIG, MARGIN_PRESETS, STORAGE_KEYS } from '@/lib/constants'
+import { DEFAULT_CONFIG, STORAGE_KEYS } from '@/lib/constants'
+import { mergePreset } from '@/lib/presets'
 import { countHeadings } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/logger'
 import { parseFrontmatter, applyFrontmatter } from '@/lib/frontmatter'
@@ -59,7 +62,7 @@ import { ACCEPTED_IMPORT, importFile } from '@/io/importers'
 import { trackEvent } from '@/lib/analytics'
 import { exportHtml, exportMarkdown, exportWord } from '@/io/exporters'
 import type { AppLockApi } from '@/hooks/useAppLock'
-import type { DocumentSkin, PdfConfig, ViewMode } from '@/types'
+import type { DocumentSkin, ExportPreset, PdfConfig, ViewMode } from '@/types'
 
 // The PDF engine (Paged.js) is heavy — load it only when a PDF/print is requested.
 const PrintPreview = lazy(() =>
@@ -267,16 +270,45 @@ export default function App({ lock }: AppProps) {
     (presetId: string) => {
       const preset = DOCUMENT_PRESETS.find((p) => p.id === presetId)
       if (!preset) return
-      setConfig((prev) => {
-        const margins =
-          preset.config.marginPreset && preset.config.marginPreset !== 'custom'
-            ? MARGIN_PRESETS[preset.config.marginPreset]
-            : prev.margins
-        return { ...prev, ...preset.config, margins }
-      })
+      setConfig((prev) => mergePreset(prev, preset.config))
       toast.success(`${t('toast.themeApplied')} “${t(preset.nameKey)}”`)
     },
     [setConfig, t],
+  )
+
+  // ---- user export presets -------------------------------------------------
+  const exportPresets = useExportPresets()
+
+  const applyExportPreset = useCallback(
+    (preset: ExportPreset) => {
+      setConfig((prev) => mergePreset(prev, preset.config))
+      toast.success(`${t('toast.presetApplied')} “${preset.name}”`)
+    },
+    [setConfig, t],
+  )
+
+  const saveExportPreset = useCallback(
+    (name: string) => {
+      if (!exportPresets.save(name, config)) return
+      toast.success(t('toast.presetSaved'))
+    },
+    [exportPresets, config, t],
+  )
+
+  const deleteExportPreset = useCallback(
+    (id: string) => {
+      exportPresets.remove(id)
+      toast.success(t('toast.presetDeleted'))
+    },
+    [exportPresets, t],
+  )
+
+  const importExportPresets = useCallback(
+    (incoming: ExportPreset[]) => {
+      exportPresets.merge(incoming)
+      toast.success(t('toast.presetsImported'))
+    },
+    [exportPresets, t],
   )
 
   const handleImportClick = useCallback(() => fileInputRef.current?.click(), [])
@@ -688,7 +720,12 @@ export default function App({ lock }: AppProps) {
               </button>
             </div>
             <div className="h-[calc(100%-3rem)]">
-              <ConfigPanel config={config} onChange={updateConfig} onApplyPreset={applyPreset} />
+              <ConfigPanel
+                config={config}
+                onChange={updateConfig}
+                onApplyPreset={applyPreset}
+                onManagePresets={opener('presets')}
+              />
             </div>
           </aside>
         )}
@@ -768,6 +805,23 @@ export default function App({ lock }: AppProps) {
         config={config}
         onApply={updateConfig}
         onApplyPreset={applyPreset}
+        userPresets={exportPresets.presets}
+        onApplyUserPreset={applyExportPreset}
+        onManagePresets={opener('presets')}
+      />
+      <PresetsDialog
+        open={dialogs.state.presets}
+        onClose={closer('presets')}
+        presets={exportPresets.presets}
+        config={config}
+        onSave={saveExportPreset}
+        onRename={exportPresets.rename}
+        onDelete={deleteExportPreset}
+        onApply={applyExportPreset}
+        onImport={importExportPresets}
+        onNotify={(type, message) =>
+          type === 'success' ? toast.success(message) : toast.error(message)
+        }
       />
       <ResumeDetailsDialog
         open={pendingResume !== null}

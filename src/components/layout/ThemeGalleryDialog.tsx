@@ -7,7 +7,7 @@ import { SKIN_OPTIONS } from '@/data/skins'
 import { DOCUMENT_PRESETS } from '@/data/presets'
 import { useLanguage } from '@/i18n'
 import { cn } from '@/lib/utils'
-import type { DocumentSkin, PdfConfig } from '@/types'
+import type { DocumentSkin, ExportPreset, PdfConfig } from '@/types'
 
 interface ThemeGalleryDialogProps {
   open: boolean
@@ -15,6 +15,10 @@ interface ThemeGalleryDialogProps {
   config: PdfConfig
   onApply: (patch: Partial<PdfConfig>) => void
   onApplyPreset: (presetId: string) => void
+  /** The user's own saved presets, listed above the built-in themes. */
+  userPresets?: ExportPreset[]
+  onApplyUserPreset?: (preset: ExportPreset) => void
+  onManagePresets?: () => void
 }
 
 /** Compact sample document that exercises the main typographic elements. */
@@ -61,6 +65,9 @@ export function ThemeGalleryDialog({
   config,
   onApply,
   onApplyPreset,
+  userPresets = [],
+  onApplyUserPreset,
+  onManagePresets,
 }: ThemeGalleryDialogProps) {
   const { t } = useLanguage()
 
@@ -96,7 +103,9 @@ export function ThemeGalleryDialog({
                 aria-pressed={active}
                 className={cn(
                   'group overflow-hidden rounded-xl border bg-surface text-start transition-all hover:shadow-md',
-                  active ? 'border-primary ring-2 ring-primary/40' : 'border-border hover:border-primary/50',
+                  active
+                    ? 'border-primary ring-2 ring-primary/40'
+                    : 'border-border hover:border-primary/50',
                 )}
               >
                 <SkinPreview config={{ ...config, skin: value }} />
@@ -104,7 +113,9 @@ export function ThemeGalleryDialog({
                   <div className="min-w-0">
                     <div className="truncate text-sm font-medium text-foreground">{name}</div>
                     {rest.length > 0 && (
-                      <div className="truncate text-[11px] text-muted-foreground">{rest.join(' — ')}</div>
+                      <div className="truncate text-[11px] text-muted-foreground">
+                        {rest.join(' — ')}
+                      </div>
                     )}
                   </div>
                   {active && <Check size={15} className="shrink-0 text-primary" />}
@@ -114,6 +125,52 @@ export function ThemeGalleryDialog({
           })}
         </div>
       </section>
+
+      {userPresets.length > 0 && onApplyUserPreset && (
+        <section aria-label={t('presets.mine')} className="mt-6">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {t('presets.mine')}
+            </h3>
+            {onManagePresets && (
+              <button
+                type="button"
+                onClick={onManagePresets}
+                className="text-[11px] font-medium text-primary hover:underline"
+              >
+                {t('presets.manage')}
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {userPresets.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => {
+                  onApplyUserPreset(preset)
+                  onClose()
+                }}
+                className="flex items-start gap-2.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5 text-start transition-all hover:border-primary hover:shadow-sm"
+              >
+                <span
+                  aria-hidden
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded-full ring-1 ring-border"
+                  style={{ backgroundColor: preset.config.accentColor ?? config.accentColor }}
+                />
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium text-foreground">
+                    {preset.name}
+                  </span>
+                  <span className="mt-0.5 block text-[11px] leading-tight text-muted-foreground">
+                    {preset.config.skin ?? config.skin}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section aria-label={t('themeGallery.themesAria')} className="mt-6">
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -137,7 +194,9 @@ export function ThemeGalleryDialog({
                 style={{ backgroundColor: preset.config.accentColor ?? config.accentColor }}
               />
               <span className="min-w-0">
-                <span className="block text-sm font-medium text-foreground">{t(preset.nameKey)}</span>
+                <span className="block text-sm font-medium text-foreground">
+                  {t(preset.nameKey)}
+                </span>
                 <span className="mt-0.5 line-clamp-2 block text-[11px] leading-tight text-muted-foreground">
                   {t(preset.descKey)}
                 </span>

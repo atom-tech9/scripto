@@ -122,8 +122,18 @@ export interface PdfConfig {
   readonly meta: DocumentMeta
 }
 
+/** A user-saved bundle of look-and-feel settings — a reusable house style. */
+export interface ExportPreset {
+  readonly id: string
+  readonly name: string
+  /** The presentation half of a `PdfConfig`; never carries document `meta`. */
+  readonly config: Partial<PdfConfig>
+  readonly createdAt: number
+}
+
 export interface ExportProgress {
-  readonly stage: 'idle' | 'preparing' | 'rendering' | 'paginating' | 'finalizing' | 'done' | 'error'
+  readonly stage:
+    'idle' | 'preparing' | 'rendering' | 'paginating' | 'finalizing' | 'done' | 'error'
   readonly message: string
   readonly percent: number
 }

@@ -898,6 +898,31 @@ export const EN_STRINGS = {
   'stage.galleryWall': 'Gallery wall',
   'print.frontMatter': 'Cover & contents',
 
+  // Export presets
+  'presets.title': 'Export presets',
+  'presets.description':
+    'Save the current paper, margins, typography and skin as a reusable house style.',
+  'presets.saveCurrent': 'Save current',
+  'presets.namePlaceholder': 'Name this preset…',
+  'presets.empty':
+    'No saved presets yet. Set the document up the way you like it, then save it here.',
+  'presets.apply': 'Apply',
+  'presets.rename': 'Rename preset',
+  'presets.delete': 'Delete preset',
+  'presets.import': 'Import…',
+  'presets.export': 'Export…',
+  'presets.mine': 'My presets',
+  'presets.manage': 'Manage presets…',
+  'command.presets': 'Export presets…',
+  'toast.presetSaved': 'Preset saved',
+  'toast.presetDeleted': 'Preset deleted',
+  'toast.presetApplied': 'Preset applied',
+  'toast.presetsImported': 'Presets imported',
+  'toast.presetImportFailed': 'That file has no valid presets in it.',
+  'toast.presetNameRequired': 'Give the preset a name first.',
+  'confirm.deletePreset.title': 'Delete this preset?',
+  'confirm.deletePreset.body': 'This removes the saved preset',
+
   // Visual page-break editor
   'print.break.toggle': 'Page breaks',
   'print.break.here': 'Break here',
@@ -1779,6 +1804,30 @@ export const STRINGS: Record<UiLanguage, Dictionary> = {
     'stage.interoffice': 'مذكرة داخلية',
     'stage.galleryWall': 'جدار المعرض',
     'print.frontMatter': 'الغلاف والمحتويات',
+
+    // Export presets
+    'presets.title': 'إعدادات التصدير المحفوظة',
+    'presets.description':
+      'احفظ حجم الورق والهوامش والطباعة والنمط الحالي كنمط بيت قابل لإعادة الاستخدام.',
+    'presets.saveCurrent': 'حفظ الحالي',
+    'presets.namePlaceholder': 'سمِّ هذا الإعداد…',
+    'presets.empty': 'لا توجد إعدادات محفوظة بعد. اضبط المستند كما تحب ثم احفظه هنا.',
+    'presets.apply': 'تطبيق',
+    'presets.rename': 'إعادة تسمية الإعداد',
+    'presets.delete': 'حذف الإعداد',
+    'presets.import': 'استيراد…',
+    'presets.export': 'تصدير…',
+    'presets.mine': 'إعداداتي',
+    'presets.manage': 'إدارة الإعدادات…',
+    'command.presets': 'إعدادات التصدير…',
+    'toast.presetSaved': 'تم حفظ الإعداد',
+    'toast.presetDeleted': 'تم حذف الإعداد',
+    'toast.presetApplied': 'تم تطبيق الإعداد',
+    'toast.presetsImported': 'تم استيراد الإعدادات',
+    'toast.presetImportFailed': 'هذا الملف لا يحتوي على إعدادات صالحة.',
+    'toast.presetNameRequired': 'أعطِ الإعداد اسمًا أولًا.',
+    'confirm.deletePreset.title': 'حذف هذا الإعداد؟',
+    'confirm.deletePreset.body': 'سيؤدي هذا إلى إزالة الإعداد المحفوظ',
 
     // Visual page-break editor
     'print.break.toggle': 'فواصل الصفحات',
