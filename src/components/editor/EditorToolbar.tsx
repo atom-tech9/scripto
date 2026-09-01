@@ -78,7 +78,9 @@ export function EditorToolbar({ view, tocPresent, onToggleToc, onAi }: EditorToo
   const { isSimple } = useMode()
 
   // Simple mode makes the formatting controls slightly larger for beginners.
-  const btnSize = isSimple ? 'h-9 w-9' : 'h-8 w-8'
+  // 44px targets on touch, per the platform guidelines; the compact desktop
+  // sizes return once there is a pointer.
+  const btnSize = isSimple ? 'h-11 w-11 lg:h-9 lg:w-9' : 'h-11 w-11 lg:h-8 lg:w-8'
   const iconSize = isSimple ? 18 : 16
 
   const labelOf = (action: ToolAction): string =>
@@ -90,13 +92,35 @@ export function EditorToolbar({ view, tocPresent, onToggleToc, onAi }: EditorToo
       { icon: Redo2, labelKey: 'editor.tooltip.redo', shortcut: '⌘⇧Z', run: (v) => void redo(v) },
     ],
     [
-      { icon: Heading1, labelKey: 'editor.tooltip.heading1', run: (v) => toggleLinePrefix(v, '# ') },
-      { icon: Heading2, labelKey: 'editor.tooltip.heading2', run: (v) => toggleLinePrefix(v, '## ') },
-      { icon: Heading3, labelKey: 'editor.tooltip.heading3', run: (v) => toggleLinePrefix(v, '### ') },
+      {
+        icon: Heading1,
+        labelKey: 'editor.tooltip.heading1',
+        run: (v) => toggleLinePrefix(v, '# '),
+      },
+      {
+        icon: Heading2,
+        labelKey: 'editor.tooltip.heading2',
+        run: (v) => toggleLinePrefix(v, '## '),
+      },
+      {
+        icon: Heading3,
+        labelKey: 'editor.tooltip.heading3',
+        run: (v) => toggleLinePrefix(v, '### '),
+      },
     ],
     [
-      { icon: Bold, labelKey: 'editor.tooltip.bold', shortcut: '⌘B', run: (v) => wrapSelection(v, '**', '**', 'bold text') },
-      { icon: Italic, labelKey: 'editor.tooltip.italic', shortcut: '⌘I', run: (v) => wrapSelection(v, '*', '*', 'italic text') },
+      {
+        icon: Bold,
+        labelKey: 'editor.tooltip.bold',
+        shortcut: '⌘B',
+        run: (v) => wrapSelection(v, '**', '**', 'bold text'),
+      },
+      {
+        icon: Italic,
+        labelKey: 'editor.tooltip.italic',
+        shortcut: '⌘I',
+        run: (v) => wrapSelection(v, '*', '*', 'italic text'),
+      },
       {
         icon: Strikethrough,
         labelKey: 'editor.tooltip.strikethrough',
@@ -104,16 +128,55 @@ export function EditorToolbar({ view, tocPresent, onToggleToc, onAi }: EditorToo
         secondary: true,
         run: (v) => wrapSelection(v, '~~', '~~', 'strikethrough'),
       },
-      { icon: Highlighter, labelKey: 'editor.tooltip.highlight', secondary: true, run: (v) => wrapSelection(v, '==', '==', 'highlight') },
-      { icon: Code, labelKey: 'editor.tooltip.inlineCode', shortcut: '⌘E', run: (v) => wrapSelection(v, '`', '`', 'code') },
-      { icon: Superscript, labelKey: 'editor.tooltip.superscript', secondary: true, run: (v) => wrapSelection(v, '^', '^', 'sup') },
-      { icon: Subscript, labelKey: 'editor.tooltip.subscript', secondary: true, run: (v) => wrapSelection(v, '~', '~', 'sub') },
+      {
+        icon: Highlighter,
+        labelKey: 'editor.tooltip.highlight',
+        secondary: true,
+        run: (v) => wrapSelection(v, '==', '==', 'highlight'),
+      },
+      {
+        icon: Code,
+        labelKey: 'editor.tooltip.inlineCode',
+        shortcut: '⌘E',
+        run: (v) => wrapSelection(v, '`', '`', 'code'),
+      },
+      {
+        icon: Superscript,
+        labelKey: 'editor.tooltip.superscript',
+        secondary: true,
+        run: (v) => wrapSelection(v, '^', '^', 'sup'),
+      },
+      {
+        icon: Subscript,
+        labelKey: 'editor.tooltip.subscript',
+        secondary: true,
+        run: (v) => wrapSelection(v, '~', '~', 'sub'),
+      },
     ],
     [
-      { icon: List, labelKey: 'editor.tooltip.bulletList', shortcut: '⌘⇧8', run: (v) => toggleLinePrefix(v, '- ') },
-      { icon: ListOrdered, labelKey: 'editor.tooltip.numberedList', shortcut: '⌘⇧7', run: (v) => toggleLinePrefix(v, '1. ') },
-      { icon: ListChecks, labelKey: 'editor.tooltip.taskList', run: (v) => toggleLinePrefix(v, '- [ ] ') },
-      { icon: Quote, labelKey: 'editor.tooltip.blockquote', shortcut: '⌘⇧.', run: (v) => toggleLinePrefix(v, '> ') },
+      {
+        icon: List,
+        labelKey: 'editor.tooltip.bulletList',
+        shortcut: '⌘⇧8',
+        run: (v) => toggleLinePrefix(v, '- '),
+      },
+      {
+        icon: ListOrdered,
+        labelKey: 'editor.tooltip.numberedList',
+        shortcut: '⌘⇧7',
+        run: (v) => toggleLinePrefix(v, '1. '),
+      },
+      {
+        icon: ListChecks,
+        labelKey: 'editor.tooltip.taskList',
+        run: (v) => toggleLinePrefix(v, '- [ ] '),
+      },
+      {
+        icon: Quote,
+        labelKey: 'editor.tooltip.blockquote',
+        shortcut: '⌘⇧.',
+        run: (v) => toggleLinePrefix(v, '> '),
+      },
       {
         icon: Info,
         labelKey: 'editor.tooltip.callout',
@@ -122,21 +185,40 @@ export function EditorToolbar({ view, tocPresent, onToggleToc, onAi }: EditorToo
       },
     ],
     [
-      { icon: LinkIcon, labelKey: 'editor.tooltip.link', shortcut: '⌘K', run: (v) => insertLink(v) },
-      { icon: ImageIcon, labelKey: 'editor.tooltip.image', run: (v) => insertText(v, '![alt text](https://)') },
+      {
+        icon: LinkIcon,
+        labelKey: 'editor.tooltip.link',
+        shortcut: '⌘K',
+        run: (v) => insertLink(v),
+      },
+      {
+        icon: ImageIcon,
+        labelKey: 'editor.tooltip.image',
+        run: (v) => insertText(v, '![alt text](https://)'),
+      },
       { icon: TableIcon, labelKey: 'editor.tooltip.table', run: (v) => insertTable(v) },
       {
         icon: SquareCode,
         labelKey: 'editor.tooltip.codeBlock',
         run: (v) => insertText(v, '\n```js\n\n```\n', 8),
       },
-      { icon: Sigma, labelKey: 'editor.tooltip.mathBlock', secondary: true, run: (v) => insertText(v, '\n$$\n\\frac{a}{b}\n$$\n') },
-      { icon: Minus, labelKey: 'editor.tooltip.divider', secondary: true, run: (v) => insertText(v, '\n---\n') },
+      {
+        icon: Sigma,
+        labelKey: 'editor.tooltip.mathBlock',
+        secondary: true,
+        run: (v) => insertText(v, '\n$$\n\\frac{a}{b}\n$$\n'),
+      },
+      {
+        icon: Minus,
+        labelKey: 'editor.tooltip.divider',
+        secondary: true,
+        run: (v) => insertText(v, '\n---\n'),
+      },
     ],
   ]
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5 border-b border-border bg-surface/60 px-2 py-1.5">
+    <div className="scrollbar-none flex items-center gap-0.5 overflow-x-auto border-t border-border bg-surface/60 px-2 py-1.5 lg:flex-wrap lg:overflow-visible lg:border-b lg:border-t-0">
       {groups.map((group, gi) => (
         <span key={gi} className="flex items-center">
           {gi > 0 && <span className="mx-1 h-5 w-px bg-border" aria-hidden />}
@@ -144,17 +226,17 @@ export function EditorToolbar({ view, tocPresent, onToggleToc, onAi }: EditorToo
             const { icon: Icon, run } = action
             const label = labelOf(action)
             return (
-            <Tooltip key={action.labelKey} label={label}>
-              <button
-                type="button"
-                aria-label={label}
-                disabled={!view}
-                onClick={() => view && run(view)}
-                className={`${action.secondary ? 'hidden sm:flex' : 'flex'} ${btnSize} items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40`}
-              >
-                <Icon size={iconSize} />
-              </button>
-            </Tooltip>
+              <Tooltip key={action.labelKey} label={label}>
+                <button
+                  type="button"
+                  aria-label={label}
+                  disabled={!view}
+                  onClick={() => view && run(view)}
+                  className={`${action.secondary ? 'hidden sm:flex' : 'flex'} ${btnSize} items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40`}
+                >
+                  <Icon size={iconSize} />
+                </button>
+              </Tooltip>
             )
           })}
         </span>

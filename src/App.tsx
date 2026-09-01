@@ -5,6 +5,7 @@ import { FileDown, Minimize2, Moon, Settings2 } from 'lucide-react'
 
 import { Header } from '@/components/layout/Header'
 import { StatusBar } from '@/components/layout/StatusBar'
+import { MobileTabBar } from '@/components/layout/MobileTabBar'
 import {
   ONBOARDING_DEFAULT,
   OnboardingChecklist,
@@ -46,7 +47,7 @@ import { useExportPresets } from '@/hooks/useExportPresets'
 
 import { DEFAULT_CONFIG, STORAGE_KEYS } from '@/lib/constants'
 import { mergePreset } from '@/lib/presets'
-import { countHeadings } from '@/lib/utils'
+import { cn, countHeadings } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/logger'
 import { parseFrontmatter, applyFrontmatter } from '@/lib/frontmatter'
 import { SAMPLE_DOCUMENT } from '@/data/sampleDocument'
@@ -637,12 +638,16 @@ export default function App({ lock }: AppProps) {
             showEditor ? (isSplit ? '' : 'flex-1') : 'hidden'
           }`}
         >
-          <EditorToolbar
-            view={editorView}
-            tocPresent={tocPresent}
-            onToggleToc={handleToggleToc}
-            onAi={ai.handleAction}
-          />
+          {/* On a phone the formatting toolbar sits at the foot of the pane,
+              where a thumb reaches it; on desktop it returns to the top. */}
+          <div className="order-last shrink-0 lg:order-none">
+            <EditorToolbar
+              view={editorView}
+              tocPresent={tocPresent}
+              onToggleToc={handleToggleToc}
+              onAi={ai.handleAction}
+            />
+          </div>
           {isSimple && <SimpleHintBar onOpenFormattingHelp={openFormattingHelp} />}
           <div ref={editorWrapRef} className="relative min-h-0 flex-1 bg-surface">
             <MarkdownEditor
@@ -713,7 +718,19 @@ export default function App({ lock }: AppProps) {
         </section>
 
         {!zen && dialogs.state.config && (
-          <aside className="absolute inset-y-0 end-0 z-20 w-80 max-w-[85vw] border-s border-border bg-surface shadow-xl lg:static lg:z-0 lg:max-w-none lg:shadow-none">
+          <aside
+            className={cn(
+              'z-20 flex flex-col border-border bg-surface shadow-xl',
+              // Phone: a bottom sheet, thumb-reachable and full width. Capped in
+              // `svh` rather than a percentage — a percentage max-height does
+              // not resolve reliably against a flex-sized parent, and the sheet
+              // grew past the pane and covered the tab bar below it.
+              'absolute inset-x-0 bottom-0 max-h-[55svh] overflow-hidden rounded-t-2xl border-t',
+              // Desktop: the familiar side panel.
+              'lg:static lg:inset-auto lg:z-0 lg:max-h-none lg:w-80 lg:overflow-visible lg:rounded-none lg:border-s lg:border-t-0 lg:shadow-none',
+            )}
+          >
+            <div aria-hidden className="mx-auto mt-2 h-1 w-10 rounded-full bg-border lg:hidden" />
             <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
               <span className="text-sm font-semibold">{t('config.exportSettings')}</span>
               <button
@@ -724,7 +741,7 @@ export default function App({ lock }: AppProps) {
                 <Settings2 size={16} />
               </button>
             </div>
-            <div className="h-[calc(100%-3rem)]">
+            <div className="min-h-0 flex-1">
               <ConfigPanel
                 config={config}
                 onChange={updateConfig}
@@ -736,6 +753,16 @@ export default function App({ lock }: AppProps) {
           </aside>
         )}
       </div>
+
+      {!zen && !isDesktop && (
+        <MobileTabBar
+          view={effectiveView}
+          onView={setViewMode}
+          settingsOpen={dialogs.state.config}
+          onToggleSettings={toggler('config')}
+          onExport={openPrint}
+        />
+      )}
 
       {!zen && (
         <StatusBar
