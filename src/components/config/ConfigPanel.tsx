@@ -261,9 +261,11 @@ export function ConfigPanel({
               // Fetch before applying, so the document never renders a frame in
               // the fallback and then jump when the real metrics arrive.
               const descriptor = DOC_FONTS[next]
-              void loadFontFamily(descriptor.family, descriptor.googleParam).then(() =>
-                onChange({ font: next }),
-              )
+              void loadFontFamily(
+                descriptor.family,
+                descriptor.googleParam,
+                descriptor.script === 'arabic' ? 'الخط العربي' : 'Aa',
+              ).then(() => onChange({ font: next }))
             }}
           >
             <optgroup label={t('font.group.latin')}>

@@ -378,7 +378,7 @@ export const PreviewSurface = forwardRef<PreviewHandle, PreviewSurfaceProps>(
                 veil={transition.veil}
               >
                 <div ref={setPaperEl} className="stage-paper" style={paperStyle}>
-                  <ErrorBoundary fallbackTitle="This document couldn't be rendered.">
+                  <ErrorBoundary titleKey="error.documentRender">
                     {viewConfig.customCss?.trim() && (
                       <style dangerouslySetInnerHTML={{ __html: viewConfig.customCss }} />
                     )}

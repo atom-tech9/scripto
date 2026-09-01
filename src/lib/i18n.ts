@@ -755,7 +755,8 @@ export const EN_STRINGS = {
   'print.tryAgain': 'Try again',
   'markdown.diagramError': 'Diagram error:',
   'markdown.asciiDiagram': 'ASCII diagram',
-  'error.boundaryTitle': 'Something went wrong while rendering.',
+  'error.boundaryTitle': 'Scripto hit an unexpected error.',
+  'error.documentRender': "This document couldn't be rendered.",
   'error.tryAgain': 'Try again',
   'template.pitch-one-pager.name': 'Startup One-Pager',
   'template.pitch-one-pager.desc':
@@ -1741,7 +1742,8 @@ export const STRINGS: Record<UiLanguage, Dictionary> = {
     'print.tryAgain': 'حاول مجددًا',
     'markdown.diagramError': 'خطأ في المخطّط:',
     'markdown.asciiDiagram': 'مخطط ASCII',
-    'error.boundaryTitle': 'حدث خطأ أثناء العرض.',
+    'error.boundaryTitle': 'واجه سكربتو خطأً غير متوقع.',
+    'error.documentRender': 'تعذّر عرض هذا المستند.',
     'error.tryAgain': 'حاول مجددًا',
     'template.pitch-one-pager.name': 'صفحة تعريفية للشركة الناشئة',
     'template.pitch-one-pager.desc':

@@ -27,7 +27,7 @@ export default function AppShell() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <ErrorBoundary fallbackTitle="Scripto hit an unexpected error.">
+      <ErrorBoundary>
         <LanguageProvider>
           <ModeProvider>
             <ConfirmProvider>
