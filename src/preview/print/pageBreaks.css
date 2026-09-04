@@ -166,3 +166,18 @@
     transition: none;
   }
 }
+
+@media print {
+  /*
+   * The page-break editor is chrome, not content, and must never reach paper.
+   *
+   * Its handles are positioned with inline coordinates measured from the
+   * on-screen layout at the current zoom. Printing changes that layout, so the
+   * stale coordinates put them hundreds of pixels past the edge of the sheet --
+   * and Chrome shrinks the whole document to fit them, which is why an export
+   * came out squeezed into the left of the page with a wide empty margin.
+   */
+  .break-layer {
+    display: none !important;
+  }
+}
